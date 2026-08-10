@@ -103,6 +103,30 @@ const TAIWAN_NAME_MAP: Record<string, string> = {
 const MAP_WIDTH = 920;
 const MAP_HEIGHT = 600;
 const STORAGE_KEY = "china-city-fill-progress-v1";
+const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
+
+function compactName(value: string) {
+  return value.trim().replace(/\s+/g, "").replace(/臺/g, "台");
+}
+
+function stripAdministrativeSuffix(value: string) {
+  return value.replace(
+    /(特别行政区|维吾尔自治区|壮族自治区|回族自治区|自治区|自治州|地区|新区|林区|盟|省|市|区|县)$/,
+    "",
+  );
+}
+
+function answerMatches(answer: string, targets: string[]) {
+  const candidate = compactName(answer);
+  if (!candidate) return false;
+  return targets.some((target) => {
+    const normalizedTarget = compactName(target);
+    return (
+      candidate === normalizedTarget ||
+      candidate === stripAdministrativeSuffix(normalizedTarget)
+    );
+  });
+}
 
 function normalizeMap(data: MapData, code: string): MapData {
   return {
@@ -275,6 +299,7 @@ function MapCanvas({
   provinceOutline,
   onRegion,
   onHover,
+  hideProvinceNames,
 }: {
   map: MapData;
   mode: "national" | "detail";
@@ -285,6 +310,7 @@ function MapCanvas({
   provinceOutline?: MapFeature;
   onRegion: (feature: MapFeature, answer?: string) => void;
   onHover: (name: string | null) => void;
+  hideProvinceNames: boolean;
 }) {
   const project = useMemo(() => makeProjection(map.features), [map]);
 
@@ -334,7 +360,9 @@ function MapCanvas({
               tabIndex={0}
               aria-label={
                 mode === "national"
-                  ? `${feature.properties.name}${isComplete ? "，已完成" : "，未完成"}`
+                  ? hideProvinceNames
+                    ? `省级行政区块${isComplete ? "，已完成" : "，未解锁"}`
+                    : `${feature.properties.name}${isComplete ? "，已完成" : "，未完成"}`
                   : isComplete
                     ? `${feature.properties.name}，已填入`
                     : "待填充区域"
@@ -402,6 +430,7 @@ function LoadingMap() {
 
 export default function CityGame() {
   const [province, setProvince] = useState<Province | null>(null);
+  const [hardMode, setHardMode] = useState(false);
   const [completedNames, setCompletedNames] = useState<Set<string>>(new Set());
   const [completedProvinceCodes, setCompletedProvinceCodes] = useState<Set<string>>(
     new Set(),
@@ -413,6 +442,9 @@ export default function CityGame() {
   const [attempts, setAttempts] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [showAllProvinces, setShowAllProvinces] = useState(false);
+  const [pendingFeature, setPendingFeature] = useState<MapFeature | null>(null);
+  const [manualAnswer, setManualAnswer] = useState("");
+  const [manualError, setManualError] = useState("");
   const [dragGhost, setDragGhost] = useState<{
     name: string;
     x: number;
@@ -437,6 +469,11 @@ export default function CityGame() {
         string[]
       >;
       progressRef.current = saved;
+      const savedHardMode = localStorage.getItem(HARD_MODE_KEY) === "true";
+      setHardMode(savedHardMode);
+      if (savedHardMode) {
+        setMessage("难度提升：点击省级行政区并输入名称解锁");
+      }
       setCompletedProvinceCodes(
         new Set(
           PROVINCES.filter(
@@ -485,13 +522,15 @@ export default function CityGame() {
       setAttempts(0);
       setMistakes(0);
       setMessage(
-        nextProvince.kind === "直辖市"
+        hardMode
+          ? "难度提升：点击地图区块并输入名称"
+          : nextProvince.kind === "直辖市"
           ? `把区县名称放到${nextProvince.shortName}地图上的正确位置`
           : `把行政区名称放到${nextProvince.shortName}地图上的正确位置`,
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [],
+    [hardMode],
   );
 
   useEffect(() => {
@@ -544,12 +583,83 @@ export default function CityGame() {
   );
 
   const handleMapRegion = (feature: MapFeature, draggedAnswer?: string) => {
+    if (hardMode) {
+      if (province && completedNames.has(feature.properties.name)) {
+        setMessage(`${feature.properties.name}已经填好啦，试试其他区块`);
+        return;
+      }
+      setPendingFeature(feature);
+      setManualAnswer("");
+      setManualError("");
+      setMessage(
+        province
+          ? "已选中一个区块，请输入它的名称"
+          : "已选中一个省级行政区，请输入名称解锁",
+      );
+      return;
+    }
     if (!province) {
       const selectedProvince = provinceForFeature(feature);
       if (selectedProvince) enterProvince(selectedProvince);
       return;
     }
     handleGuess(feature.properties.name, draggedAnswer);
+  };
+
+  const submitManualAnswer = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!pendingFeature) return;
+
+    if (!province) {
+      const selectedProvince = provinceForFeature(pendingFeature);
+      if (
+        selectedProvince &&
+        answerMatches(manualAnswer, [selectedProvince.name, selectedProvince.shortName])
+      ) {
+        setPendingFeature(null);
+        setManualAnswer("");
+        setManualError("");
+        enterProvince(selectedProvince);
+        return;
+      }
+      setManualError("名称不正确，再观察一下它在全国地图中的位置");
+      return;
+    }
+
+    const regionName = pendingFeature.properties.name;
+    if (answerMatches(manualAnswer, [regionName])) {
+      setPendingFeature(null);
+      setManualAnswer("");
+      setManualError("");
+      handleGuess(regionName, regionName);
+      return;
+    }
+
+    setAttempts((value) => value + 1);
+    setMistakes((value) => value + 1);
+    setWrongRegion(regionName);
+    setManualError("名称不正确，再观察一下这个区块的形状和位置");
+    window.setTimeout(() => setWrongRegion(null), 560);
+  };
+
+  const toggleHardMode = () => {
+    const next = !hardMode;
+    setHardMode(next);
+    localStorage.setItem(HARD_MODE_KEY, String(next));
+    setPendingFeature(null);
+    setManualAnswer("");
+    setManualError("");
+    setSelectedAnswer(null);
+    setHoveredName(null);
+    setMessage(
+      next
+        ? province
+          ? "难度提升：点击地图区块并输入名称"
+          : "难度提升：点击省级行政区并输入名称解锁"
+        : province
+          ? "名称提示已恢复，可以拖拽或点选作答"
+          : "省份名称已恢复，选择一个省级行政区开始挑战",
+    );
   };
 
   const resetProvince = () => {
@@ -572,7 +682,14 @@ export default function CityGame() {
     setProvince(null);
     setSelectedAnswer(null);
     setHoveredName(null);
-    setMessage("请选择一个省级行政区开始挑战");
+    setPendingFeature(null);
+    setManualAnswer("");
+    setManualError("");
+    setMessage(
+      hardMode
+        ? "点击省级行政区并输入名称解锁"
+        : "请选择一个省级行政区开始挑战",
+    );
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -589,7 +706,7 @@ export default function CityGame() {
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
 
   return (
-    <main className="game-shell">
+    <main className={`game-shell ${hardMode ? "is-hard-mode" : ""}`}>
       <header className="site-header">
         <button className="brand" type="button" onClick={backToNational}>
           <span className="brand-seal" aria-hidden="true">城</span>
@@ -598,11 +715,23 @@ export default function CityGame() {
             <small>CHINA CITY ATLAS</small>
           </span>
         </button>
-        <div className="national-progress" aria-label={`已完成 ${completedProvinceCodes.size} 个省级行政区`}>
-          <span>全国进度</span>
-          <strong>{completedProvinceCodes.size}<i>/34</i></strong>
-          <div className="progress-track" aria-hidden="true">
-            <span style={{ width: `${(completedProvinceCodes.size / 34) * 100}%` }} />
+        <div className="header-actions">
+          <button
+            className={`difficulty-button ${hardMode ? "is-active" : ""}`}
+            type="button"
+            aria-pressed={hardMode}
+            onClick={toggleHardMode}
+          >
+            <span aria-hidden="true">↑</span>
+            难度提升
+            {hardMode ? <i>已开启</i> : null}
+          </button>
+          <div className="national-progress" aria-label={`已完成 ${completedProvinceCodes.size} 个省级行政区`}>
+            <span>全国进度</span>
+            <strong>{completedProvinceCodes.size}<i>/34</i></strong>
+            <div className="progress-track" aria-hidden="true">
+              <span style={{ width: `${(completedProvinceCodes.size / 34) * 100}%` }} />
+            </div>
           </div>
         </div>
       </header>
@@ -621,10 +750,14 @@ export default function CityGame() {
           </h1>
           <p className="lede">
             {province
-              ? province.kind === "直辖市"
+              ? hardMode
+                ? `点击地图中的任一区块，手动输入它的名称。完成 ${province.name} 的全部 ${answerNames.length || "…"} 个区域即可点亮印章。`
+                : province.kind === "直辖市"
                 ? `将下方的区县名称拖到地图中。完成 ${province.name} 的全部 ${answerNames.length || "…"} 个区县即可点亮印章。`
                 : `将下方的行政区名称拖到地图中。完成 ${province.name} 的全部 ${answerNames.length || "…"} 个区域即可点亮印章。`
-              : "点击地图或省份名进入挑战。红色标出省级边界，进入省内后，绿色标出地市或区县边界。"}
+              : hardMode
+                ? "省份名称已隐藏。点击地图中的省级行政区，手动输入名称，回答正确后才能解锁省内挑战。"
+                : "点击地图或省份名进入挑战。红色标出省级边界，进入省内后，绿色标出地市或区县边界。"}
           </p>
         </div>
         <div className="legend-card" aria-label="地图图例">
@@ -652,12 +785,14 @@ export default function CityGame() {
                 <span aria-hidden="true">←</span> 返回全国地图
               </button>
             ) : (
-              <span className="map-step">第一步 · 选择省级行政区</span>
+              <span className="map-step">
+                {hardMode ? "第一步 · 辨认并解锁省份" : "第一步 · 选择省级行政区"}
+              </span>
             )}
           </div>
           <div className="map-status" aria-live="polite">
             <span className={`status-dot ${isProvinceComplete ? "is-complete" : ""}`} />
-            {hoveredName && !province
+            {hoveredName && !province && !hardMode
               ? hoveredName
               : hoveredName && completedNames.has(hoveredName)
                 ? `已填入：${hoveredName}`
@@ -691,6 +826,7 @@ export default function CityGame() {
               provinceOutline={outlineFeature}
               onRegion={handleMapRegion}
               onHover={setHoveredName}
+              hideProvinceNames={hardMode}
             />
           ) : (
             <LoadingMap />
@@ -707,6 +843,30 @@ export default function CityGame() {
       </section>
 
       {province ? (
+        hardMode ? (
+          <section className="answer-dock hard-mode-dock" aria-labelledby="hard-city-title">
+            <div className="dock-heading">
+              <div>
+                <p className="eyebrow">无提示模式</p>
+                <h2 id="hard-city-title">点区块，写名称</h2>
+              </div>
+            </div>
+            <div className="hard-mode-card">
+              <span className="hard-mode-mark" aria-hidden="true">?</span>
+              <strong>城市名称已全部隐藏</strong>
+              <p>从地图中挑选一个尚未填充的区块，输入它的城市、地区或区县名称。</p>
+              <ol>
+                <li><i>1</i> 点击地图区块</li>
+                <li><i>2</i> 手动输入名称</li>
+                <li><i>3</i> 回答正确后填入地图</li>
+              </ol>
+            </div>
+            <div className="hard-mode-summary">
+              <span>已识别</span>
+              <strong>{completedNames.size}<i> / {answerNames.length}</i></strong>
+            </div>
+          </section>
+        ) : (
         <section className="answer-dock" aria-labelledby="answer-title">
           <div className="dock-heading">
             <div>
@@ -781,7 +941,34 @@ export default function CityGame() {
             })}
           </div>
         </section>
+        )
       ) : (
+        hardMode ? (
+          <section className="province-dock hard-mode-dock" aria-labelledby="hard-province-title">
+            <div className="dock-heading">
+              <div>
+                <p className="eyebrow">无提示模式</p>
+                <h2 id="hard-province-title">辨认 34 个省份</h2>
+              </div>
+            </div>
+            <div className="hard-mode-card">
+              <span className="hard-mode-mark" aria-hidden="true">?</span>
+              <strong>省份名称已全部隐藏</strong>
+              <p>点击全国地图中的任一区块，输入省份名称。回答正确后进入该省挑战。</p>
+            </div>
+            <div className="blind-progress" aria-label={`已完成 ${completedProvinceCodes.size} 个省级行政区`}>
+              {PROVINCES.map((item, index) => (
+                <span
+                  key={item.code}
+                  className={completedProvinceCodes.has(item.code) ? "is-complete" : ""}
+                  aria-label={`进度位 ${index + 1}${completedProvinceCodes.has(item.code) ? "，已完成" : "，未完成"}`}
+                >
+                  {completedProvinceCodes.has(item.code) ? "✓" : index + 1}
+                </span>
+              ))}
+            </div>
+          </section>
+        ) : (
         <section className="province-dock" aria-labelledby="province-title">
           <div className="dock-heading">
             <div>
@@ -817,6 +1004,7 @@ export default function CityGame() {
             <div className="all-complete-note">全国 34 个省级行政区已全部点亮，太厉害了！</div>
           ) : null}
         </section>
+        )
       )}
       </div>
 
@@ -824,6 +1012,61 @@ export default function CityGame() {
         <span>一张地图，497 个待归位的名字</span>
         <span>进度自动保存在当前设备</span>
       </footer>
+
+      {pendingFeature ? (
+        <div className="answer-dialog-backdrop" role="presentation">
+          <section
+            className={`answer-dialog ${manualError ? "has-error" : ""}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="manual-answer-title"
+          >
+            <button
+              className="dialog-close"
+              type="button"
+              aria-label="关闭输入框"
+              onClick={() => {
+                setPendingFeature(null);
+                setManualAnswer("");
+                setManualError("");
+              }}
+            >
+              ×
+            </button>
+            <p className="eyebrow">难度提升 · 区块已选中</p>
+            <h2 id="manual-answer-title">
+              {province ? "这里是什么城市或区县？" : "这里是哪个省份？"}
+            </h2>
+            <p className="dialog-hint">
+              可输入完整行政区名称，也可以省略“省、市、区、县”等常见后缀。
+            </p>
+            <form onSubmit={submitManualAnswer}>
+              <label htmlFor="manual-answer">
+                {province ? "城市 / 区县名称" : "省份名称"}
+              </label>
+              <div className="manual-answer-row">
+                <input
+                  id="manual-answer"
+                  value={manualAnswer}
+                  autoFocus
+                  autoComplete="off"
+                  placeholder={province ? "输入名称" : "输入省份名称"}
+                  onChange={(event) => {
+                    setManualAnswer(event.target.value);
+                    setManualError("");
+                  }}
+                />
+                <button type="submit" disabled={!manualAnswer.trim()}>
+                  确认答案
+                </button>
+              </div>
+              <p className="manual-error" aria-live="polite">
+                {manualError || "按 Enter 键也可以提交"}
+              </p>
+            </form>
+          </section>
+        </div>
+      ) : null}
 
       {dragGhost ? (
         <div

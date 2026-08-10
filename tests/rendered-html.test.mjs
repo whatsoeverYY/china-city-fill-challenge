@@ -46,6 +46,9 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /draggable=\{!isPlaced\}/);
   assert.match(game, /data-region-name/);
   assert.match(game, /PROVINCES/);
+  assert.match(game, /难度提升/);
+  assert.match(game, /submitManualAnswer/);
+  assert.match(game, /manual-answer/);
   assert.match(css, /--red:\s*#b43b32/i);
   assert.match(css, /--green:\s*#2d7d5f/i);
   assert.match(layout, /lang="zh-CN"/);
