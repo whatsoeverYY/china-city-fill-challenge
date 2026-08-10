@@ -186,7 +186,7 @@ h1 {
   max-width: 940px;
   margin-bottom: 16px;
   font-family: "Songti SC", STSong, SimSun, serif;
-  font-size: clamp(38px, 5.2vw, 72px);
+  font-size: clamp(34px, 4.2vw, 58px);
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.08;
@@ -304,15 +304,11 @@ h1 span {
   font-weight: 900;
 }
 
-.challenge-layout:not(.is-national) {
+.challenge-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(310px, 360px);
   gap: 22px;
   align-items: start;
-}
-
-.challenge-layout.is-national {
-  display: block;
 }
 
 .map-card,
@@ -636,7 +632,8 @@ h1 span {
   box-shadow: 0 16px 46px rgba(57, 46, 31, 0.06);
 }
 
-.challenge-layout .answer-dock {
+.challenge-layout .answer-dock,
+.challenge-layout .province-dock {
   position: sticky;
   top: 16px;
   display: flex;
@@ -645,6 +642,10 @@ h1 span {
   flex-direction: column;
   align-self: start;
   margin-top: 0;
+}
+
+.challenge-layout.is-national .province-dock {
+  height: min(782px, calc(100vh - 32px));
 }
 
 .challenge-layout .answer-dock .dock-heading {
@@ -669,6 +670,20 @@ h1 span {
   align-content: start;
   scrollbar-color: #c7bba7 transparent;
   scrollbar-width: thin;
+}
+
+.challenge-layout .province-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+  padding: 3px 5px 5px 3px;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-color: #c7bba7 transparent;
+  scrollbar-width: thin;
+}
+
+.challenge-layout .province-chip {
+  min-width: 0;
 }
 
 .challenge-layout .answer-chip {
@@ -875,7 +890,7 @@ footer {
 }
 
 @media (max-width: 1050px) {
-  .challenge-layout:not(.is-national) {
+  .challenge-layout {
     grid-template-columns: minmax(0, 1fr) 310px;
   }
 
@@ -893,11 +908,12 @@ footer {
 }
 
 @media (max-width: 900px) {
-  .challenge-layout:not(.is-national) {
+  .challenge-layout {
     display: block;
   }
 
-  .challenge-layout .answer-dock {
+  .challenge-layout .answer-dock,
+  .challenge-layout .province-dock {
     position: static;
     display: block;
     height: auto;
@@ -915,6 +931,12 @@ footer {
 
   .challenge-layout .answer-grid {
     display: flex;
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .challenge-layout .province-grid {
     max-height: none;
     padding: 0;
     overflow: visible;
@@ -963,7 +985,7 @@ footer {
   }
 
   h1 {
-    font-size: clamp(35px, 11vw, 54px);
+    font-size: clamp(30px, 9vw, 44px);
   }
 
   .legend-card {

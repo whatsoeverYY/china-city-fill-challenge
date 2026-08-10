@@ -781,10 +781,7 @@ export default function CityGame() {
             })}
           </div>
         </section>
-      ) : null}
-      </div>
-
-      {!province ? (
+      ) : (
         <section className="province-dock" aria-labelledby="province-title">
           <div className="dock-heading">
             <div>
@@ -820,7 +817,8 @@ export default function CityGame() {
             <div className="all-complete-note">全国 34 个省级行政区已全部点亮，太厉害了！</div>
           ) : null}
         </section>
-      ) : null}
+      )}
+      </div>
 
       <footer>
         <span>一张地图，497 个待归位的名字</span>
