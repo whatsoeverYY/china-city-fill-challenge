@@ -22,6 +22,7 @@ type MapFeature = {
     adcode?: string | number;
     center?: Position;
     centroid?: Position;
+    provinceCode?: string;
   };
   geometry: Geometry;
 };
@@ -104,6 +105,45 @@ const MAP_WIDTH = 920;
 const MAP_HEIGHT = 600;
 const STORAGE_KEY = "china-city-fill-progress-v1";
 const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
+const NEIGHBOR_MODE_KEY = "china-city-fill-neighbor-mode-v1";
+const NEIGHBOR_PROGRESS_KEY = "china-city-fill-neighbor-progress-v1";
+
+const PROVINCE_NEIGHBORS: Record<string, string[]> = {
+  "110000": ["120000", "130000"],
+  "120000": ["110000", "130000"],
+  "130000": ["110000", "120000", "140000", "150000", "210000", "370000", "410000"],
+  "140000": ["130000", "150000", "410000", "610000"],
+  "150000": ["130000", "140000", "210000", "220000", "230000", "610000", "620000", "640000"],
+  "210000": ["130000", "150000", "220000"],
+  "220000": ["150000", "210000", "230000"],
+  "230000": ["150000", "220000"],
+  "310000": ["320000", "330000"],
+  "320000": ["310000", "330000", "340000", "370000"],
+  "330000": ["310000", "320000", "340000", "350000", "360000"],
+  "340000": ["320000", "330000", "360000", "370000", "410000", "420000"],
+  "350000": ["330000", "360000", "440000"],
+  "360000": ["330000", "340000", "350000", "420000", "430000", "440000"],
+  "370000": ["130000", "320000", "340000", "410000"],
+  "410000": ["130000", "140000", "340000", "370000", "420000", "610000"],
+  "420000": ["340000", "360000", "410000", "430000", "500000", "610000"],
+  "430000": ["360000", "420000", "440000", "450000", "500000", "520000"],
+  "440000": ["350000", "360000", "430000", "450000", "810000", "820000"],
+  "450000": ["430000", "440000", "520000", "530000"],
+  "460000": [],
+  "500000": ["420000", "430000", "510000", "520000", "610000"],
+  "510000": ["500000", "520000", "530000", "540000", "610000", "620000", "630000"],
+  "520000": ["430000", "450000", "500000", "510000", "530000"],
+  "530000": ["450000", "510000", "520000", "540000"],
+  "540000": ["510000", "530000", "630000", "650000"],
+  "610000": ["140000", "150000", "410000", "420000", "500000", "510000", "620000", "640000"],
+  "620000": ["150000", "510000", "610000", "630000", "640000", "650000"],
+  "630000": ["510000", "540000", "620000", "650000"],
+  "640000": ["150000", "610000", "620000"],
+  "650000": ["540000", "620000", "630000"],
+  "710000": [],
+  "810000": ["440000"],
+  "820000": ["440000"],
+};
 
 function compactName(value: string) {
   return value.trim().replace(/\s+/g, "").replace(/臺/g, "台");
@@ -171,6 +211,57 @@ function useMapData(code: string) {
       cancelled = true;
     };
   }, [code]);
+
+  return { data, error };
+}
+
+function useMapCollection(codes: string[]) {
+  const [data, setData] = useState<MapData | null>(null);
+  const [error, setError] = useState(false);
+  const codeKey = codes.join(",");
+
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    setError(false);
+
+    if (!codeKey) return () => {
+      cancelled = true;
+    };
+
+    const requestedCodes = codeKey.split(",");
+    Promise.all(
+      requestedCodes.map((code) =>
+        fetch(`/data/maps/${code}.json`).then((response) => {
+          if (!response.ok) throw new Error("地图载入失败");
+          return response.json() as Promise<MapData>;
+        }),
+      ),
+    )
+      .then((maps) => {
+        if (cancelled) return;
+        setData({
+          type: "FeatureCollection",
+          features: maps.flatMap((map, index) => {
+            const code = requestedCodes[index];
+            return normalizeMap(map, code).features.map((feature) => ({
+              ...feature,
+              properties: {
+                ...feature.properties,
+                provinceCode: code,
+              },
+            }));
+          }),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [codeKey]);
 
   return { data, error };
 }
@@ -296,10 +387,12 @@ function MapCanvas({
   completedProvinceCodes,
   selectedAnswer,
   wrongRegion,
-  provinceOutline,
+  provinceOutlines,
   onRegion,
   onHover,
   hideProvinceNames,
+  showAllLabels,
+  joined,
 }: {
   map: MapData;
   mode: "national" | "detail";
@@ -307,10 +400,12 @@ function MapCanvas({
   completedProvinceCodes: Set<string>;
   selectedAnswer: string | null;
   wrongRegion: string | null;
-  provinceOutline?: MapFeature;
+  provinceOutlines: MapFeature[];
   onRegion: (feature: MapFeature, answer?: string) => void;
   onHover: (name: string | null) => void;
   hideProvinceNames: boolean;
+  showAllLabels: boolean;
+  joined: boolean;
 }) {
   const project = useMemo(() => makeProjection(map.features), [map]);
 
@@ -326,7 +421,7 @@ function MapCanvas({
 
   return (
     <svg
-      className={`game-map game-map--${mode}`}
+      className={`game-map game-map--${mode} ${joined ? "is-joined" : ""}`}
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
       aria-label={mode === "national" ? "中国省级行政区地图" : "行政区填充地图"}
@@ -384,28 +479,35 @@ function MapCanvas({
         })}
       </g>
 
-      {mode === "detail" && provinceOutline ? (
-        <path
-          className="province-outline"
-          d={geometryToPath(provinceOutline.geometry, project)}
-          fill="none"
-          fillRule="evenodd"
-          aria-hidden="true"
-        />
-      ) : null}
+      {mode === "detail"
+        ? provinceOutlines.map((outline) => (
+            <path
+              key={`outline-${String(outline.properties.adcode)}`}
+              className="province-outline"
+              d={geometryToPath(outline.geometry, project)}
+              fill="none"
+              fillRule="evenodd"
+              aria-hidden="true"
+            />
+          ))
+        : null}
 
       {mode === "detail"
         ? map.features
-            .filter((feature) => completedNames.has(feature.properties.name))
+            .filter(
+              (feature) =>
+                showAllLabels || completedNames.has(feature.properties.name),
+            )
             .map((feature) => {
               const [x, y] = featureLabelPosition(feature, project);
               const name = feature.properties.name;
+              const isHint = !completedNames.has(name);
               return (
                 <text
-                  key={`label-${name}`}
+                  key={`label-${String(feature.properties.adcode)}-${name}`}
                   x={x}
                   y={y}
-                  className={`region-label ${name.length > 7 ? "is-long" : ""}`}
+                  className={`region-label ${name.length > 7 ? "is-long" : ""} ${isHint ? "is-hint" : ""}`}
                   textAnchor="middle"
                   dominantBaseline="central"
                   aria-hidden="true"
@@ -431,8 +533,13 @@ function LoadingMap() {
 export default function CityGame() {
   const [province, setProvince] = useState<Province | null>(null);
   const [hardMode, setHardMode] = useState(false);
+  const [neighborMode, setNeighborMode] = useState(false);
+  const [showAllCityNames, setShowAllCityNames] = useState(false);
   const [completedNames, setCompletedNames] = useState<Set<string>>(new Set());
   const [completedProvinceCodes, setCompletedProvinceCodes] = useState<Set<string>>(
+    new Set(),
+  );
+  const [completedNeighborCodes, setCompletedNeighborCodes] = useState<Set<string>>(
     new Set(),
   );
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -451,6 +558,7 @@ export default function CityGame() {
     y: number;
   } | null>(null);
   const progressRef = useRef<Record<string, string[]>>({});
+  const neighborProgressRef = useRef<Record<string, string[]>>({});
   const touchDragRef = useRef<{
     name: string;
     startX: number;
@@ -458,9 +566,20 @@ export default function CityGame() {
   } | null>(null);
 
   const { data: nationalMap, error: nationalError } = useMapData("100000");
-  const { data: detailMap, error: detailError } = useMapData(
-    province?.code ?? "100000",
+  const challengeProvinces = useMemo(() => {
+    if (!province) return [];
+    const codes = neighborMode
+      ? [province.code, ...(PROVINCE_NEIGHBORS[province.code] ?? [])]
+      : [province.code];
+    return codes
+      .map((code) => PROVINCES.find((item) => item.code === code))
+      .filter((item): item is Province => Boolean(item));
+  }, [neighborMode, province]);
+  const challengeCodes = useMemo(
+    () => challengeProvinces.map((item) => item.code),
+    [challengeProvinces],
   );
+  const { data: detailMap, error: detailError } = useMapCollection(challengeCodes);
 
   useEffect(() => {
     try {
@@ -470,9 +589,17 @@ export default function CityGame() {
       >;
       progressRef.current = saved;
       const savedHardMode = localStorage.getItem(HARD_MODE_KEY) === "true";
+      const savedNeighborMode = localStorage.getItem(NEIGHBOR_MODE_KEY) === "true";
+      const savedNeighborProgress = JSON.parse(
+        localStorage.getItem(NEIGHBOR_PROGRESS_KEY) ?? "{}",
+      ) as Record<string, string[]>;
+      neighborProgressRef.current = savedNeighborProgress;
       setHardMode(savedHardMode);
+      setNeighborMode(savedNeighborMode);
       if (savedHardMode) {
         setMessage("难度提升：点击省级行政区并输入名称解锁");
+      } else if (savedNeighborMode) {
+        setMessage("邻省连城：选择一个省份，联动它的所有接壤省份");
       }
       setCompletedProvinceCodes(
         new Set(
@@ -481,8 +608,18 @@ export default function CityGame() {
           ).map((item) => item.code),
         ),
       );
+      setCompletedNeighborCodes(
+        new Set(
+          PROVINCES.filter(
+            (item) =>
+              savedNeighborProgress[item.code]?.length &&
+              savedNeighborProgress[item.code][0] === "__complete__",
+          ).map((item) => item.code),
+        ),
+      );
     } catch {
       progressRef.current = {};
+      neighborProgressRef.current = {};
     }
   }, []);
 
@@ -492,21 +629,33 @@ export default function CityGame() {
   );
 
   const shuffledAnswers = useMemo(
-    () => deterministicShuffle(answerNames, province?.code ?? "1"),
-    [answerNames, province?.code],
+    () =>
+      deterministicShuffle(
+        answerNames,
+        `${province?.code ?? "1"}${neighborMode ? "7" : ""}`,
+      ),
+    [answerNames, neighborMode, province?.code],
   );
 
-  const isProvinceComplete =
+  const isChallengeComplete =
     Boolean(province) &&
     answerNames.length > 0 &&
     completedNames.size === answerNames.length;
 
+  const activeCompletedProvinceCodes = neighborMode
+    ? completedNeighborCodes
+    : completedProvinceCodes;
+
   const saveProgress = useCallback(
-    (code: string, names: Set<string>, complete: boolean) => {
-      progressRef.current[code] = complete
+    (code: string, names: Set<string>, complete: boolean, joined: boolean) => {
+      const progress = joined ? neighborProgressRef.current : progressRef.current;
+      progress[code] = complete
         ? ["__complete__", ...Array.from(names)]
         : Array.from(names);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
+      localStorage.setItem(
+        joined ? NEIGHBOR_PROGRESS_KEY : STORAGE_KEY,
+        JSON.stringify(progress),
+      );
     },
     [],
   );
@@ -514,23 +663,30 @@ export default function CityGame() {
   const enterProvince = useCallback(
     (nextProvince: Province) => {
       setProvince(nextProvince);
-      const saved = progressRef.current[nextProvince.code] ?? [];
+      const saved = (
+        neighborMode ? neighborProgressRef.current : progressRef.current
+      )[nextProvince.code] ?? [];
       setCompletedNames(new Set(saved.filter((name) => name !== "__complete__")));
       setSelectedAnswer(null);
       setHoveredName(null);
       setWrongRegion(null);
+      setShowAllCityNames(false);
       setAttempts(0);
       setMistakes(0);
       setMessage(
         hardMode
-          ? "难度提升：点击地图区块并输入名称"
+          ? neighborMode
+            ? "邻省连城：点击联合地图区块并输入名称"
+            : "难度提升：点击地图区块并输入名称"
+          : neighborMode
+          ? `把${nextProvince.shortName}及所有邻省的城市名称送回正确位置`
           : nextProvince.kind === "直辖市"
           ? `把区县名称放到${nextProvince.shortName}地图上的正确位置`
           : `把行政区名称放到${nextProvince.shortName}地图上的正确位置`,
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [hardMode],
+    [hardMode, neighborMode],
   );
 
   useEffect(() => {
@@ -571,15 +727,28 @@ export default function CityGame() {
       setSelectedAnswer(null);
       setMessage(
         complete
-          ? `${province.name}全部完成！`
+          ? neighborMode
+            ? `${province.shortName}邻省连城挑战全部完成！`
+            : `${province.name}全部完成！`
           : `正确！${regionName}已填入地图`,
       );
-      saveProgress(province.code, next, complete);
+      saveProgress(province.code, next, complete, neighborMode);
       if (complete) {
-        setCompletedProvinceCodes((current) => new Set(current).add(province.code));
+        if (neighborMode) {
+          setCompletedNeighborCodes((current) => new Set(current).add(province.code));
+        } else {
+          setCompletedProvinceCodes((current) => new Set(current).add(province.code));
+        }
       }
     },
-    [completedNames, detailMap, province, saveProgress, selectedAnswer],
+    [
+      completedNames,
+      detailMap,
+      neighborMode,
+      province,
+      saveProgress,
+      selectedAnswer,
+    ],
   );
 
   const handleMapRegion = (feature: MapFeature, draggedAnswer?: string) => {
@@ -654,28 +823,76 @@ export default function CityGame() {
     setMessage(
       next
         ? province
-          ? "难度提升：点击地图区块并输入名称"
+          ? neighborMode
+            ? "邻省连城：点击联合地图区块并输入名称"
+            : "难度提升：点击地图区块并输入名称"
           : "难度提升：点击省级行政区并输入名称解锁"
         : province
-          ? "名称提示已恢复，可以拖拽或点选作答"
-          : "省份名称已恢复，选择一个省级行政区开始挑战",
+          ? neighborMode
+            ? "名称卡片已恢复，完成整片联合区域吧"
+            : "名称提示已恢复，可以拖拽或点选作答"
+          : neighborMode
+            ? "邻省连城：选择一个省份，联动它的所有接壤省份"
+            : "省份名称已恢复，选择一个省级行政区开始挑战",
     );
+  };
+
+  const toggleNeighborMode = () => {
+    const next = !neighborMode;
+    setNeighborMode(next);
+    localStorage.setItem(NEIGHBOR_MODE_KEY, String(next));
+    setProvince(null);
+    setCompletedNames(new Set());
+    setSelectedAnswer(null);
+    setHoveredName(null);
+    setPendingFeature(null);
+    setManualAnswer("");
+    setManualError("");
+    setShowAllCityNames(false);
+    setAttempts(0);
+    setMistakes(0);
+    setMessage(
+      hardMode
+        ? "点击省级行政区并输入名称解锁"
+        : next
+          ? "邻省连城：选择一个省份，联动它的所有接壤省份"
+          : "请选择一个省级行政区开始挑战",
+    );
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const resetProvince = () => {
     if (!province) return;
     setCompletedNames(new Set());
-    setCompletedProvinceCodes((current) => {
-      const next = new Set(current);
-      next.delete(province.code);
-      return next;
-    });
-    progressRef.current[province.code] = [];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
+    if (neighborMode) {
+      setCompletedNeighborCodes((current) => {
+        const next = new Set(current);
+        next.delete(province.code);
+        return next;
+      });
+      neighborProgressRef.current[province.code] = [];
+      localStorage.setItem(
+        NEIGHBOR_PROGRESS_KEY,
+        JSON.stringify(neighborProgressRef.current),
+      );
+    } else {
+      setCompletedProvinceCodes((current) => {
+        const next = new Set(current);
+        next.delete(province.code);
+        return next;
+      });
+      progressRef.current[province.code] = [];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
+    }
     setSelectedAnswer(null);
+    setShowAllCityNames(false);
     setAttempts(0);
     setMistakes(0);
-    setMessage(`已重置${province.shortName}，重新开始吧`);
+    setMessage(
+      neighborMode
+        ? `已重置以${province.shortName}为起点的联合挑战`
+        : `已重置${province.shortName}，重新开始吧`,
+    );
   };
 
   const backToNational = () => {
@@ -685,28 +902,35 @@ export default function CityGame() {
     setPendingFeature(null);
     setManualAnswer("");
     setManualError("");
+    setShowAllCityNames(false);
     setMessage(
       hardMode
         ? "点击省级行政区并输入名称解锁"
-        : "请选择一个省级行政区开始挑战",
+        : neighborMode
+          ? "邻省连城：选择一个省份，联动它的所有接壤省份"
+          : "请选择一个省级行政区开始挑战",
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const visibleProvinceList = showAllProvinces
     ? PROVINCES
-    : PROVINCES.filter((item) => !completedProvinceCodes.has(item.code));
+    : PROVINCES.filter((item) => !activeCompletedProvinceCodes.has(item.code));
 
-  const outlineFeature = nationalMap?.features.find(
-    (feature) => provinceForFeature(feature)?.code === province?.code,
-  );
+  const outlineFeatures =
+    nationalMap?.features.filter((feature) => {
+      const featureProvince = provinceForFeature(feature);
+      return Boolean(
+        featureProvince && challengeCodes.includes(featureProvince.code),
+      );
+    }) ?? [];
 
   const mapError = province ? detailError : nationalError;
   const activeMap = province ? detailMap : nationalMap;
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
 
   return (
-    <main className={`game-shell ${hardMode ? "is-hard-mode" : ""}`}>
+    <main className={`game-shell ${hardMode ? "is-hard-mode" : ""} ${neighborMode ? "is-neighbor-mode" : ""}`}>
       <header className="site-header">
         <button className="brand" type="button" onClick={backToNational}>
           <span className="brand-seal" aria-hidden="true">城</span>
@@ -717,6 +941,16 @@ export default function CityGame() {
         </button>
         <div className="header-actions">
           <button
+            className={`neighbor-mode-button ${neighborMode ? "is-active" : ""}`}
+            type="button"
+            aria-pressed={neighborMode}
+            onClick={toggleNeighborMode}
+          >
+            <span aria-hidden="true">联</span>
+            邻省连城
+            {neighborMode ? <i>已开启</i> : null}
+          </button>
+          <button
             className={`difficulty-button ${hardMode ? "is-active" : ""}`}
             type="button"
             aria-pressed={hardMode}
@@ -726,11 +960,11 @@ export default function CityGame() {
             难度提升
             {hardMode ? <i>已开启</i> : null}
           </button>
-          <div className="national-progress" aria-label={`已完成 ${completedProvinceCodes.size} 个省级行政区`}>
-            <span>全国进度</span>
-            <strong>{completedProvinceCodes.size}<i>/34</i></strong>
+          <div className="national-progress" aria-label={`已完成 ${activeCompletedProvinceCodes.size} 个挑战`}>
+            <span>{neighborMode ? "联挑战进度" : "全国进度"}</span>
+            <strong>{activeCompletedProvinceCodes.size}<i>/34</i></strong>
             <div className="progress-track" aria-hidden="true">
-              <span style={{ width: `${(completedProvinceCodes.size / 34) * 100}%` }} />
+              <span style={{ width: `${(activeCompletedProvinceCodes.size / 34) * 100}%` }} />
             </div>
           </div>
         </div>
@@ -741,23 +975,31 @@ export default function CityGame() {
           <p className="eyebrow">拖动 · 辨认 · 探索</p>
           <h1>
             {province ? (
-              <>
-                <span>{province.shortName}</span>，你认识多少座城？
-              </>
+              neighborMode ? (
+                <><span>{province.shortName}</span>与邻省，连城共答</>
+              ) : (
+                <><span>{province.shortName}</span>，你认识多少座城？</>
+              )
             ) : (
-              <>从一省出发，拼出整幅中国城市地图</>
+              neighborMode
+                ? <>选一省，连起它周围的每一座城</>
+                : <>从一省出发，拼出整幅中国城市地图</>
             )}
           </h1>
           <p className="lede">
             {province
-              ? hardMode
+              ? neighborMode
+                ? `当前联合区域包含 ${challengeProvinces.map((item) => item.shortName).join("、")}，共 ${answerNames.length || "…"} 个城市或区县。${hardMode ? "点击区块并手动输入名称。" : "拖拽或点选名称完成整片区域。"}`
+                : hardMode
                 ? `点击地图中的任一区块，手动输入它的名称。完成 ${province.name} 的全部 ${answerNames.length || "…"} 个区域即可点亮印章。`
                 : province.kind === "直辖市"
                 ? `将下方的区县名称拖到地图中。完成 ${province.name} 的全部 ${answerNames.length || "…"} 个区县即可点亮印章。`
                 : `将下方的行政区名称拖到地图中。完成 ${province.name} 的全部 ${answerNames.length || "…"} 个区域即可点亮印章。`
               : hardMode
                 ? "省份名称已隐藏。点击地图中的省级行政区，手动输入名称，回答正确后才能解锁省内挑战。"
-                : "点击地图或省份名进入挑战。红色标出省级边界，进入省内后，绿色标出地市或区县边界。"}
+                : neighborMode
+                  ? "点击任一省份，把它和所有陆地接壤省份展开成联合地图，一次填完区域内全部城市。"
+                  : "点击地图或省份名进入挑战。红色标出省级边界，进入省内后，绿色标出地市或区县边界。"}
           </p>
         </div>
         <div className="legend-card" aria-label="地图图例">
@@ -767,16 +1009,16 @@ export default function CityGame() {
         </div>
       </section>
 
-      {isProvinceComplete && province ? (
+      {isChallengeComplete && province ? (
         <section className="success-banner" aria-live="polite">
           <span className="success-kicker">挑战达成</span>
-          <strong>{province.name}</strong>
+          <strong>{neighborMode ? `${province.shortName}邻省连城` : province.name}</strong>
           <span className="success-icon" aria-label="成功">✓</span>
           <p>这片区域的每一个名字，都已回到正确的位置。</p>
         </section>
       ) : null}
 
-      <div className={`challenge-layout ${province ? "" : "is-national"}`}>
+      <div className={`challenge-layout ${province ? "" : "is-national"} ${neighborMode ? "is-joined" : ""}`}>
       <section className="map-card">
         <div className="map-toolbar">
           <div>
@@ -786,12 +1028,16 @@ export default function CityGame() {
               </button>
             ) : (
               <span className="map-step">
-                {hardMode ? "第一步 · 辨认并解锁省份" : "第一步 · 选择省级行政区"}
+                {hardMode
+                  ? "第一步 · 辨认并解锁省份"
+                  : neighborMode
+                    ? "第一步 · 选择联合区域的起点"
+                    : "第一步 · 选择省级行政区"}
               </span>
             )}
           </div>
           <div className="map-status" aria-live="polite">
-            <span className={`status-dot ${isProvinceComplete ? "is-complete" : ""}`} />
+            <span className={`status-dot ${isChallengeComplete ? "is-complete" : ""}`} />
             {hoveredName && !province && !hardMode
               ? hoveredName
               : hoveredName && completedNames.has(hoveredName)
@@ -799,13 +1045,38 @@ export default function CityGame() {
                 : message}
           </div>
           {province ? (
-            <button className="reset-button" type="button" onClick={resetProvince}>
-              重新挑战
-            </button>
+            <div className="map-actions">
+              {neighborMode ? (
+                <button
+                  className={`reveal-cities-button ${showAllCityNames ? "is-active" : ""}`}
+                  type="button"
+                  aria-pressed={showAllCityNames}
+                  onClick={() => setShowAllCityNames((value) => !value)}
+                >
+                  {showAllCityNames ? "隐藏全部城市" : "显示全部城市"}
+                </button>
+              ) : null}
+              <button className="reset-button" type="button" onClick={resetProvince}>
+                重新挑战
+              </button>
+            </div>
           ) : (
-            <span className="map-total">34 个省级行政区</span>
+            <span className="map-total">
+              {neighborMode ? "选择一省 · 联动接壤省份" : "34 个省级行政区"}
+            </span>
           )}
         </div>
+
+        {province && neighborMode ? (
+          <div className="joined-province-strip" aria-label="本轮联合区域">
+            <strong>本轮区域</strong>
+            {challengeProvinces.map((item, index) => (
+              <span key={item.code} className={index === 0 ? "is-origin" : ""}>
+                {item.shortName}{index === 0 ? <i>起点</i> : null}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         <div className="map-stage">
           <div className="map-corner map-corner--top" aria-hidden="true" />
@@ -820,13 +1091,15 @@ export default function CityGame() {
               map={activeMap}
               mode={province ? "detail" : "national"}
               completedNames={completedNames}
-              completedProvinceCodes={completedProvinceCodes}
+              completedProvinceCodes={activeCompletedProvinceCodes}
               selectedAnswer={selectedAnswer}
               wrongRegion={wrongRegion}
-              provinceOutline={outlineFeature}
+              provinceOutlines={outlineFeatures}
               onRegion={handleMapRegion}
               onHover={setHoveredName}
               hideProvinceNames={hardMode}
+              showAllLabels={showAllCityNames}
+              joined={neighborMode && Boolean(province)}
             />
           ) : (
             <LoadingMap />
@@ -847,14 +1120,18 @@ export default function CityGame() {
           <section className="answer-dock hard-mode-dock" aria-labelledby="hard-city-title">
             <div className="dock-heading">
               <div>
-                <p className="eyebrow">无提示模式</p>
+                <p className="eyebrow">{neighborMode ? "邻省连城 · 无提示" : "无提示模式"}</p>
                 <h2 id="hard-city-title">点区块，写名称</h2>
               </div>
             </div>
             <div className="hard-mode-card">
               <span className="hard-mode-mark" aria-hidden="true">?</span>
               <strong>城市名称已全部隐藏</strong>
-              <p>从地图中挑选一个尚未填充的区块，输入它的城市、地区或区县名称。</p>
+              <p>
+                {neighborMode
+                  ? `从 ${challengeProvinces.length} 个省级行政区的联合地图中挑选区块，输入城市、地区或区县名称。`
+                  : "从地图中挑选一个尚未填充的区块，输入它的城市、地区或区县名称。"}
+              </p>
               <ol>
                 <li><i>1</i> 点击地图区块</li>
                 <li><i>2</i> 手动输入名称</li>
@@ -869,9 +1146,9 @@ export default function CityGame() {
         ) : (
         <section className="answer-dock" aria-labelledby="answer-title">
           <div className="dock-heading">
-            <div>
-              <p className="eyebrow">名称卡片</p>
-              <h2 id="answer-title">把名字送回地图</h2>
+              <div>
+              <p className="eyebrow">{neighborMode ? `${challengeProvinces.length} 省连城` : "名称卡片"}</p>
+              <h2 id="answer-title">{neighborMode ? "让群城各归其位" : "把名字送回地图"}</h2>
             </div>
             <p><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
           </div>
@@ -954,16 +1231,19 @@ export default function CityGame() {
             <div className="hard-mode-card">
               <span className="hard-mode-mark" aria-hidden="true">?</span>
               <strong>省份名称已全部隐藏</strong>
-              <p>点击全国地图中的任一区块，输入省份名称。回答正确后进入该省挑战。</p>
+              <p>
+                点击全国地图中的任一区块，输入省份名称。回答正确后
+                {neighborMode ? "展开它与接壤省份的联合挑战" : "进入该省挑战"}。
+              </p>
             </div>
-            <div className="blind-progress" aria-label={`已完成 ${completedProvinceCodes.size} 个省级行政区`}>
+            <div className="blind-progress" aria-label={`已完成 ${activeCompletedProvinceCodes.size} 个挑战`}>
               {PROVINCES.map((item, index) => (
                 <span
                   key={item.code}
-                  className={completedProvinceCodes.has(item.code) ? "is-complete" : ""}
-                  aria-label={`进度位 ${index + 1}${completedProvinceCodes.has(item.code) ? "，已完成" : "，未完成"}`}
+                  className={activeCompletedProvinceCodes.has(item.code) ? "is-complete" : ""}
+                  aria-label={`进度位 ${index + 1}${activeCompletedProvinceCodes.has(item.code) ? "，已完成" : "，未完成"}`}
                 >
-                  {completedProvinceCodes.has(item.code) ? "✓" : index + 1}
+                  {activeCompletedProvinceCodes.has(item.code) ? "✓" : index + 1}
                 </span>
               ))}
             </div>
@@ -973,7 +1253,7 @@ export default function CityGame() {
           <div className="dock-heading">
             <div>
               <p className="eyebrow">34 个省级行政区</p>
-              <h2 id="province-title">也可以从名称进入</h2>
+              <h2 id="province-title">{neighborMode ? "选择连城起点" : "也可以从名称进入"}</h2>
             </div>
             <button
               className="text-button"
@@ -985,7 +1265,7 @@ export default function CityGame() {
           </div>
           <div className="province-grid">
             {visibleProvinceList.map((item, index) => {
-              const complete = completedProvinceCodes.has(item.code);
+              const complete = activeCompletedProvinceCodes.has(item.code);
               return (
                 <button
                   key={item.code}
@@ -1001,7 +1281,11 @@ export default function CityGame() {
             })}
           </div>
           {visibleProvinceList.length === 0 ? (
-            <div className="all-complete-note">全国 34 个省级行政区已全部点亮，太厉害了！</div>
+            <div className="all-complete-note">
+              {neighborMode
+                ? "34 个邻省连城起点已全部完成，太厉害了！"
+                : "全国 34 个省级行政区已全部点亮，太厉害了！"}
+            </div>
           ) : null}
         </section>
         )

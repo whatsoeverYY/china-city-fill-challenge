@@ -90,6 +90,58 @@ button:focus-visible,
   transition: color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
+.neighbor-mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 12px;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.72);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.neighbor-mode-button:hover {
+  transform: translateY(-1px);
+}
+
+.neighbor-mode-button > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: white;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: "Songti SC", STSong, serif;
+  font-size: 11px;
+}
+
+.neighbor-mode-button i {
+  padding-left: 7px;
+  border-left: 1px solid rgba(255, 255, 255, 0.32);
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.neighbor-mode-button.is-active {
+  color: #f4fff9;
+  border-color: var(--green-dark);
+  background: var(--green-dark);
+}
+
+.neighbor-mode-button.is-active > span {
+  color: var(--green-dark);
+  background: #f4fff9;
+}
+
 .difficulty-button:hover {
   transform: translateY(-1px);
 }
@@ -449,6 +501,81 @@ h1 span {
   justify-self: end;
 }
 
+.map-actions {
+  display: flex;
+  justify-self: end;
+  align-items: center;
+  gap: 12px;
+}
+
+.reveal-cities-button {
+  min-height: 32px;
+  padding: 6px 10px;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.28);
+  border-radius: 999px;
+  background: #f6fbf5;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.reveal-cities-button.is-active {
+  color: white;
+  border-color: var(--green-dark);
+  background: var(--green-dark);
+}
+
+.joined-province-strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 48px;
+  padding: 8px 22px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  background: #f4f0e5;
+  scrollbar-width: thin;
+}
+
+.joined-province-strip > strong {
+  margin-right: 4px;
+  color: #727970;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.joined-province-strip > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  color: #4f5b53;
+  border: 1px solid #d1c8b8;
+  border-radius: 999px;
+  background: #fffdf8;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.joined-province-strip > span.is-origin {
+  color: var(--red-dark);
+  border-color: rgba(180, 59, 50, 0.34);
+  background: #fff4e9;
+}
+
+.joined-province-strip i {
+  padding: 2px 4px;
+  color: white;
+  border-radius: 999px;
+  background: var(--red);
+  font-size: 8px;
+  font-style: normal;
+}
+
 .reset-button {
   color: #777e78;
   font-size: 11px;
@@ -595,6 +722,24 @@ h1 span {
 
 .region-label.is-long {
   font-size: 10px;
+}
+
+.region-label.is-hint {
+  fill: #7e5d39;
+  opacity: 0.78;
+}
+
+.game-map.is-joined .region-label {
+  font-size: 8px;
+  stroke-width: 2.6px;
+}
+
+.game-map.is-joined .region-label.is-long {
+  font-size: 6.5px;
+}
+
+.game-map.is-joined .province-outline {
+  stroke-width: 2.1;
 }
 
 @keyframes wrong-region {
@@ -1281,6 +1426,12 @@ footer {
     padding-top: 13px;
     border-top: 1px solid var(--line);
     justify-content: space-between;
+    gap: 10px;
+  }
+
+  .neighbor-mode-button,
+  .difficulty-button {
+    padding-inline: 10px;
   }
 
   .brand strong {
@@ -1353,6 +1504,18 @@ footer {
   .map-toolbar > div:first-child,
   .map-toolbar > .map-step {
     min-height: 50px;
+  }
+
+  .map-actions {
+    gap: 7px;
+  }
+
+  .reveal-cities-button {
+    padding-inline: 8px;
+  }
+
+  .joined-province-strip {
+    padding-inline: 14px;
   }
 
   .map-stage {
@@ -1430,7 +1593,20 @@ footer {
   }
 
   .national-progress {
-    width: 112px;
+    width: 78px;
+  }
+
+  .neighbor-mode-button,
+  .difficulty-button {
+    gap: 5px;
+    padding-inline: 8px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .neighbor-mode-button i,
+  .difficulty-button i {
+    display: none;
   }
 
   .national-progress > span {
@@ -1454,6 +1630,12 @@ footer {
 
   .map-stage {
     min-height: 330px;
+  }
+
+  .reveal-cities-button {
+    max-width: 76px;
+    line-height: 1.25;
+    white-space: normal;
   }
 
   .game-map {
