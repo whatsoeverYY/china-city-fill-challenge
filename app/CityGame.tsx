@@ -145,16 +145,16 @@ const PROVINCE_NEIGHBORS: Record<string, string[]> = {
   "820000": ["440000"],
 };
 
-const PROVINCE_OUTLINE_COLORS = [
-  "#b43b32",
-  "#355c9a",
-  "#7b4fa3",
-  "#d47a24",
-  "#a73d72",
-  "#6b4e2e",
-  "#4f4b8f",
-  "#c05252",
-  "#8a5a9b",
+const PROVINCE_FILL_COLORS = [
+  "#f6d8d4",
+  "#dbe6f7",
+  "#e8def5",
+  "#f8e5c9",
+  "#f2dce8",
+  "#eadfce",
+  "#dfe1f4",
+  "#f3d9cf",
+  "#eee0ef",
 ];
 
 function compactName(value: string) {
@@ -400,7 +400,7 @@ function MapCanvas({
   selectedAnswer,
   wrongRegion,
   provinceOutlines,
-  provinceOutlineColors,
+  provinceFillColors,
   onRegion,
   onHover,
   hideProvinceNames,
@@ -414,7 +414,7 @@ function MapCanvas({
   selectedAnswer: string | null;
   wrongRegion: string | null;
   provinceOutlines: MapFeature[];
-  provinceOutlineColors: Record<string, string>;
+  provinceFillColors: Record<string, string>;
   onRegion: (feature: MapFeature, answer?: string) => void;
   onHover: (name: string | null) => void;
   hideProvinceNames: boolean;
@@ -456,17 +456,26 @@ function MapCanvas({
               ? Boolean(province && completedProvinceCodes.has(province.code))
               : completedNames.has(feature.properties.name);
           const path = geometryToPath(feature.geometry, project);
+          const provinceFill =
+            joined && showAllLabels
+              ? provinceFillColors[feature.properties.provinceCode ?? ""]
+              : undefined;
           return (
             <path
               key={`${feature.properties.name}-${String(feature.properties.adcode)}`}
               d={path}
-              className={`map-region ${isComplete ? "is-complete" : ""} ${
+              className={`map-region ${isComplete ? "is-complete" : ""} ${provinceFill ? "is-province-tinted" : ""} ${
                 wrongRegion === feature.properties.name ? "is-wrong" : ""
               } ${selectedAnswer && mode === "detail" ? "is-targetable" : ""}`}
               data-region-name={feature.properties.name}
               fillRule="evenodd"
               role="button"
               tabIndex={0}
+              style={
+                provinceFill
+                  ? ({ "--province-fill": provinceFill } as React.CSSProperties)
+                  : undefined
+              }
               aria-label={
                 mode === "national"
                   ? hideProvinceNames
@@ -494,25 +503,16 @@ function MapCanvas({
       </g>
 
       {mode === "detail"
-        ? provinceOutlines.map((outline) => {
-            const code = String(outline.properties.adcode ?? "");
-            const colorCoded = joined && showAllLabels;
-            return (
-              <path
-                key={`outline-${code}`}
-                className={`province-outline ${colorCoded ? "is-color-coded" : ""}`}
-                d={geometryToPath(outline.geometry, project)}
-                fill="none"
-                fillRule="evenodd"
-                aria-hidden="true"
-                style={
-                  colorCoded
-                    ? { stroke: provinceOutlineColors[code] }
-                    : undefined
-                }
-              />
-            );
-          })
+        ? provinceOutlines.map((outline) => (
+            <path
+              key={`outline-${String(outline.properties.adcode ?? "")}`}
+              className="province-outline"
+              d={geometryToPath(outline.geometry, project)}
+              fill="none"
+              fillRule="evenodd"
+              aria-hidden="true"
+            />
+          ))
         : null}
 
       {mode === "detail"
@@ -947,12 +947,12 @@ export default function CityGame() {
         featureProvince && challengeCodes.includes(featureProvince.code),
       );
     }) ?? [];
-  const provinceOutlineColors = useMemo(
+  const provinceFillColors = useMemo(
     () =>
       Object.fromEntries(
         challengeProvinces.map((item, index) => [
           item.code,
-          PROVINCE_OUTLINE_COLORS[index % PROVINCE_OUTLINE_COLORS.length],
+          PROVINCE_FILL_COLORS[index % PROVINCE_FILL_COLORS.length],
         ]),
       ),
     [challengeProvinces],
@@ -1036,14 +1036,7 @@ export default function CityGame() {
           </p>
         </div>
         <div className="legend-card" aria-label="地图图例">
-          <p>
-            <span
-              className={`legend-line ${neighborMode && province && showAllCityNames ? "legend-line--multi" : "legend-line--red"}`}
-            />
-            {neighborMode && province && showAllCityNames
-              ? "各省边界（分色）"
-              : "省级边界"}
-          </p>
+          <p><span className="legend-line legend-line--red" />省级边界</p>
           <p><span className="legend-line legend-line--green" />地市 / 区县边界</p>
           <p><span className="legend-fill" />已正确填入</p>
         </div>
@@ -1115,7 +1108,7 @@ export default function CityGame() {
                 {showAllCityNames ? (
                   <b
                     className="province-color-dot"
-                    style={{ backgroundColor: provinceOutlineColors[item.code] }}
+                    style={{ backgroundColor: provinceFillColors[item.code] }}
                     aria-hidden="true"
                   />
                 ) : null}
@@ -1142,7 +1135,7 @@ export default function CityGame() {
               selectedAnswer={selectedAnswer}
               wrongRegion={wrongRegion}
               provinceOutlines={outlineFeatures}
-              provinceOutlineColors={provinceOutlineColors}
+              provinceFillColors={provinceFillColors}
               onRegion={handleMapRegion}
               onHover={setHoveredName}
               hideProvinceNames={hardMode}
