@@ -145,6 +145,18 @@ const PROVINCE_NEIGHBORS: Record<string, string[]> = {
   "820000": ["440000"],
 };
 
+const PROVINCE_OUTLINE_COLORS = [
+  "#b43b32",
+  "#355c9a",
+  "#7b4fa3",
+  "#d47a24",
+  "#a73d72",
+  "#6b4e2e",
+  "#4f4b8f",
+  "#c05252",
+  "#8a5a9b",
+];
+
 function compactName(value: string) {
   return value.trim().replace(/\s+/g, "").replace(/臺/g, "台");
 }
@@ -388,6 +400,7 @@ function MapCanvas({
   selectedAnswer,
   wrongRegion,
   provinceOutlines,
+  provinceOutlineColors,
   onRegion,
   onHover,
   hideProvinceNames,
@@ -401,6 +414,7 @@ function MapCanvas({
   selectedAnswer: string | null;
   wrongRegion: string | null;
   provinceOutlines: MapFeature[];
+  provinceOutlineColors: Record<string, string>;
   onRegion: (feature: MapFeature, answer?: string) => void;
   onHover: (name: string | null) => void;
   hideProvinceNames: boolean;
@@ -480,16 +494,25 @@ function MapCanvas({
       </g>
 
       {mode === "detail"
-        ? provinceOutlines.map((outline) => (
-            <path
-              key={`outline-${String(outline.properties.adcode)}`}
-              className="province-outline"
-              d={geometryToPath(outline.geometry, project)}
-              fill="none"
-              fillRule="evenodd"
-              aria-hidden="true"
-            />
-          ))
+        ? provinceOutlines.map((outline) => {
+            const code = String(outline.properties.adcode ?? "");
+            const colorCoded = joined && showAllLabels;
+            return (
+              <path
+                key={`outline-${code}`}
+                className={`province-outline ${colorCoded ? "is-color-coded" : ""}`}
+                d={geometryToPath(outline.geometry, project)}
+                fill="none"
+                fillRule="evenodd"
+                aria-hidden="true"
+                style={
+                  colorCoded
+                    ? { stroke: provinceOutlineColors[code] }
+                    : undefined
+                }
+              />
+            );
+          })
         : null}
 
       {mode === "detail"
@@ -924,6 +947,16 @@ export default function CityGame() {
         featureProvince && challengeCodes.includes(featureProvince.code),
       );
     }) ?? [];
+  const provinceOutlineColors = useMemo(
+    () =>
+      Object.fromEntries(
+        challengeProvinces.map((item, index) => [
+          item.code,
+          PROVINCE_OUTLINE_COLORS[index % PROVINCE_OUTLINE_COLORS.length],
+        ]),
+      ),
+    [challengeProvinces],
+  );
 
   const mapError = province ? detailError : nationalError;
   const activeMap = province ? detailMap : nationalMap;
@@ -1003,7 +1036,14 @@ export default function CityGame() {
           </p>
         </div>
         <div className="legend-card" aria-label="地图图例">
-          <p><span className="legend-line legend-line--red" />省级边界</p>
+          <p>
+            <span
+              className={`legend-line ${neighborMode && province && showAllCityNames ? "legend-line--multi" : "legend-line--red"}`}
+            />
+            {neighborMode && province && showAllCityNames
+              ? "各省边界（分色）"
+              : "省级边界"}
+          </p>
           <p><span className="legend-line legend-line--green" />地市 / 区县边界</p>
           <p><span className="legend-fill" />已正确填入</p>
         </div>
@@ -1072,6 +1112,13 @@ export default function CityGame() {
             <strong>本轮区域</strong>
             {challengeProvinces.map((item, index) => (
               <span key={item.code} className={index === 0 ? "is-origin" : ""}>
+                {showAllCityNames ? (
+                  <b
+                    className="province-color-dot"
+                    style={{ backgroundColor: provinceOutlineColors[item.code] }}
+                    aria-hidden="true"
+                  />
+                ) : null}
                 {item.shortName}{index === 0 ? <i>起点</i> : null}
               </span>
             ))}
@@ -1095,6 +1142,7 @@ export default function CityGame() {
               selectedAnswer={selectedAnswer}
               wrongRegion={wrongRegion}
               provinceOutlines={outlineFeatures}
+              provinceOutlineColors={provinceOutlineColors}
               onRegion={handleMapRegion}
               onHover={setHoveredName}
               hideProvinceNames={hardMode}

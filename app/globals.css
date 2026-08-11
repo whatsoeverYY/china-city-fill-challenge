@@ -346,6 +346,20 @@ h1 span {
   border-color: var(--green);
 }
 
+.legend-line--multi {
+  height: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #b43b32 0 20%,
+    #355c9a 20% 40%,
+    #7b4fa3 40% 60%,
+    #d47a24 60% 80%,
+    #a73d72 80% 100%
+  );
+}
+
 .legend-fill {
   display: inline-block;
   width: 27px;
@@ -576,6 +590,15 @@ h1 span {
   font-style: normal;
 }
 
+.province-color-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(32, 37, 34, 0.16);
+}
+
 .reset-button {
   color: #777e78;
   font-size: 11px;
@@ -740,6 +763,11 @@ h1 span {
 
 .game-map.is-joined .province-outline {
   stroke-width: 2.1;
+}
+
+.game-map.is-joined .province-outline.is-color-coded {
+  stroke-width: 2.8;
+  filter: drop-shadow(0 0 1px rgba(255, 253, 247, 0.94));
 }
 
 @keyframes wrong-region {

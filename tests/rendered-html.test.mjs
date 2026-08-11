@@ -49,11 +49,13 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /难度提升/);
   assert.match(game, /邻省连城/);
   assert.match(game, /PROVINCE_NEIGHBORS/);
+  assert.match(game, /PROVINCE_OUTLINE_COLORS/);
   assert.match(game, /显示全部城市/);
   assert.match(game, /useMapCollection/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
   assert.match(css, /--red:\s*#b43b32/i);
   assert.match(css, /--green:\s*#2d7d5f/i);
+  assert.match(css, /province-outline\.is-color-coded/);
   assert.match(layout, /lang="zh-CN"/);
 });
