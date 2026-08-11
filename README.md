@@ -42,6 +42,20 @@ npm run build
 node --test tests/rendered-html.test.mjs
 ```
 
+## GitHub Pages 部署
+
+项目已配置 GitHub Actions。推送到 `main` 后，会自动构建纯静态版本并部署到：
+
+<https://whatsoeveryy.github.io/china-city-fill-challenge/>
+
+首次使用时，在仓库的 `Settings → Pages` 中将发布来源设置为 `GitHub Actions`。
+
+本地验证 Pages 构建：
+
+```bash
+npm run test:pages
+```
+
 ## 技术栈
 
 - React 19

@@ -198,6 +198,10 @@ function normalizeMap(data: MapData, code: string): MapData {
   };
 }
 
+function mapDataUrl(code: string) {
+  return new URL(`data/maps/${code}.json`, document.baseURI).toString();
+}
+
 function useMapData(code: string) {
   const [data, setData] = useState<MapData | null>(null);
   const [error, setError] = useState(false);
@@ -207,7 +211,7 @@ function useMapData(code: string) {
     setData(null);
     setError(false);
 
-    fetch(`/data/maps/${code}.json`)
+    fetch(mapDataUrl(code))
       .then((response) => {
         if (!response.ok) throw new Error("地图载入失败");
         return response.json() as Promise<MapData>;
@@ -244,7 +248,7 @@ function useMapCollection(codes: string[]) {
     const requestedCodes = codeKey.split(",");
     Promise.all(
       requestedCodes.map((code) =>
-        fetch(`/data/maps/${code}.json`).then((response) => {
+        fetch(mapDataUrl(code)).then((response) => {
           if (!response.ok) throw new Error("地图载入失败");
           return response.json() as Promise<MapData>;
         }),
