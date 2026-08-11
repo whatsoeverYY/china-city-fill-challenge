@@ -410,6 +410,7 @@ function MapCanvas({
   hideProvinceNames,
   showAllLabels,
   joined,
+  hiddenProvinceCodes,
 }: {
   map: MapData;
   mode: "national" | "detail";
@@ -424,6 +425,7 @@ function MapCanvas({
   hideProvinceNames: boolean;
   showAllLabels: boolean;
   joined: boolean;
+  hiddenProvinceCodes: Set<string>;
 }) {
   const project = useMemo(() => makeProjection(map.features), [map]);
 
@@ -453,7 +455,13 @@ function MapCanvas({
         </pattern>
       </defs>
       <g className="map-shadow-layer" filter="url(#map-shadow)">
-        {map.features.map((feature) => {
+        {map.features
+          .filter(
+            (feature) =>
+              mode === "national" ||
+              !hiddenProvinceCodes.has(feature.properties.provinceCode ?? ""),
+          )
+          .map((feature) => {
           const province = provinceForFeature(feature);
           const isComplete =
             mode === "national"
@@ -503,11 +511,18 @@ function MapCanvas({
               }}
             />
           );
-        })}
+          })}
       </g>
 
       {mode === "detail"
-        ? provinceOutlines.map((outline) => (
+        ? provinceOutlines
+            .filter(
+              (outline) =>
+                !hiddenProvinceCodes.has(
+                  String(outline.properties.adcode ?? ""),
+                ),
+            )
+            .map((outline) => (
             <path
               key={`outline-${String(outline.properties.adcode ?? "")}`}
               className="province-outline"
@@ -516,14 +531,15 @@ function MapCanvas({
               fillRule="evenodd"
               aria-hidden="true"
             />
-          ))
+            ))
         : null}
 
       {mode === "detail"
         ? map.features
             .filter(
               (feature) =>
-                showAllLabels || completedNames.has(feature.properties.name),
+                !hiddenProvinceCodes.has(feature.properties.provinceCode ?? "") &&
+                (showAllLabels || completedNames.has(feature.properties.name)),
             )
             .map((feature) => {
               const [x, y] = featureLabelPosition(feature, project);
@@ -562,6 +578,9 @@ export default function CityGame() {
   const [hardMode, setHardMode] = useState(false);
   const [neighborMode, setNeighborMode] = useState(false);
   const [showAllCityNames, setShowAllCityNames] = useState(false);
+  const [hiddenProvinceCodes, setHiddenProvinceCodes] = useState<Set<string>>(
+    new Set(),
+  );
   const [completedNames, setCompletedNames] = useState<Set<string>>(new Set());
   const [completedProvinceCodes, setCompletedProvinceCodes] = useState<Set<string>>(
     new Set(),
@@ -663,6 +682,23 @@ export default function CityGame() {
       ),
     [answerNames, neighborMode, province?.code],
   );
+  const answerProvinceCodes = useMemo(
+    () =>
+      new Map(
+        detailMap?.features.map((feature) => [
+          feature.properties.name,
+          feature.properties.provinceCode ?? "",
+        ]) ?? [],
+      ),
+    [detailMap],
+  );
+  const visibleShuffledAnswers = useMemo(
+    () =>
+      shuffledAnswers.filter(
+        (name) => !hiddenProvinceCodes.has(answerProvinceCodes.get(name) ?? ""),
+      ),
+    [answerProvinceCodes, hiddenProvinceCodes, shuffledAnswers],
+  );
 
   const isChallengeComplete =
     Boolean(province) &&
@@ -698,6 +734,7 @@ export default function CityGame() {
       setHoveredName(null);
       setWrongRegion(null);
       setShowAllCityNames(false);
+      setHiddenProvinceCodes(new Set());
       setAttempts(0);
       setMistakes(0);
       setMessage(
@@ -876,6 +913,7 @@ export default function CityGame() {
     setManualAnswer("");
     setManualError("");
     setShowAllCityNames(false);
+    setHiddenProvinceCodes(new Set());
     setAttempts(0);
     setMistakes(0);
     setMessage(
@@ -913,6 +951,7 @@ export default function CityGame() {
     }
     setSelectedAnswer(null);
     setShowAllCityNames(false);
+    setHiddenProvinceCodes(new Set());
     setAttempts(0);
     setMistakes(0);
     setMessage(
@@ -930,6 +969,7 @@ export default function CityGame() {
     setManualAnswer("");
     setManualError("");
     setShowAllCityNames(false);
+    setHiddenProvinceCodes(new Set());
     setMessage(
       hardMode
         ? "点击省级行政区并输入名称解锁"
@@ -938,6 +978,28 @@ export default function CityGame() {
           : "请选择一个省级行政区开始挑战",
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const toggleProvinceVisibility = (item: Province) => {
+    const isHidden = hiddenProvinceCodes.has(item.code);
+    if (!isHidden && challengeCodes.length - hiddenProvinceCodes.size <= 1) {
+      setMessage("至少保留一个省份显示在联合地图中");
+      return;
+    }
+
+    const next = new Set(hiddenProvinceCodes);
+    if (isHidden) {
+      next.delete(item.code);
+      setMessage(`已重新显示${item.shortName}`);
+    } else {
+      next.add(item.code);
+      if (selectedAnswer && answerProvinceCodes.get(selectedAnswer) === item.code) {
+        setSelectedAnswer(null);
+      }
+      setMessage(`已隐藏${item.shortName}，再次点击名称可恢复`);
+    }
+    setHoveredName(null);
+    setHiddenProvinceCodes(next);
   };
 
   const visibleProvinceList = showAllProvinces
@@ -1106,9 +1168,19 @@ export default function CityGame() {
 
         {province && neighborMode ? (
           <div className="joined-province-strip" aria-label="本轮联合区域">
-            <strong>本轮区域</strong>
+            <strong>本轮区域 · 点击名称可隐藏</strong>
             {challengeProvinces.map((item, index) => (
-              <span key={item.code} className={index === 0 ? "is-origin" : ""}>
+              <button
+                key={item.code}
+                type="button"
+                className={`${index === 0 ? "is-origin" : ""} ${hiddenProvinceCodes.has(item.code) ? "is-hidden" : ""}`}
+                aria-pressed={!hiddenProvinceCodes.has(item.code)}
+                aria-label={`${hiddenProvinceCodes.has(item.code) ? "显示" : "隐藏"}${item.name}`}
+                onClick={() => toggleProvinceVisibility(item)}
+              >
+                <b className="province-visibility-mark" aria-hidden="true">
+                  {hiddenProvinceCodes.has(item.code) ? "○" : "●"}
+                </b>
                 {showAllCityNames ? (
                   <b
                     className="province-color-dot"
@@ -1117,7 +1189,7 @@ export default function CityGame() {
                   />
                 ) : null}
                 {item.shortName}{index === 0 ? <i>起点</i> : null}
-              </span>
+              </button>
             ))}
           </div>
         ) : null}
@@ -1145,6 +1217,7 @@ export default function CityGame() {
               hideProvinceNames={hardMode}
               showAllLabels={showAllCityNames}
               joined={neighborMode && Boolean(province)}
+              hiddenProvinceCodes={hiddenProvinceCodes}
             />
           ) : (
             <LoadingMap />
@@ -1198,7 +1271,7 @@ export default function CityGame() {
             <p><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
           </div>
           <div className="answer-grid">
-            {shuffledAnswers.map((name) => {
+            {visibleShuffledAnswers.map((name) => {
               const isPlaced = completedNames.has(name);
               const isSelected = selectedAnswer === name;
               return (

@@ -51,11 +51,15 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /PROVINCE_NEIGHBORS/);
   assert.match(game, /PROVINCE_FILL_COLORS/);
   assert.match(game, /显示全部城市/);
+  assert.match(game, /hiddenProvinceCodes/);
+  assert.match(game, /toggleProvinceVisibility/);
+  assert.match(game, /点击名称可隐藏/);
   assert.match(game, /useMapCollection/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
   assert.match(css, /--red:\s*#b43b32/i);
   assert.match(css, /--green:\s*#2d7d5f/i);
   assert.match(css, /map-region\.is-province-tinted/);
+  assert.match(css, /joined-province-strip > button\.is-hidden/);
   assert.match(layout, /lang="zh-CN"/);
 });

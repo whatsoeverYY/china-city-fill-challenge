@@ -547,7 +547,7 @@ h1 span {
   white-space: nowrap;
 }
 
-.joined-province-strip > span {
+.joined-province-strip > button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -556,15 +556,41 @@ h1 span {
   border: 1px solid #d1c8b8;
   border-radius: 999px;
   background: #fffdf8;
+  cursor: pointer;
   font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
+  transition: border-color 150ms ease, background 150ms ease, opacity 150ms ease;
 }
 
-.joined-province-strip > span.is-origin {
+.joined-province-strip > button:hover {
+  border-color: var(--red);
+  background: #fff8ed;
+}
+
+.joined-province-strip > button.is-origin {
   color: var(--red-dark);
   border-color: rgba(180, 59, 50, 0.34);
   background: #fff4e9;
+}
+
+.joined-province-strip > button.is-hidden {
+  color: #8a8e89;
+  border-style: dashed;
+  background: rgba(255, 253, 248, 0.48);
+  opacity: 0.68;
+  text-decoration: line-through;
+}
+
+.province-visibility-mark {
+  color: var(--green-dark);
+  font-size: 9px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.joined-province-strip > button.is-hidden .province-visibility-mark {
+  color: #9a968d;
 }
 
 .joined-province-strip i {
