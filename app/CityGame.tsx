@@ -146,15 +146,15 @@ const PROVINCE_NEIGHBORS: Record<string, string[]> = {
 };
 
 const PROVINCE_FILL_COLORS = [
-  "#f6d8d4",
-  "#dbe6f7",
-  "#e8def5",
-  "#f8e5c9",
-  "#f2dce8",
-  "#eadfce",
-  "#dfe1f4",
-  "#f3d9cf",
-  "#eee0ef",
+  "#f0beb8",
+  "#f3c99b",
+  "#eee093",
+  "#b8d9f0",
+  "#bfc8ec",
+  "#d2bdeb",
+  "#edbdd8",
+  "#d9c1a8",
+  "#c2d0da",
 ];
 
 function compactName(value: string) {
