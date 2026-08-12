@@ -63,6 +63,10 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /省牌双答/);
   assert.match(game, /GAUNTLET_PROGRESS_KEY/);
   assert.match(game, /normalizePlate/);
+  assert.match(game, /选择省份（可多选）/);
+  assert.match(game, /selectedQuizProvinces/);
+  assert.match(game, /applyProvinceSelection/);
+  assert.match(game, /nextSelection\.has\(item\.provinceShort\)/);
   assert.match(game, /useMapCollection/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
@@ -72,6 +76,8 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /joined-province-strip > button\.is-hidden/);
   assert.match(css, /gauntlet-level-grid/);
   assert.match(css, /gauntlet-silhouette/);
+  assert.match(css, /province-picker-dialog/);
+  assert.match(css, /province-picker-grid/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(layout, /lang="zh-CN"/);
