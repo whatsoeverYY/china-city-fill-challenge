@@ -37,10 +37,11 @@ test("server-renders the city challenge shell", async () => {
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout] = await Promise.all([
+  const [game, css, layout, gauntletData] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/gauntlet-data.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(game, /draggable=\{!isPlaced\}/);
@@ -56,6 +57,12 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /hiddenProvinceCodes/);
   assert.match(game, /toggleProvinceVisibility/);
   assert.match(game, /点击名称可隐藏/);
+  assert.match(game, /过关斩将/);
+  assert.match(game, /辨形识省/);
+  assert.match(game, /城归何处/);
+  assert.match(game, /省牌双答/);
+  assert.match(game, /GAUNTLET_PROGRESS_KEY/);
+  assert.match(game, /normalizePlate/);
   assert.match(game, /useMapCollection/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
@@ -63,5 +70,9 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /--green:\s*#2d7d5f/i);
   assert.match(css, /map-region\.is-province-tinted/);
   assert.match(css, /joined-province-strip > button\.is-hidden/);
+  assert.match(css, /gauntlet-level-grid/);
+  assert.match(css, /gauntlet-silhouette/);
+  assert.match(gauntletData, /CITY_QUIZ_DATA/);
+  assert.match(gauntletData, /苏A/);
   assert.match(layout, /lang="zh-CN"/);
 });

@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { CITY_QUIZ_DATA, type CityQuizItem } from "./gauntlet-data";
 
 type Position = [number, number];
 
@@ -107,6 +108,7 @@ const STORAGE_KEY = "china-city-fill-progress-v1";
 const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
 const NEIGHBOR_MODE_KEY = "china-city-fill-neighbor-mode-v1";
 const NEIGHBOR_PROGRESS_KEY = "china-city-fill-neighbor-progress-v1";
+const GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v1";
 
 const PROVINCE_NEIGHBORS: Record<string, string[]> = {
   "110000": ["120000", "130000"],
@@ -581,7 +583,374 @@ function LoadingMap() {
   );
 }
 
+type GauntletLevel = 1 | 2 | 3;
+
+const GAUNTLET_LEVELS: Array<{
+  level: GauntletLevel;
+  title: string;
+  badge: string;
+  description: string;
+  target: string;
+}> = [
+  {
+    level: 1,
+    title: "辨形识省",
+    badge: "省形",
+    description: "只看省级行政区轮廓，写出它的名称。34 个全部答对即可过关。",
+    target: "34 个省级行政区",
+  },
+  {
+    level: 2,
+    title: "城归何处",
+    badge: "城市",
+    description: "根据随机出现的城市名称，写出所属省级行政区。",
+    target: "连续答对 30 题",
+  },
+  {
+    level: 3,
+    title: "省牌双答",
+    badge: "车牌",
+    description: "根据城市名称，同时写出所属省份与车牌前缀。",
+    target: "连续答对 20 题",
+  },
+];
+
+function randomShuffle<T>(values: T[]) {
+  const copy = [...values];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[target]] = [copy[target], copy[index]];
+  }
+  return copy;
+}
+
+function normalizePlate(value: string) {
+  return compactName(value).replace(/[·.-]/g, "").toUpperCase();
+}
+
+function ProvinceSilhouette({ feature }: { feature: MapFeature }) {
+  const project = useMemo(() => makeProjection([feature]), [feature]);
+  return (
+    <svg
+      className="gauntlet-silhouette"
+      viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+      role="img"
+      aria-label="待辨认的省级行政区轮廓"
+    >
+      <path
+        d={geometryToPath(feature.geometry, project)}
+        fillRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function GauntletGame({
+  nationalMap,
+  nationalError,
+  onExit,
+}: {
+  nationalMap: MapData | null;
+  nationalError: boolean;
+  onExit: () => void;
+}) {
+  const [level, setLevel] = useState<GauntletLevel | null>(null);
+  const [passedLevel, setPassedLevel] = useState<GauntletLevel | null>(null);
+  const [completedLevels, setCompletedLevels] = useState<Set<GauntletLevel>>(
+    new Set(),
+  );
+  const [provinceOrder, setProvinceOrder] = useState<MapFeature[]>([]);
+  const [cityOrder, setCityOrder] = useState<CityQuizItem[]>([]);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [provinceAnswer, setProvinceAnswer] = useState("");
+  const [plateAnswer, setPlateAnswer] = useState("");
+  const [feedback, setFeedback] = useState("准备好后提交答案");
+  const [feedbackType, setFeedbackType] = useState<"idle" | "right" | "wrong">(
+    "idle",
+  );
+  const provinceInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(GAUNTLET_PROGRESS_KEY) ?? "[]",
+      ) as number[];
+      setCompletedLevels(
+        new Set(saved.filter((item): item is GauntletLevel => [1, 2, 3].includes(item))),
+      );
+    } catch {
+      setCompletedLevels(new Set());
+    }
+  }, []);
+
+  const currentProvinceFeature = provinceOrder[questionIndex] ?? null;
+  const currentProvince = currentProvinceFeature
+    ? provinceForFeature(currentProvinceFeature)
+    : null;
+  const currentCity = cityOrder.length
+    ? cityOrder[questionIndex % cityOrder.length]
+    : null;
+  const target = level === 1 ? provinceOrder.length : level === 2 ? 30 : 20;
+  const progress = level === 1 ? questionIndex : streak;
+
+  const focusProvinceInput = () => {
+    window.requestAnimationFrame(() => provinceInputRef.current?.focus());
+  };
+
+  const startLevel = (nextLevel: GauntletLevel) => {
+    if (nextLevel === 1 && (!nationalMap || nationalError)) return;
+    setLevel(nextLevel);
+    setPassedLevel(null);
+    setQuestionIndex(0);
+    setStreak(0);
+    setProvinceAnswer("");
+    setPlateAnswer("");
+    setFeedbackType("idle");
+    setFeedback(
+      nextLevel === 1
+        ? "观察轮廓，写出省级行政区名称"
+        : nextLevel === 2
+          ? "写出这座城市所属的省级行政区"
+          : "省份和车牌前缀都答对才计入连胜",
+    );
+    if (nextLevel === 1 && nationalMap) {
+      setProvinceOrder(randomShuffle(nationalMap.features));
+      setCityOrder([]);
+    } else {
+      setCityOrder(randomShuffle(CITY_QUIZ_DATA));
+      setProvinceOrder([]);
+    }
+    focusProvinceInput();
+  };
+
+  const finishLevel = (finishedLevel: GauntletLevel) => {
+    const nextCompleted = new Set(completedLevels);
+    nextCompleted.add(finishedLevel);
+    setCompletedLevels(nextCompleted);
+    localStorage.setItem(
+      GAUNTLET_PROGRESS_KEY,
+      JSON.stringify(Array.from(nextCompleted)),
+    );
+    setPassedLevel(finishedLevel);
+    setFeedbackType("right");
+  };
+
+  const submitAnswer = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!level) return;
+
+    if (level === 1) {
+      if (!currentProvince) return;
+      const correct = answerMatches(provinceAnswer, [
+        currentProvince.name,
+        currentProvince.shortName,
+      ]);
+      if (!correct) {
+        setFeedbackType("wrong");
+        setFeedback("名称不对，再观察一下轮廓");
+        focusProvinceInput();
+        return;
+      }
+
+      const nextIndex = questionIndex + 1;
+      if (nextIndex === provinceOrder.length) {
+        finishLevel(1);
+        return;
+      }
+      setQuestionIndex(nextIndex);
+      setProvinceAnswer("");
+      setFeedbackType("right");
+      setFeedback(`回答正确：${currentProvince.name}。继续下一题`);
+      focusProvinceInput();
+      return;
+    }
+
+    if (!currentCity) return;
+    const provinceCorrect = answerMatches(provinceAnswer, [
+      currentCity.province,
+      currentCity.provinceShort,
+    ]);
+    const plateCorrect =
+      level === 2 || normalizePlate(plateAnswer) === normalizePlate(currentCity.plate);
+    const correct = provinceCorrect && plateCorrect;
+    const nextStreak = correct ? streak + 1 : 0;
+    const winTarget = level === 2 ? 30 : 20;
+
+    if (correct && nextStreak === winTarget) {
+      finishLevel(level);
+      return;
+    }
+
+    setStreak(nextStreak);
+    setQuestionIndex((value) => value + 1);
+    setProvinceAnswer("");
+    setPlateAnswer("");
+    setFeedbackType(correct ? "right" : "wrong");
+    setFeedback(
+      correct
+        ? `回答正确，当前连续答对 ${nextStreak} 题`
+        : level === 2
+          ? `连胜中断。${currentCity.city}属于${currentCity.province}`
+          : `连胜中断。正确答案：${currentCity.provinceShort} · ${currentCity.plate}`,
+    );
+    focusProvinceInput();
+  };
+
+  const returnToLevels = () => {
+    setLevel(null);
+    setPassedLevel(null);
+    setFeedbackType("idle");
+  };
+
+  const activeConfig = level
+    ? GAUNTLET_LEVELS.find((item) => item.level === level)
+    : null;
+
+  return (
+    <main className="game-shell gauntlet-shell">
+      <header className="site-header gauntlet-header">
+        <button className="brand" type="button" onClick={onExit}>
+          <span className="brand-seal gauntlet-brand-seal" aria-hidden="true">关</span>
+          <span>
+            <strong>中国城市填充挑战</strong>
+            <small>GAUNTLET MODE</small>
+          </span>
+        </button>
+        <button className="gauntlet-exit" type="button" onClick={onExit}>
+          返回地图玩法
+        </button>
+      </header>
+
+      {!level ? (
+        <>
+          <section className="gauntlet-intro">
+            <p className="eyebrow">过关斩将 · 三重试炼</p>
+            <h1>从轮廓到车牌，<span>一关比一关难</span></h1>
+            <p className="lede">三个关卡均可直接选择。连续答题关卡一旦答错，连胜数会归零。</p>
+          </section>
+          <section className="gauntlet-level-grid" aria-label="选择关卡">
+            {GAUNTLET_LEVELS.map((item) => {
+              const completed = completedLevels.has(item.level);
+              return (
+                <button
+                  key={item.level}
+                  className="gauntlet-level-card"
+                  type="button"
+                  onClick={() => startLevel(item.level)}
+                  disabled={item.level === 1 && (!nationalMap || nationalError)}
+                >
+                  <span className="level-number">第 {item.level} 关</span>
+                  <i>{item.badge}</i>
+                  <strong>{item.title}</strong>
+                  <p>{item.description}</p>
+                  <b>{item.target}</b>
+                  <span className={`level-state ${completed ? "is-complete" : ""}`}>
+                    {completed ? "✓ 已过关" : item.level === 1 && !nationalMap ? "地图载入中…" : "开始挑战 →"}
+                  </span>
+                </button>
+              );
+            })}
+          </section>
+        </>
+      ) : passedLevel ? (
+        <section className="gauntlet-passed" aria-live="polite">
+          <span className="gauntlet-pass-seal" aria-hidden="true">胜</span>
+          <p className="eyebrow">第 {passedLevel} 关 · 挑战达成</p>
+          <h1>{activeConfig?.title}，过关！</h1>
+          <p>{activeConfig?.target}已经完成，这一关已留下通关印记。</p>
+          <div>
+            {passedLevel < 3 ? (
+              <button type="button" onClick={() => startLevel((passedLevel + 1) as GauntletLevel)}>
+                挑战下一关
+              </button>
+            ) : null}
+            <button type="button" className="is-secondary" onClick={() => startLevel(passedLevel)}>
+              再来一次
+            </button>
+            <button type="button" className="is-text" onClick={returnToLevels}>
+              返回选关
+            </button>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="gauntlet-round-heading">
+            <div>
+              <button type="button" onClick={returnToLevels}>← 返回选关</button>
+              <p className="eyebrow">第 {level} 关 · {activeConfig?.title}</p>
+              <h1>{level === 1 ? "看轮廓，识省份" : "看城市，答归属"}</h1>
+            </div>
+            <div className="gauntlet-progress-card">
+              <span>{level === 1 ? "答题进度" : "当前连胜"}</span>
+              <strong>{progress}<i> / {target}</i></strong>
+              <div><span style={{ width: `${target ? (progress / target) * 100 : 0}%` }} /></div>
+            </div>
+          </section>
+
+          <section className={`gauntlet-play-card ${feedbackType === "wrong" ? "has-error" : ""}`}>
+            <div className="gauntlet-question-stage">
+              <span className="question-count">
+                {level === 1 ? `第 ${questionIndex + 1} / ${target} 题` : `随机城市 · 第 ${questionIndex + 1} 题`}
+              </span>
+              {level === 1 ? (
+                currentProvinceFeature ? <ProvinceSilhouette feature={currentProvinceFeature} /> : <LoadingMap />
+              ) : (
+                <div className="city-question">
+                  <span aria-hidden="true">城</span>
+                  <p>这座城市属于哪里？</p>
+                  <strong>{currentCity?.city ?? "载入中…"}</strong>
+                  {level === 3 ? <small>还需要写出它的车牌前缀</small> : null}
+                </div>
+              )}
+            </div>
+
+            <aside className="gauntlet-answer-panel">
+              <p className="eyebrow">你的答案</p>
+              <h2>{level === 1 ? "这是哪个省级行政区？" : "写出所属省份"}</h2>
+              <form onSubmit={submitAnswer}>
+                <label htmlFor="gauntlet-province-answer">省份名称</label>
+                <input
+                  ref={provinceInputRef}
+                  id="gauntlet-province-answer"
+                  value={provinceAnswer}
+                  onChange={(event) => setProvinceAnswer(event.target.value)}
+                  placeholder={level === 1 ? "例如：江苏省" : "例如：江苏"}
+                  autoComplete="off"
+                />
+                {level === 3 ? (
+                  <>
+                    <label htmlFor="gauntlet-plate-answer">车牌前缀</label>
+                    <input
+                      id="gauntlet-plate-answer"
+                      value={plateAnswer}
+                      onChange={(event) => setPlateAnswer(event.target.value)}
+                      placeholder="例如：苏A"
+                      autoComplete="off"
+                      maxLength={5}
+                    />
+                  </>
+                ) : null}
+                <button type="submit" disabled={!provinceAnswer.trim() || (level === 3 && !plateAnswer.trim())}>
+                  提交答案
+                </button>
+              </form>
+              <p className={`gauntlet-feedback is-${feedbackType}`} aria-live="polite">
+                {feedback}
+              </p>
+              {level !== 1 ? (
+                <p className="streak-note">答错后连胜归零，并自动进入下一题。</p>
+              ) : null}
+            </aside>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}
+
 export default function CityGame() {
+  const [gauntletOpen, setGauntletOpen] = useState(false);
   const [province, setProvince] = useState<Province | null>(null);
   const [hardMode, setHardMode] = useState(false);
   const [neighborMode, setNeighborMode] = useState(false);
@@ -1036,6 +1405,16 @@ export default function CityGame() {
   const activeMap = province ? detailMap : nationalMap;
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
 
+  if (gauntletOpen) {
+    return (
+      <GauntletGame
+        nationalMap={nationalMap}
+        nationalError={nationalError}
+        onExit={() => setGauntletOpen(false)}
+      />
+    );
+  }
+
   return (
     <main className={`game-shell ${hardMode ? "is-hard-mode" : ""} ${neighborMode ? "is-neighbor-mode" : ""}`}>
       <header className="site-header">
@@ -1047,6 +1426,16 @@ export default function CityGame() {
           </span>
         </button>
         <div className="header-actions">
+          {!province ? (
+            <button
+              className="gauntlet-mode-button"
+              type="button"
+              onClick={() => setGauntletOpen(true)}
+            >
+              <span aria-hidden="true">关</span>
+              过关斩将
+            </button>
+          ) : null}
           <button
             className={`neighbor-mode-button ${neighborMode ? "is-active" : ""}`}
             type="button"
