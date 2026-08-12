@@ -51,6 +51,8 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /PROVINCE_NEIGHBORS/);
   assert.match(game, /PROVINCE_FILL_COLORS/);
   assert.match(game, /显示全部城市/);
+  assert.match(game, /makeProjection\(visibleFeatures\)/);
+  assert.match(game, /map\.features\.filter[\s\S]*hiddenProvinceCodes\.has/);
   assert.match(game, /hiddenProvinceCodes/);
   assert.match(game, /toggleProvinceVisibility/);
   assert.match(game, /点击名称可隐藏/);

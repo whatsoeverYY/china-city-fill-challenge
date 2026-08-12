@@ -427,7 +427,22 @@ function MapCanvas({
   joined: boolean;
   hiddenProvinceCodes: Set<string>;
 }) {
-  const project = useMemo(() => makeProjection(map.features), [map]);
+  const visibleFeatures = useMemo(
+    () =>
+      mode === "national"
+        ? map.features
+        : map.features.filter(
+            (feature) =>
+              !hiddenProvinceCodes.has(
+                feature.properties.provinceCode ?? "",
+              ),
+          ),
+    [hiddenProvinceCodes, map.features, mode],
+  );
+  const project = useMemo(
+    () => makeProjection(visibleFeatures),
+    [visibleFeatures],
+  );
 
   const handleKeyDown = (
     event: React.KeyboardEvent<SVGPathElement>,
@@ -455,13 +470,7 @@ function MapCanvas({
         </pattern>
       </defs>
       <g className="map-shadow-layer" filter="url(#map-shadow)">
-        {map.features
-          .filter(
-            (feature) =>
-              mode === "national" ||
-              !hiddenProvinceCodes.has(feature.properties.provinceCode ?? ""),
-          )
-          .map((feature) => {
+        {visibleFeatures.map((feature) => {
           const province = provinceForFeature(feature);
           const isComplete =
             mode === "national"
@@ -535,10 +544,9 @@ function MapCanvas({
         : null}
 
       {mode === "detail"
-        ? map.features
+        ? visibleFeatures
             .filter(
               (feature) =>
-                !hiddenProvinceCodes.has(feature.properties.provinceCode ?? "") &&
                 (showAllLabels || completedNames.has(feature.properties.name)),
             )
             .map((feature) => {
@@ -1145,16 +1153,14 @@ export default function CityGame() {
           </div>
           {province ? (
             <div className="map-actions">
-              {neighborMode ? (
-                <button
-                  className={`reveal-cities-button ${showAllCityNames ? "is-active" : ""}`}
-                  type="button"
-                  aria-pressed={showAllCityNames}
-                  onClick={() => setShowAllCityNames((value) => !value)}
-                >
-                  {showAllCityNames ? "隐藏全部城市" : "显示全部城市"}
-                </button>
-              ) : null}
+              <button
+                className={`reveal-cities-button ${showAllCityNames ? "is-active" : ""}`}
+                type="button"
+                aria-pressed={showAllCityNames}
+                onClick={() => setShowAllCityNames((value) => !value)}
+              >
+                {showAllCityNames ? "隐藏全部城市" : "显示全部城市"}
+              </button>
               <button className="reset-button" type="button" onClick={resetProvince}>
                 重新挑战
               </button>
