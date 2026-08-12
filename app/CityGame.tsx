@@ -583,7 +583,7 @@ function LoadingMap() {
   );
 }
 
-type GauntletLevel = 1 | 2 | 3;
+type GauntletLevel = 1 | 2 | 3 | 4;
 
 const GAUNTLET_LEVELS: Array<{
   level: GauntletLevel;
@@ -611,6 +611,13 @@ const GAUNTLET_LEVELS: Array<{
     title: "省牌双答",
     badge: "车牌",
     description: "根据城市名称，同时写出所属省份与车牌前缀。",
+    target: "连续答对 20 题",
+  },
+  {
+    level: 4,
+    title: "牌归省市",
+    badge: "识牌",
+    description: "根据随机出现的车牌前缀，同时写出对应的省份与城市。",
     target: "连续答对 20 题",
   },
 ];
@@ -691,6 +698,7 @@ function GauntletGame({
   const [streak, setStreak] = useState(0);
   const [provinceAnswer, setProvinceAnswer] = useState("");
   const [plateAnswer, setPlateAnswer] = useState("");
+  const [cityAnswer, setCityAnswer] = useState("");
   const [feedback, setFeedback] = useState("准备好后提交答案");
   const [feedbackType, setFeedbackType] = useState<"idle" | "right" | "wrong">(
     "idle",
@@ -710,7 +718,7 @@ function GauntletGame({
         localStorage.getItem(GAUNTLET_PROGRESS_KEY) ?? "[]",
       ) as number[];
       setCompletedLevels(
-        new Set(saved.filter((item): item is GauntletLevel => [1, 2, 3].includes(item))),
+        new Set(saved.filter((item): item is GauntletLevel => [1, 2, 3, 4].includes(item))),
       );
     } catch {
       setCompletedLevels(new Set());
@@ -739,19 +747,26 @@ function GauntletGame({
     setStreak(0);
     setProvinceAnswer("");
     setPlateAnswer("");
+    setCityAnswer("");
     setFeedbackType("idle");
     setFeedback(
       nextLevel === 1
         ? "观察轮廓，写出省级行政区名称"
         : nextLevel === 2
           ? "写出这座城市所属的省级行政区"
-          : "省份和车牌前缀都答对才计入连胜",
+          : nextLevel === 3
+            ? "省份和车牌前缀都答对才计入连胜"
+            : "省份和城市都答对才计入连胜",
     );
     if (nextLevel === 1 && nationalMap) {
-      setProvinceOrder(randomShuffle(nationalMap.features));
+      setProvinceOrder(
+        randomShuffle(
+          nationalMap.features.filter((feature) => Boolean(provinceForFeature(feature))),
+        ),
+      );
       setCityOrder([]);
     } else {
-      const keepCurrentSelection = level === 2 || level === 3;
+      const keepCurrentSelection = level === 2 || level === 3 || level === 4;
       const nextSelection = keepCurrentSelection
         ? selectedQuizProvinces
         : new Set(ALL_GAUNTLET_PROVINCE_NAMES);
@@ -797,6 +812,7 @@ function GauntletGame({
     setStreak(0);
     setProvinceAnswer("");
     setPlateAnswer("");
+    setCityAnswer("");
     setFeedbackType("idle");
     setFeedback(
       `题目范围已更新：${nextSelection.size} 个省级行政区，共 ${nextQuestions.length} 座城市`,
@@ -852,9 +868,13 @@ function GauntletGame({
       currentCity.province,
       currentCity.provinceShort,
     ]);
-    const plateCorrect =
-      level === 2 || normalizePlate(plateAnswer) === normalizePlate(currentCity.plate);
-    const correct = provinceCorrect && plateCorrect;
+    const secondaryCorrect =
+      level === 2
+        ? true
+        : level === 3
+          ? normalizePlate(plateAnswer) === normalizePlate(currentCity.plate)
+          : answerMatches(cityAnswer, [currentCity.city]);
+    const correct = provinceCorrect && secondaryCorrect;
     const nextStreak = correct ? streak + 1 : 0;
     const winTarget = level === 2 ? 30 : 20;
 
@@ -867,13 +887,16 @@ function GauntletGame({
     setQuestionIndex((value) => value + 1);
     setProvinceAnswer("");
     setPlateAnswer("");
+    setCityAnswer("");
     setFeedbackType(correct ? "right" : "wrong");
     setFeedback(
       correct
         ? `回答正确，当前连续答对 ${nextStreak} 题`
         : level === 2
           ? `连胜中断。${currentCity.city}属于${currentCity.province}`
-          : `连胜中断。正确答案：${currentCity.provinceShort} · ${currentCity.plate}`,
+          : level === 3
+            ? `连胜中断。正确答案：${currentCity.provinceShort} · ${currentCity.plate}`
+            : `连胜中断。正确答案：${currentCity.provinceShort} · ${currentCity.city}`,
     );
     focusProvinceInput();
   };
@@ -906,9 +929,9 @@ function GauntletGame({
       {!level ? (
         <>
           <section className="gauntlet-intro">
-            <p className="eyebrow">过关斩将 · 三重试炼</p>
+            <p className="eyebrow">过关斩将 · 四重试炼</p>
             <h1>从轮廓到车牌，<span>一关比一关难</span></h1>
-            <p className="lede">三个关卡均可直接选择。连续答题关卡一旦答错，连胜数会归零。</p>
+            <p className="lede">四个关卡均可直接选择。连续答题关卡一旦答错，连胜数会归零。</p>
           </section>
           <section className="gauntlet-level-grid" aria-label="选择关卡">
             {GAUNTLET_LEVELS.map((item) => {
@@ -941,7 +964,7 @@ function GauntletGame({
           <h1>{activeConfig?.title}，过关！</h1>
           <p>{activeConfig?.target}已经完成，这一关已留下通关印记。</p>
           <div>
-            {passedLevel < 3 ? (
+            {passedLevel < 4 ? (
               <button type="button" onClick={() => startLevel((passedLevel + 1) as GauntletLevel)}>
                 挑战下一关
               </button>
@@ -960,7 +983,13 @@ function GauntletGame({
             <div>
               <button type="button" onClick={returnToLevels}>← 返回选关</button>
               <p className="eyebrow">第 {level} 关 · {activeConfig?.title}</p>
-              <h1>{level === 1 ? "看轮廓，识省份" : "看城市，答归属"}</h1>
+              <h1>
+                {level === 1
+                  ? "看轮廓，识省份"
+                  : level === 4
+                    ? "看车牌，答省市"
+                    : "看城市，答归属"}
+              </h1>
             </div>
             <div className="gauntlet-round-actions">
               {level !== 1 ? (
@@ -992,11 +1021,12 @@ function GauntletGame({
               {level === 1 ? (
                 currentProvinceFeature ? <ProvinceSilhouette feature={currentProvinceFeature} /> : <LoadingMap />
               ) : (
-                <div className="city-question">
-                  <span aria-hidden="true">城</span>
-                  <p>这座城市属于哪里？</p>
-                  <strong>{currentCity?.city ?? "载入中…"}</strong>
+                <div className={`city-question ${level === 4 ? "is-plate-question" : ""}`}>
+                  <span aria-hidden="true">{level === 4 ? "牌" : "城"}</span>
+                  <p>{level === 4 ? "这组车牌属于哪里？" : "这座城市属于哪里？"}</p>
+                  <strong>{(level === 4 ? currentCity?.plate : currentCity?.city) ?? "载入中…"}</strong>
                   {level === 3 ? <small>还需要写出它的车牌前缀</small> : null}
+                  {level === 4 ? <small>需要同时写出省份和城市</small> : null}
                 </div>
               )}
             </div>
@@ -1027,7 +1057,26 @@ function GauntletGame({
                     />
                   </>
                 ) : null}
-                <button type="submit" disabled={!provinceAnswer.trim() || (level === 3 && !plateAnswer.trim())}>
+                {level === 4 ? (
+                  <>
+                    <label htmlFor="gauntlet-city-answer">城市名称</label>
+                    <input
+                      id="gauntlet-city-answer"
+                      value={cityAnswer}
+                      onChange={(event) => setCityAnswer(event.target.value)}
+                      placeholder="例如：南京市"
+                      autoComplete="off"
+                    />
+                  </>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={
+                    !provinceAnswer.trim() ||
+                    (level === 3 && !plateAnswer.trim()) ||
+                    (level === 4 && !cityAnswer.trim())
+                  }
+                >
                   提交答案
                 </button>
               </form>
