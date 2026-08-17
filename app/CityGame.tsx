@@ -648,6 +648,8 @@ const ALL_GAUNTLET_PROVINCE_NAMES = GAUNTLET_QUIZ_PROVINCES.map(
   (item) => item.shortName,
 );
 
+const ALL_GAUNTLET_SHAPE_PROVINCE_CODES = PROVINCES.map((item) => item.code);
+
 function randomShuffle<T>(values: T[]) {
   const copy = [...values];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -709,6 +711,12 @@ function GauntletGame({
   const [draftQuizProvinces, setDraftQuizProvinces] = useState<Set<string>>(
     () => new Set(ALL_GAUNTLET_PROVINCE_NAMES),
   );
+  const [selectedShapeProvinceCodes, setSelectedShapeProvinceCodes] = useState<
+    Set<string>
+  >(() => new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
+  const [draftShapeProvinceCodes, setDraftShapeProvinceCodes] = useState<
+    Set<string>
+  >(() => new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
   const [provincePickerOpen, setProvincePickerOpen] = useState(false);
   const provinceInputRef = useRef<HTMLInputElement>(null);
 
@@ -734,6 +742,23 @@ function GauntletGame({
     : null;
   const target = level === 1 ? provinceOrder.length : level === 2 ? 30 : 20;
   const progress = level === 1 ? questionIndex : streak;
+  const provincePickerOptions = level === 1
+    ? PROVINCES.map((item) => ({
+        key: item.code,
+        shortName: item.shortName,
+        questionCount: 1,
+      }))
+    : GAUNTLET_QUIZ_PROVINCES.map((item) => ({
+        key: item.shortName,
+        shortName: item.shortName,
+        questionCount: item.questionCount,
+      }));
+  const selectedPickerProvinces = level === 1
+    ? selectedShapeProvinceCodes
+    : selectedQuizProvinces;
+  const draftPickerProvinces = level === 1
+    ? draftShapeProvinceCodes
+    : draftQuizProvinces;
 
   const focusProvinceInput = () => {
     window.requestAnimationFrame(() => provinceInputRef.current?.focus());
@@ -759,9 +784,19 @@ function GauntletGame({
             : "省份和城市都答对才计入连胜",
     );
     if (nextLevel === 1 && nationalMap) {
+      const nextSelection = level === 1
+        ? selectedShapeProvinceCodes
+        : new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES);
+      setSelectedShapeProvinceCodes(new Set(nextSelection));
+      setDraftShapeProvinceCodes(new Set(nextSelection));
       setProvinceOrder(
         randomShuffle(
-          nationalMap.features.filter((feature) => Boolean(provinceForFeature(feature))),
+          nationalMap.features.filter((feature) => {
+            const featureProvince = provinceForFeature(feature);
+            return Boolean(
+              featureProvince && nextSelection.has(featureProvince.code),
+            );
+          }),
         ),
       );
       setCityOrder([]);
@@ -786,39 +821,80 @@ function GauntletGame({
   };
 
   const openProvincePicker = () => {
-    setDraftQuizProvinces(new Set(selectedQuizProvinces));
+    if (level === 1) {
+      setDraftShapeProvinceCodes(new Set(selectedShapeProvinceCodes));
+    } else {
+      setDraftQuizProvinces(new Set(selectedQuizProvinces));
+    }
     setProvincePickerOpen(true);
   };
 
-  const toggleDraftProvince = (shortName: string) => {
-    const next = new Set(draftQuizProvinces);
-    if (next.has(shortName)) {
-      next.delete(shortName);
+  const toggleDraftProvince = (key: string) => {
+    const next = new Set(draftPickerProvinces);
+    if (next.has(key)) {
+      next.delete(key);
     } else {
-      next.add(shortName);
+      next.add(key);
     }
-    setDraftQuizProvinces(next);
+    if (level === 1) {
+      setDraftShapeProvinceCodes(next);
+    } else {
+      setDraftQuizProvinces(next);
+    }
   };
 
   const applyProvinceSelection = () => {
-    if (draftQuizProvinces.size === 0) return;
-    const nextSelection = new Set(draftQuizProvinces);
-    const nextQuestions = CITY_QUIZ_DATA.filter((item) =>
-      nextSelection.has(item.provinceShort),
-    );
-    setSelectedQuizProvinces(nextSelection);
-    setCityOrder(randomShuffle(nextQuestions));
+    if (!level || draftPickerProvinces.size === 0) return;
+
+    let rangeMessage = "";
+    if (level === 1) {
+      if (!nationalMap) return;
+      const nextSelection = new Set(draftShapeProvinceCodes);
+      const nextFeatures = nationalMap.features.filter((feature) => {
+        const featureProvince = provinceForFeature(feature);
+        return Boolean(
+          featureProvince && nextSelection.has(featureProvince.code),
+        );
+      });
+      setSelectedShapeProvinceCodes(nextSelection);
+      setProvinceOrder(randomShuffle(nextFeatures));
+      rangeMessage = `题目范围已更新：本轮辨认 ${nextFeatures.length} 个省级行政区`;
+    } else {
+      const nextSelection = new Set(draftQuizProvinces);
+      const nextQuestions = CITY_QUIZ_DATA.filter((item) =>
+        nextSelection.has(item.provinceShort),
+      );
+      setSelectedQuizProvinces(nextSelection);
+      setCityOrder(randomShuffle(nextQuestions));
+      rangeMessage = `题目范围已更新：${nextSelection.size} 个省级行政区，共 ${nextQuestions.length} 座城市`;
+    }
     setQuestionIndex(0);
     setStreak(0);
     setProvinceAnswer("");
     setPlateAnswer("");
     setCityAnswer("");
     setFeedbackType("idle");
-    setFeedback(
-      `题目范围已更新：${nextSelection.size} 个省级行政区，共 ${nextQuestions.length} 座城市`,
-    );
+    setFeedback(rangeMessage);
     setProvincePickerOpen(false);
     focusProvinceInput();
+  };
+
+  const selectAllPickerProvinces = () => {
+    if (level === 1) {
+      setDraftShapeProvinceCodes(
+        new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES),
+      );
+    } else {
+      setDraftQuizProvinces(new Set(ALL_GAUNTLET_PROVINCE_NAMES));
+    }
+  };
+
+  const clearPickerProvinces = () => {
+    if (level === 1) {
+      setDraftShapeProvinceCodes(new Set());
+    } else {
+      setDraftQuizProvinces(new Set());
+    }
   };
 
   const finishLevel = (finishedLevel: GauntletLevel) => {
@@ -992,17 +1068,15 @@ function GauntletGame({
               </h1>
             </div>
             <div className="gauntlet-round-actions">
-              {level !== 1 ? (
-                <button
-                  className="province-picker-button"
-                  type="button"
-                  onClick={openProvincePicker}
-                >
-                  <span aria-hidden="true">选</span>
-                  <b>选择省份</b>
-                  <i>{selectedQuizProvinces.size} / {GAUNTLET_QUIZ_PROVINCES.length}</i>
-                </button>
-              ) : null}
+              <button
+                className="province-picker-button"
+                type="button"
+                onClick={openProvincePicker}
+              >
+                <span aria-hidden="true">选</span>
+                <b>选择省份</b>
+                <i>{selectedPickerProvinces.size} / {provincePickerOptions.length}</i>
+              </button>
               <div className="gauntlet-progress-card">
                 <span>{level === 1 ? "答题进度" : "当前连胜"}</span>
                 <strong>{progress}<i> / {target}</i></strong>
@@ -1015,7 +1089,7 @@ function GauntletGame({
             <div className="gauntlet-question-stage">
               <span className="question-count">
                 {level === 1
-                  ? `第 ${questionIndex + 1} / ${target} 题`
+                  ? `${selectedShapeProvinceCodes.size} 省 · 第 ${questionIndex + 1} / ${target} 题`
                   : `${selectedQuizProvinces.size} 省 · ${cityOrder.length} 城 · 第 ${questionIndex + 1} 题`}
               </span>
               {level === 1 ? (
@@ -1091,7 +1165,7 @@ function GauntletGame({
         </>
       )}
 
-      {provincePickerOpen && level !== 1 ? (
+      {provincePickerOpen && level ? (
         <div className="province-picker-overlay" role="presentation">
           <section
             className="province-picker-dialog"
@@ -1110,30 +1184,32 @@ function GauntletGame({
             <p className="eyebrow">限定出题范围</p>
             <h2 id="province-picker-title">选择省份（可多选）</h2>
             <p className="province-picker-hint">
-              应用后，后续题目只会来自所选省份，当前连胜将重新计数。
+              {level === 1
+                ? "应用后，后续轮廓只会来自所选省份，本轮进度将重新计算。"
+                : "应用后，后续题目只会来自所选省份，当前连胜将重新计数。"}
             </p>
             <div className="province-picker-tools">
               <button
                 type="button"
-                onClick={() => setDraftQuizProvinces(new Set(ALL_GAUNTLET_PROVINCE_NAMES))}
+                onClick={selectAllPickerProvinces}
               >
                 全选
               </button>
-              <button type="button" onClick={() => setDraftQuizProvinces(new Set())}>
+              <button type="button" onClick={clearPickerProvinces}>
                 清空
               </button>
-              <span>已选 {draftQuizProvinces.size} / {GAUNTLET_QUIZ_PROVINCES.length}</span>
+              <span>已选 {draftPickerProvinces.size} / {provincePickerOptions.length}</span>
             </div>
             <div className="province-picker-grid">
-              {GAUNTLET_QUIZ_PROVINCES.map((item) => {
-                const selected = draftQuizProvinces.has(item.shortName);
+              {provincePickerOptions.map((item) => {
+                const selected = draftPickerProvinces.has(item.key);
                 return (
                   <button
-                    key={item.shortName}
+                    key={item.key}
                     className={selected ? "is-selected" : ""}
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => toggleDraftProvince(item.shortName)}
+                    onClick={() => toggleDraftProvince(item.key)}
                   >
                     <span>{selected ? "✓" : ""}</span>
                     <strong>{item.shortName}</strong>
@@ -1143,10 +1219,10 @@ function GauntletGame({
               })}
             </div>
             <div className="province-picker-footer">
-              <p>{draftQuizProvinces.size === 0 ? "请至少选择一个省份" : "应用后将从新范围重新出题"}</p>
+              <p>{draftPickerProvinces.size === 0 ? "请至少选择一个省份" : "应用后将从新范围重新出题"}</p>
               <button
                 type="button"
-                disabled={draftQuizProvinces.size === 0}
+                disabled={draftPickerProvinces.size === 0}
                 onClick={applyProvinceSelection}
               >
                 应用选择

@@ -69,6 +69,9 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /normalizePlate/);
   assert.match(game, /选择省份（可多选）/);
   assert.match(game, /selectedQuizProvinces/);
+  assert.match(game, /selectedShapeProvinceCodes/);
+  assert.match(game, /ALL_GAUNTLET_SHAPE_PROVINCE_CODES/);
+  assert.match(game, /后续轮廓只会来自所选省份/);
   assert.match(game, /applyProvinceSelection/);
   assert.match(game, /nextSelection\.has\(item\.provinceShort\)/);
   assert.match(game, /useMapCollection/);
