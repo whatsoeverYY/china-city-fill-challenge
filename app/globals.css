@@ -1627,6 +1627,20 @@ footer {
   background: #3f645f;
 }
 
+.gauntlet-level-card:nth-child(11) > i { background: #a15d3a; }
+.gauntlet-level-card:nth-child(12) > i { background: #72558a; }
+.gauntlet-level-card:nth-child(13) > i { background: #3c7b72; }
+.gauntlet-level-card:nth-child(14) > i { background: #567b3d; }
+.gauntlet-level-card:nth-child(15) > i { background: #41678a; }
+.gauntlet-level-card:nth-child(16) > i { background: #9a6530; }
+.gauntlet-level-card:nth-child(17) > i { background: #775083; }
+.gauntlet-level-card:nth-child(18) > i { background: #356b8e; }
+.gauntlet-level-card:nth-child(19) > i { background: #8a503e; }
+.gauntlet-level-card:nth-child(20) > i {
+  background: linear-gradient(135deg, var(--red), #7c2d68);
+  box-shadow: inset 0 0 0 3px rgba(255, 248, 231, 0.28), 0 12px 30px rgba(124, 45, 104, 0.24);
+}
+
 .gauntlet-level-card > strong {
   font-family: "Songti SC", STSong, serif;
   font-size: 28px;
@@ -1777,6 +1791,42 @@ footer {
   border-color: rgba(180, 59, 50, 0.38);
   background: #f5dfd7;
   animation: timer-pulse 900ms ease-in-out infinite alternate;
+}
+
+.boss-lives {
+  display: grid;
+  min-width: 116px;
+  padding: 12px 15px;
+  align-content: center;
+  border: 1px solid rgba(180, 59, 50, 0.24);
+  border-radius: 15px;
+  background: #f5e4dd;
+  text-align: center;
+}
+
+.boss-lives > span {
+  color: #8c7069;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.boss-lives strong {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.boss-lives i {
+  color: #cfc3b9;
+  font-size: 21px;
+  font-style: normal;
+  line-height: 1.15;
+}
+
+.boss-lives i.is-alive {
+  color: var(--red);
+  filter: drop-shadow(0 3px 3px rgba(180, 59, 50, 0.16));
 }
 
 @keyframes timer-pulse {
@@ -1979,6 +2029,155 @@ footer {
   font-size: 8px;
 }
 
+.puzzle-question-stage {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.province-puzzle-piece {
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  width: min(420px, 88%);
+  min-height: 122px;
+  margin-bottom: -45px;
+  padding: 12px 16px;
+  align-items: center;
+  gap: 14px;
+  color: #76684e;
+  border: 1px solid rgba(180, 59, 50, 0.22);
+  border-radius: 15px;
+  background: rgba(255, 253, 247, 0.96);
+  box-shadow: 0 14px 35px rgba(62, 49, 33, 0.15);
+  cursor: grab;
+}
+
+.province-puzzle-piece:active {
+  cursor: grabbing;
+}
+
+.province-puzzle-piece span {
+  grid-column: 2;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.province-puzzle-piece svg {
+  grid-column: 1;
+  grid-row: 1;
+  width: 150px;
+  height: 96px;
+  overflow: visible;
+}
+
+.province-puzzle-piece path {
+  fill: #e0c788;
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 4px;
+  filter: drop-shadow(0 8px 8px rgba(68, 55, 35, 0.16));
+}
+
+.gauntlet-detail-map {
+  width: min(100%, 760px);
+  height: 500px;
+  overflow: visible;
+  filter: drop-shadow(0 15px 14px rgba(68, 55, 35, 0.1));
+}
+
+.gauntlet-detail-map path {
+  fill: #eee4cf;
+  stroke: var(--green);
+  stroke-linejoin: round;
+  stroke-width: 1.8px;
+  cursor: pointer;
+  transition: fill 130ms ease, stroke-width 130ms ease;
+}
+
+.gauntlet-detail-map path:hover,
+.gauntlet-detail-map path:focus-visible {
+  fill: #b9d8c4;
+  stroke-width: 2.8px;
+  outline: none;
+}
+
+.route-target-banner strong {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.route-target-banner i {
+  color: var(--red);
+  font-family: sans-serif;
+  font-style: normal;
+}
+
+.choice-question {
+  display: grid;
+  max-width: 720px;
+  justify-items: center;
+  text-align: center;
+}
+
+.choice-question > span {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 28px;
+  place-items: center;
+  color: white;
+  border-radius: 26px 26px 26px 9px;
+  background: #72558a;
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.2), 0 16px 35px rgba(76, 48, 91, 0.18);
+  font-family: "Songti SC", STSong, serif;
+  font-size: 39px;
+  font-weight: 900;
+  transform: rotate(-3deg);
+}
+
+.choice-question.is-dual > span { background: #9a6530; }
+.plate-fault-heading > span { background: #356b8e; }
+.boss-text-question > span { background: linear-gradient(135deg, var(--red), #7c2d68); }
+
+.choice-question p,
+.boss-shape-question > p {
+  margin-bottom: 12px;
+  color: #78766f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.choice-question strong {
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.25;
+}
+
+.choice-question small {
+  margin-top: 16px;
+  color: #8b6d2a;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.boss-shape-question {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+}
+
+.boss-shape-question .gauntlet-silhouette {
+  height: 450px;
+}
+
+.map-error {
+  color: var(--red-dark);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .city-question {
   display: grid;
   justify-items: center;
@@ -2171,6 +2370,66 @@ footer {
 .gauntlet-primary-action:disabled {
   cursor: not-allowed;
   opacity: 0.4;
+}
+
+.gauntlet-option-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gauntlet-option-grid button {
+  min-height: 76px;
+  padding: 12px;
+  color: #43554b;
+  border: 1px solid rgba(45, 125, 95, 0.25);
+  border-radius: 12px;
+  background: #edf4e9;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.45;
+  transition: border-color 150ms ease, transform 150ms ease, background 150ms ease;
+}
+
+.gauntlet-option-grid button:hover,
+.gauntlet-option-grid button:focus-visible {
+  border-color: var(--green);
+  background: #e2eee0;
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.plate-fault-options {
+  grid-template-columns: 1fr;
+}
+
+.plate-fault-options button {
+  min-height: 62px;
+  color: #315b7b;
+  border-color: rgba(53, 95, 145, 0.25);
+  background: #e6eef3;
+  font-family: "SFMono-Regular", Consolas, "Microsoft YaHei", monospace;
+  font-size: 12px;
+}
+
+.puzzle-progress-dots {
+  display: flex;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.puzzle-progress-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d6cec0;
+}
+
+.puzzle-progress-dots i.is-done {
+  background: var(--green);
+  box-shadow: 0 2px 4px rgba(45, 125, 95, 0.2);
 }
 
 .map-answer-summary {
@@ -2614,6 +2873,10 @@ footer {
     height: 420px;
   }
 
+  .gauntlet-detail-map {
+    height: 420px;
+  }
+
   .challenge-layout {
     display: block;
   }
@@ -2945,12 +3208,40 @@ footer {
     height: 330px;
   }
 
+  .gauntlet-detail-map {
+    height: 330px;
+  }
+
+  .province-puzzle-piece {
+    grid-template-columns: 100px 1fr;
+    min-height: 96px;
+    margin-bottom: -24px;
+    padding: 9px 11px;
+  }
+
+  .province-puzzle-piece svg {
+    width: 100px;
+    height: 72px;
+  }
+
+  .province-puzzle-piece span {
+    font-size: 9px;
+  }
+
   .map-question-banner {
     margin-bottom: -16px;
   }
 
   .map-question-banner strong {
     font-size: 18px;
+  }
+
+  .gauntlet-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gauntlet-option-grid button {
+    min-height: 58px;
   }
 
   .city-question strong {
