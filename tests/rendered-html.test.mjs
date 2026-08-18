@@ -98,6 +98,16 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /applyProvinceSelection/);
   assert.match(game, /nextSelection\.has\(item\.provinceShort\)/);
   assert.match(game, /useMapCollection/);
+  assert.match(game, /return useMapCollection\(\[code\]\)/);
+  assert.match(game, /fetchMapData/);
+  assert.match(game, /ProvinceShape/);
+  assert.match(game, /cityGroupsWithMinimum/);
+  assert.match(game, /resetRoundProgress/);
+  assert.match(game, /setCityChallengeQuestions/);
+  assert.match(game, /advanceStreakChallenge/);
+  assert.match(game, /已辨认本轮所选的/);
+  assert.match(game, /已完成本轮所选的/);
+  assert.match(game, /已完成目标：/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
   assert.match(css, /--red:\s*#b43b32/i);
