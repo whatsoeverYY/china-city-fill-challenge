@@ -37,12 +37,13 @@ test("server-renders the city challenge shell", async () => {
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout, gauntletData, universityData] = await Promise.all([
+  const [game, css, layout, gauntletData, universityData, confusableCityData] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/gauntlet-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/university-data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/confusable-city-data.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(game, /draggable=\{!isPlaced\}/);
@@ -80,12 +81,21 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /省会落点/);
   assert.match(game, /名校坐标/);
   assert.match(game, /写出这所大学所在的城市/);
+  assert.match(game, /错题复仇赛/);
+  assert.match(game, /双城迷阵/);
+  assert.match(game, /省内穿越/);
   assert.match(game, /终极混战/);
   assert.match(game, /GAUNTLET_TIME_LIMIT = 90/);
   assert.match(game, /极速模式 · 60 秒/);
   assert.match(game, /GauntletNationalMap/);
   assert.match(game, /GauntletDetailMap/);
   assert.match(game, /shortestProvincePath/);
+  assert.match(game, /buildCityAdjacencyMap/);
+  assert.match(game, /shortestCityPath/);
+  assert.match(game, /createCityRouteChallenge/);
+  assert.match(game, /GAUNTLET_MISTAKES_KEY/);
+  assert.match(game, /recordMistake/);
+  assert.match(game, /masterMistake/);
   assert.match(game, /createBossQuestions/);
   assert.match(game, /AnswerReviewPanel/);
   assert.match(game, /正确答案/);
@@ -98,7 +108,7 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /PROVINCE_CAPITALS/);
   assert.match(game, /看车牌，答省市/);
   assert.match(game, /cityAnswer/);
-  assert.match(game, /passedLevel < 21/);
+  assert.match(game, /passedLevel < 24/);
   assert.match(game, /GAUNTLET_PROGRESS_KEY/);
   assert.match(game, /normalizePlate/);
   assert.match(game, /选择省份（可多选）/);
@@ -142,6 +152,9 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /is-correct-answer/);
   assert.match(css, /boss-skill-summary/);
   assert.match(css, /university-question/);
+  assert.match(css, /mistake-empty-state/);
+  assert.match(css, /confusable-options/);
+  assert.match(css, /is-city-route/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(universityData, /UNIVERSITY_QUIZ_DATA/);
@@ -155,6 +168,13 @@ test("includes map and interaction affordances", async () => {
   assert.equal(
     universityData.match(/^\s+\["[^"]+", "[^"]+", "985"/gm)?.length,
     39,
+  );
+  assert.match(confusableCityData, /CONFUSABLE_CITY_PAIRS/);
+  assert.match(confusableCityData, /苏州市/);
+  assert.match(confusableCityData, /宿州市/);
+  assert.equal(
+    confusableCityData.match(/memoryTip: "/g)?.length,
+    12,
   );
   assert.match(layout, /lang="zh-CN"/);
 });
