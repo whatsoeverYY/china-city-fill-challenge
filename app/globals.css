@@ -1637,6 +1637,9 @@ footer {
 .gauntlet-level-card:nth-child(18) > i { background: #356b8e; }
 .gauntlet-level-card:nth-child(19) > i { background: #8a503e; }
 .gauntlet-level-card:nth-child(20) > i {
+  background: #426d88;
+}
+.gauntlet-level-card:nth-child(21) > i {
   background: linear-gradient(135deg, var(--red), #7c2d68);
   box-shadow: inset 0 0 0 3px rgba(255, 248, 231, 0.28), 0 12px 30px rgba(124, 45, 104, 0.24);
 }
@@ -1716,6 +1719,12 @@ footer {
 .province-picker-button:hover {
   border-color: var(--green);
   transform: translateY(-1px);
+}
+
+.province-picker-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
 }
 
 .province-picker-button > span {
@@ -2014,6 +2023,13 @@ footer {
   stroke-width: 2.8px;
 }
 
+.gauntlet-national-region.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px rgba(241, 199, 91, 0.72));
+}
+
 .gauntlet-national-map text {
   fill: #4c574f;
   font-family: "Microsoft YaHei", sans-serif;
@@ -2101,6 +2117,13 @@ footer {
   outline: none;
 }
 
+.gauntlet-detail-map path.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 5px rgba(241, 199, 91, 0.68));
+}
+
 .route-target-banner strong {
   display: flex;
   align-items: center;
@@ -2138,6 +2161,7 @@ footer {
 
 .choice-question.is-dual > span { background: #9a6530; }
 .plate-fault-heading > span { background: #356b8e; }
+.university-question > span { background: #426d88; }
 .boss-text-question > span { background: linear-gradient(135deg, var(--red), #7c2d68); }
 
 .choice-question p,
@@ -2153,6 +2177,11 @@ footer {
   font-family: "Songti SC", STSong, serif;
   font-size: clamp(38px, 5vw, 64px);
   line-height: 1.25;
+}
+
+.university-question strong {
+  max-width: 720px;
+  font-size: clamp(30px, 4vw, 52px);
 }
 
 .choice-question small {
@@ -2370,6 +2399,93 @@ footer {
 .gauntlet-primary-action:disabled {
   cursor: not-allowed;
   opacity: 0.4;
+}
+
+.answer-review {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(237, 246, 236, 0.96), rgba(255, 253, 247, 0.96));
+  box-shadow: 0 16px 38px rgba(58, 75, 61, 0.09);
+}
+
+.answer-review.is-wrong {
+  border-color: rgba(180, 59, 50, 0.24);
+  background: linear-gradient(145deg, rgba(250, 235, 228, 0.96), rgba(255, 253, 247, 0.96));
+}
+
+.answer-review-state {
+  width: max-content;
+  padding: 6px 10px;
+  color: var(--green-dark);
+  border-radius: 999px;
+  background: rgba(45, 125, 95, 0.12);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.answer-review.is-wrong .answer-review-state {
+  color: var(--red-dark);
+  background: rgba(180, 59, 50, 0.12);
+}
+
+.answer-review > p {
+  margin: 4px 0 -8px;
+  color: #78766f;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.answer-review > strong {
+  color: #8b4a16;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(27px, 3.2vw, 40px);
+  line-height: 1.25;
+}
+
+.answer-explanation {
+  padding: 14px 15px;
+  border-left: 3px solid #d5a945;
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 249, 230, 0.84);
+}
+
+.answer-explanation small {
+  color: #987023;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.answer-explanation p {
+  margin: 5px 0 0;
+  color: #4f514b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.answer-review .boss-checkpoint {
+  margin: 0;
+  padding: 9px 12px;
+  color: #7e5a18;
+  border-radius: 9px;
+  background: rgba(213, 169, 69, 0.15);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.answer-review > button {
+  min-height: 50px;
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  background: var(--red);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .gauntlet-option-grid {
@@ -2598,6 +2714,39 @@ footer {
 .gauntlet-passed button.is-text {
   color: #777e78;
   background: transparent;
+}
+
+.gauntlet-passed > .boss-skill-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 620px);
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.boss-skill-summary > div {
+  display: grid;
+  padding: 12px 10px;
+  gap: 3px;
+  border: 1px solid rgba(45, 125, 95, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 253, 247, 0.82);
+}
+
+.boss-skill-summary span {
+  color: #6f746e;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.boss-skill-summary strong {
+  color: var(--green-dark);
+  font-size: 22px;
+}
+
+.boss-skill-summary small {
+  color: #95958e;
+  font-size: 9px;
 }
 
 .gauntlet-timeout {
@@ -3129,6 +3278,14 @@ footer {
 }
 
 @media (max-width: 470px) {
+  .gauntlet-passed > .boss-skill-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .answer-review {
+    padding: 18px;
+  }
+
   .site-header {
     align-items: flex-start;
   }
