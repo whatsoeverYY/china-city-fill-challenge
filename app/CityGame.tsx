@@ -16,6 +16,10 @@ import {
   CONFUSABLE_CITY_PAIRS,
   type ConfusableCityPair,
 } from "./confusable-city-data";
+import {
+  PROVINCE_CITY_COUNT_DATA,
+  type ProvinceCityCountItem,
+} from "./province-city-count-data";
 
 type Position = [number, number];
 
@@ -116,7 +120,8 @@ const STORAGE_KEY = "china-city-fill-progress-v1";
 const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
 const NEIGHBOR_MODE_KEY = "china-city-fill-neighbor-mode-v1";
 const NEIGHBOR_PROGRESS_KEY = "china-city-fill-neighbor-progress-v1";
-const GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v3";
+const GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v4";
+const LEGACY_GAUNTLET_PROGRESS_V3_KEY = "china-city-fill-gauntlet-progress-v3";
 const LEGACY_GAUNTLET_PROGRESS_V2_KEY = "china-city-fill-gauntlet-progress-v2";
 const LEGACY_GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v1";
 const GAUNTLET_MISTAKES_KEY = "china-city-fill-gauntlet-mistakes-v1";
@@ -575,7 +580,7 @@ function LoadingMap() {
 type GauntletLevel =
   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
   | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
-  | 21 | 22 | 23 | 24;
+  | 21 | 22 | 23 | 24 | 25;
 
 const GAUNTLET_LEVELS: Array<{
   level: GauntletLevel;
@@ -747,6 +752,13 @@ const GAUNTLET_LEVELS: Array<{
   },
   {
     level: 24,
+    title: "省市点兵",
+    badge: "市数",
+    description: "根据省级行政区名称，写出其中有多少座地级及以上城市。",
+    target: "连续答对 20 题",
+  },
+  {
+    level: 25,
     title: "终极混战",
     badge: "终极",
     description: "六类题型随机混合，带着三条生命完成最终考验。",
@@ -755,11 +767,11 @@ const GAUNTLET_LEVELS: Array<{
 ];
 
 const MAP_REQUIRED_LEVELS = new Set<GauntletLevel>([
-  1, 5, 8, 10, 11, 13, 14, 15, 17, 19, 24,
+  1, 5, 8, 10, 11, 13, 14, 15, 17, 19, 25,
 ]);
 
-const NATIONAL_PICKER_LEVELS = new Set<GauntletLevel>([1, 5, 7, 11, 17, 19]);
-const NO_PICKER_LEVELS = new Set<GauntletLevel>([10, 14, 15, 21, 22, 24]);
+const NATIONAL_PICKER_LEVELS = new Set<GauntletLevel>([1, 5, 7, 11, 17, 19, 24]);
+const NO_PICKER_LEVELS = new Set<GauntletLevel>([10, 14, 15, 21, 22, 25]);
 
 const GAUNTLET_OPENING_FEEDBACK: Record<GauntletLevel, string> = {
   1: "观察轮廓，写出省级行政区名称",
@@ -785,7 +797,8 @@ const GAUNTLET_OPENING_FEEDBACK: Record<GauntletLevel, string> = {
   21: "逐个击破历史错题，答对后从错题库移除",
   22: "辨清读音、字形相近的城市及其所属省份",
   23: "沿市级接壤区块走出省内最短路线",
-  24: "三条生命、三十道均衡混合题，每十题通过一个检查点",
+  24: "看到省级行政区，写出其中有多少座地级及以上城市",
+  25: "三条生命、三十道均衡混合题，每十题通过一个检查点",
 };
 
 const GAUNTLET_ROUND_HEADINGS: Record<GauntletLevel, string> = {
@@ -812,7 +825,8 @@ const GAUNTLET_ROUND_HEADINGS: Record<GauntletLevel, string> = {
   21: "把曾经答错的题一一赢回来",
   22: "相似城名，也要分得一清二楚",
   23: "沿市界寻找省内最短通路",
-  24: "三条生命闯过三段终极混战",
+  24: "一个省级行政区，究竟有多少座城市",
+  25: "三条生命闯过三段终极混战",
 };
 
 const PROVINCE_CAPITALS: Record<string, string> = {
@@ -917,7 +931,7 @@ type RouteChallenge = {
 
 type MistakeQuestion = {
   id: string;
-  category: "省份" | "城市" | "车牌" | "省会" | "高校" | "判断";
+  category: "省份" | "城市" | "城市数量" | "车牌" | "省会" | "高校" | "判断";
   prompt: string;
   answers: string[];
   correctAnswer: string;
@@ -1856,6 +1870,7 @@ function GauntletGame({
   const [mistakeSessionTotal, setMistakeSessionTotal] = useState(0);
   const [confusableOrder, setConfusableOrder] = useState<ConfusableCityQuestion[]>([]);
   const [cityRouteProvinceOrder, setCityRouteProvinceOrder] = useState<string[]>([]);
+  const [provinceCityCountOrder, setProvinceCityCountOrder] = useState<ProvinceCityCountItem[]>([]);
   const [cityRouteAttempt, setCityRouteAttempt] = useState<{
     key: string;
     names: string[];
@@ -1916,14 +1931,17 @@ function GauntletGame({
   useEffect(() => {
     try {
       const savedCurrent = localStorage.getItem(GAUNTLET_PROGRESS_KEY);
+      const savedV3 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V3_KEY);
       const savedV2 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V2_KEY);
       const savedV1 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_KEY);
-      const saved = JSON.parse(savedCurrent ?? savedV2 ?? savedV1 ?? "[]") as number[];
+      const saved = JSON.parse(savedCurrent ?? savedV3 ?? savedV2 ?? savedV1 ?? "[]") as number[];
       const migrated = savedCurrent
         ? saved
-        : savedV2
-          ? saved.map((item) => item === 21 ? 24 : item)
-          : saved.map((item) => item === 20 ? 24 : item);
+        : savedV3
+          ? saved.map((item) => item === 24 ? 25 : item)
+          : savedV2
+            ? saved.map((item) => item === 21 ? 25 : item)
+            : saved.map((item) => item === 20 ? 25 : item);
       setCompletedLevels(
         new Set(
           migrated.filter(
@@ -1982,6 +2000,9 @@ function GauntletGame({
     : null;
   const currentCityRouteProvinceCode = cityRouteProvinceOrder.length
     ? cityRouteProvinceOrder[questionIndex % cityRouteProvinceOrder.length]
+    : null;
+  const currentProvinceCityCount = provinceCityCountOrder.length
+    ? provinceCityCountOrder[questionIndex % provinceCityCountOrder.length]
     : null;
   const currentChallengeProvince = provinceChallengeOrder.length
     ? provinceChallengeOrder[questionIndex % provinceChallengeOrder.length]
@@ -2081,7 +2102,7 @@ function GauntletGame({
           ? 16
           : level === 5 || level === 10 || level === 15 || level === 23
         ? 10
-        : level === 24
+        : level === 25
           ? 30
         : 20;
   const progress = level === 1
@@ -2092,7 +2113,7 @@ function GauntletGame({
       ? routeCodes.length
       : level === 21
         ? Math.max(0, mistakeSessionTotal - mistakeOrder.length)
-      : level === 24
+      : level === 25
         ? questionIndex + (answerReview ? 1 : 0)
       : streak;
   const usesNationalPicker = level ? NATIONAL_PICKER_LEVELS.has(level) : false;
@@ -2147,7 +2168,7 @@ function GauntletGame({
       cityGroups(draftQuizItems).some(([, items]) => items.length >= 3)) &&
     (level !== 18 || draftQuizItems.length >= 4);
   const hasTimedOut = timedMode && Boolean(level) && !passedLevel && timeLeft === 0;
-  const hasLostBoss = level === 24 && bossLives === 0 && !passedLevel;
+  const hasLostBoss = level === 25 && bossLives === 0 && !passedLevel;
   const reviewProvinceCodes = new Set(answerReview?.highlightProvinceCodes ?? []);
 
   const focusProvinceInput = () => {
@@ -2211,6 +2232,7 @@ function GauntletGame({
     setConfusableOrder([]);
     setCityRouteProvinceOrder([]);
     setCityRouteAttempt(null);
+    setProvinceCityCountOrder([]);
     setBossLives(3);
     setBossStats(createEmptyBossStats());
 
@@ -2338,6 +2360,22 @@ function GauntletGame({
       setCityOrder([]);
       setTruthOrder([]);
     } else if (nextLevel === 24) {
+      const selectedQuestions = PROVINCE_CITY_COUNT_DATA.filter((item) =>
+        selectedShapeProvinceCodes.has(item.code),
+      );
+      const nextQuestions = selectedQuestions.length
+        ? selectedQuestions
+        : PROVINCE_CITY_COUNT_DATA;
+      if (!selectedQuestions.length) {
+        setSelectedShapeProvinceCodes(new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
+        setDraftShapeProvinceCodes(new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
+      }
+      setProvinceCityCountOrder(randomShuffle(nextQuestions));
+      setProvinceOrder([]);
+      setProvinceChallengeOrder([]);
+      setCityOrder([]);
+      setTruthOrder([]);
+    } else if (nextLevel === 25) {
       setBossOrder(createBossQuestions());
       setProvinceOrder([]);
       setProvinceChallengeOrder([]);
@@ -2406,10 +2444,11 @@ function GauntletGame({
 
     let rangeMessage = "";
     if (usesNationalPicker) {
-      if (!nationalMap) return;
+      if (!nationalMap && level !== 24) return;
       const nextSelection = new Set(draftShapeProvinceCodes);
       setSelectedShapeProvinceCodes(nextSelection);
       if (level === 1 || level === 11 || level === 17) {
+        if (!nationalMap) return;
         const nextFeatures = nationalMap.features.filter((feature) => {
           const featureProvince = provinceForFeature(feature);
           return Boolean(
@@ -2430,6 +2469,12 @@ function GauntletGame({
         );
         setProvinceChallengeOrder(randomShuffle(nextProvinces));
         rangeMessage = `题目范围已更新：从 ${nextProvinces.length} 个有陆地邻省的省份中出题`;
+      } else if (level === 24) {
+        const nextQuestions = PROVINCE_CITY_COUNT_DATA.filter((item) =>
+          nextSelection.has(item.code),
+        );
+        setProvinceCityCountOrder(randomShuffle(nextQuestions));
+        rangeMessage = `题目范围已更新：从 ${nextQuestions.length} 个省级行政区中出题`;
       } else {
         const nextProvinces = PROVINCES.filter((item) =>
           nextSelection.has(item.code),
@@ -2603,7 +2648,7 @@ function GauntletGame({
       correct,
       correctAnswer,
       explanation,
-      level: 24,
+      level: 25,
       nextAction:
         nextLives <= 0 ? "lose" : nextIndex === 30 ? "finish" : "next",
       checkpoint: !correct
@@ -2654,7 +2699,7 @@ function GauntletGame({
     if (!level || answerReview) return;
 
     if (
-      level === 24 &&
+      level === 25 &&
       currentBossQuestion &&
       (currentBossQuestion.kind === "text" || currentBossQuestion.kind === "shape")
     ) {
@@ -2667,6 +2712,35 @@ function GauntletGame({
         correct,
         currentBossQuestion.targets.join(" / "),
         currentBossQuestion.explanation,
+      );
+      return;
+    }
+
+    if (level === 24) {
+      if (!currentProvinceCityCount) return;
+      const normalizedAnswer = compactName(provinceAnswer).replace(/[个座市]$/u, "");
+      const correct = /^\d+$/.test(normalizedAnswer) &&
+        Number(normalizedAnswer) === currentProvinceCityCount.cityCount;
+      const countAnswer = `${currentProvinceCityCount.cityCount} 座`;
+      advanceStreakChallenge(
+        24,
+        correct,
+        20,
+        countAnswer,
+        currentProvinceCityCount.explanation,
+        undefined,
+        {
+          id: `province-city-count-${currentProvinceCityCount.code}`,
+          category: "城市数量",
+          prompt: `${currentProvinceCityCount.name}有多少座地级及以上城市？`,
+          answers: [
+            String(currentProvinceCityCount.cityCount),
+            `${currentProvinceCityCount.cityCount}个`,
+            `${currentProvinceCityCount.cityCount}座`,
+          ],
+          correctAnswer: countAnswer,
+          explanation: currentProvinceCityCount.explanation,
+        },
       );
       return;
     }
@@ -3157,7 +3231,7 @@ function GauntletGame({
   };
 
   const answerBossTruth = (answer: boolean) => {
-    if (level !== 24 || currentBossQuestion?.kind !== "truth" || answerReview) return;
+    if (level !== 25 || currentBossQuestion?.kind !== "truth" || answerReview) return;
     advanceBossQuestion(
       answer === currentBossQuestion.isTrue,
       currentBossQuestion.isTrue ? "正确" : "错误",
@@ -3215,7 +3289,7 @@ function GauntletGame({
       return;
     }
 
-    if (level === 24 && currentBossQuestion?.kind === "map") {
+    if (level === 25 && currentBossQuestion?.kind === "map") {
       const correctProvince = PROVINCES.find(
         (item) => item.code === currentBossQuestion.provinceCode,
       );
@@ -3391,9 +3465,9 @@ function GauntletGame({
       {!level ? (
         <>
           <section className="gauntlet-intro">
-            <p className="eyebrow">过关斩将 · 二十四重试炼</p>
+            <p className="eyebrow">过关斩将 · 二十五重试炼</p>
             <h1>从轮廓到终极混战，<span>把中国地理练成直觉</span></h1>
-            <p className="lede">二十四个关卡均可直接选择。错题复仇会读取本机历史错题，其余连续答题关卡答错后连胜归零。</p>
+            <p className="lede">二十五个关卡均可直接选择。错题复仇会读取本机历史错题，其余连续答题关卡答错后连胜归零。</p>
             <button
               className={`timed-mode-toggle ${timedMode ? "is-active" : ""}`}
               type="button"
@@ -3471,9 +3545,9 @@ function GauntletGame({
           <p className="eyebrow">第 {passedLevel} 关 · 挑战达成</p>
           <h1>{activeConfig?.title}，过关！</h1>
           <p>{completedTarget}，这一关已留下通关印记。</p>
-          {passedLevel === 24 ? <BossSkillSummary stats={bossStats} /> : null}
+          {passedLevel === 25 ? <BossSkillSummary stats={bossStats} /> : null}
           <div>
-            {passedLevel < 24 ? (
+            {passedLevel < 25 ? (
               <button type="button" onClick={() => startLevel((passedLevel + 1) as GauntletLevel)}>
                 挑战下一关
               </button>
@@ -3507,7 +3581,7 @@ function GauntletGame({
                   <i>{selectedPickerProvinces.size} / {provincePickerOptions.length}</i>
                 </button>
               ) : null}
-              {level === 24 ? (
+              {level === 25 ? (
                 <div className="boss-lives" aria-label={`剩余 ${bossLives} 条生命`}>
                   <span>生命</span>
                   <strong>{Array.from({ length: 3 }, (_, index) => (
@@ -3535,7 +3609,7 @@ function GauntletGame({
                             ? "错题进度"
                           : level === 23
                             ? "完成路线"
-                          : level === 24
+                          : level === 25
                             ? "题目进度"
                             : "当前连胜"}
                 </span>
@@ -3573,6 +3647,8 @@ function GauntletGame({
                           : level === 23
                             ? `省内路线 · 已完成 ${streak} / 10 条`
                           : level === 24
+                            ? `${selectedShapeProvinceCodes.size} 省 · 第 ${questionIndex + 1} 题`
+                          : level === 25
                             ? `终极混战 · 第 ${questionIndex + 1} / 30 题`
                           : level === 20
                             ? `${selectedUniversityProvinces.size} 省 · ${universityOrder.length} 校 · 第 ${questionIndex + 1} 题`
@@ -3756,6 +3832,15 @@ function GauntletGame({
                   <p className="map-error">省内地图载入失败，请重试本关</p>
                 ) : <LoadingMap />
               ) : level === 24 ? (
+                currentProvinceCityCount ? (
+                  <div className="choice-question city-count-question">
+                    <span aria-hidden="true">数</span>
+                    <p>地级及以上城市数量</p>
+                    <strong>{currentProvinceCityCount.name}</strong>
+                    <small>内地按2024年《中国统计年鉴》口径；港澳台按当地现行行政层级说明</small>
+                  </div>
+                ) : <LoadingMap />
+              ) : level === 25 ? (
                 currentBossQuestion?.kind === "map" && nationalMap ? (
                   <div className="gauntlet-map-question boss-question-stage">
                     <div className="map-question-banner">
@@ -4032,6 +4117,25 @@ function GauntletGame({
                 </>
               ) : level === 24 ? (
                 <>
+                  <h2>这里有多少座地级及以上城市？</h2>
+                  <form onSubmit={submitAnswer}>
+                    <label htmlFor="gauntlet-city-count-answer">城市数量</label>
+                    <input
+                      ref={provinceInputRef}
+                      id="gauntlet-city-count-answer"
+                      value={provinceAnswer}
+                      onChange={(event) => setProvinceAnswer(event.target.value)}
+                      placeholder="例如：13"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="off"
+                    />
+                    <button type="submit" disabled={!provinceAnswer.trim()}>提交答案</button>
+                  </form>
+                  <p className="map-answer-summary">只需填写数字；自治州、地区、盟和省直辖县级市不计入城市数。</p>
+                </>
+              ) : level === 25 ? (
+                <>
                   <h2>
                     {currentBossQuestion?.kind === "truth"
                       ? "判断这句话的真伪"
@@ -4203,7 +4307,7 @@ function GauntletGame({
                   <p className={`gauntlet-feedback is-${feedbackType}`} aria-live="polite">
                     {feedback}
                   </p>
-                  {[2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23].includes(level) &&
+                  {[2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24].includes(level) &&
                   (level !== 21 || Boolean(currentMistake)) ? (
                     <p className="streak-note">答题后会展示正确答案与知识解释，由你决定何时继续。</p>
                   ) : null}
@@ -4251,6 +4355,8 @@ function GauntletGame({
                       ? "应用后，只会出现所选省份内的 985、211 大学。"
                     : level === 23
                       ? "应用后，省内穿越路线只会从所选省份中生成；直辖市和港澳台暂不参与。"
+                    : level === 24
+                      ? "应用后，只会询问所选省级行政区的地级及以上城市数量。"
                     : "应用后，后续题目只会来自所选省份，当前连胜将重新计数。"}
             </p>
             <div className="province-picker-tools">

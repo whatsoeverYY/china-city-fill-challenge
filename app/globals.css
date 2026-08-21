@@ -2193,6 +2193,7 @@ footer {
 .university-question > span { background: #426d88; }
 .mistake-question > span { background: #a34b3f; }
 .confusable-question > span { background: #8b5f9e; }
+.city-count-question > span { background: #3d766d; }
 .boss-text-question > span { background: linear-gradient(135deg, var(--red), #7c2d68); }
 
 .choice-question p,

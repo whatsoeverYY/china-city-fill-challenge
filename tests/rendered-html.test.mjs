@@ -37,13 +37,14 @@ test("server-renders the city challenge shell", async () => {
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout, gauntletData, universityData, confusableCityData] = await Promise.all([
+  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/gauntlet-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/university-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/confusable-city-data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/province-city-count-data.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(game, /draggable=\{!isPlaced\}/);
@@ -84,6 +85,8 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /错题复仇赛/);
   assert.match(game, /双城迷阵/);
   assert.match(game, /省内穿越/);
+  assert.match(game, /省市点兵/);
+  assert.match(game, /多少座地级及以上城市/);
   assert.match(game, /终极混战/);
   assert.match(game, /GAUNTLET_TIME_LIMIT = 90/);
   assert.match(game, /极速模式 · 60 秒/);
@@ -108,7 +111,7 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /PROVINCE_CAPITALS/);
   assert.match(game, /看车牌，答省市/);
   assert.match(game, /cityAnswer/);
-  assert.match(game, /passedLevel < 24/);
+  assert.match(game, /passedLevel < 25/);
   assert.match(game, /GAUNTLET_PROGRESS_KEY/);
   assert.match(game, /normalizePlate/);
   assert.match(game, /选择省份（可多选）/);
@@ -155,6 +158,7 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /mistake-empty-state/);
   assert.match(css, /confusable-options/);
   assert.match(css, /is-city-route/);
+  assert.match(css, /city-count-question/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(universityData, /UNIVERSITY_QUIZ_DATA/);
@@ -176,5 +180,14 @@ test("includes map and interaction affordances", async () => {
     confusableCityData.match(/memoryTip: "/g)?.length,
     12,
   );
+  const mainlandCityCounts = Array.from(
+    provinceCityCountData.matchAll(/mainland\("\d+",\s*"[^"]+",\s*"[^"]+",\s*(\d+)/g),
+    (match) => Number(match[1]),
+  );
+  assert.equal(mainlandCityCounts.length, 31);
+  assert.equal(mainlandCityCounts.reduce((total, count) => total + count, 0), 297);
+  assert.match(provinceCityCountData, /台湾地区有6个‘直辖市’和3个市，共9座城市/);
+  assert.match(provinceCityCountData, /香港特别行政区现行划分为18区/);
+  assert.match(provinceCityCountData, /PROVINCE_CITY_COUNT_DATA/);
   assert.match(layout, /lang="zh-CN"/);
 });
