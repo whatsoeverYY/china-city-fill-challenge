@@ -74,6 +74,10 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /省份拼图/);
   assert.match(game, /谁是卧底/);
   assert.match(game, /市域落点/);
+  assert.match(
+    game,
+    /title: "市域落点"[\s\S]{0,220}target: "连续答对 30 题"/,
+  );
   assert.match(game, /沿海与沿边/);
   assert.match(game, /最短省际路线/);
   assert.match(game, /地理排除/);
@@ -92,9 +96,17 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /极速模式 · 60 秒/);
   assert.match(game, /GauntletNationalMap/);
   assert.match(game, /GauntletDetailMap/);
-  assert.match(game, /shortestProvincePath/);
+  assert.match(game, /findShortestPath/);
   assert.match(game, /buildCityAdjacencyMap/);
-  assert.match(game, /shortestCityPath/);
+  assert.match(game, /shuffleWithRandom/);
+  assert.match(game, /summarizeQuestionsByProvince/);
+  assert.match(game, /PROVINCE_BY_CODE/);
+  assert.match(game, /setDraftPickerSelection/);
+  assert.match(game, /gradeProvinceSelection/);
+  assert.match(game, /clearProvinceView/);
+  assert.doesNotMatch(game, /function shortestCityPath/);
+  assert.doesNotMatch(game, /function shortestProvincePath/);
+  assert.doesNotMatch(game, /function collectGeometryPointKeys/);
   assert.match(game, /createCityRouteChallenge/);
   assert.match(game, /GAUNTLET_MISTAKES_KEY/);
   assert.match(game, /recordMistake/);
@@ -111,7 +123,7 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /PROVINCE_CAPITALS/);
   assert.match(game, /看车牌，答省市/);
   assert.match(game, /cityAnswer/);
-  assert.match(game, /passedLevel < 25/);
+  assert.match(game, /passedLevel < 26/);
   assert.match(game, /GAUNTLET_PROGRESS_KEY/);
   assert.match(game, /normalizePlate/);
   assert.match(game, /选择省份（可多选）/);
@@ -129,12 +141,32 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /resetRoundProgress/);
   assert.match(game, /setCityChallengeQuestions/);
   assert.match(game, /advanceStreakChallenge/);
+  assert.match(game, /GAUNTLET_LEVEL_13_HISTORY_KEY/);
+  assert.match(game, /GAUNTLET_LEVEL_25_HISTORY_KEY/);
+  assert.match(game, /CITY_MAP_RECENT_QUESTION_LIMIT = 90/);
+  assert.match(game, /createCityMapQuestionQueue/);
+  assert.match(game, /spreadCityQuestions/);
+  assert.match(game, /rememberCityMapQuestion/);
+  assert.match(game, /GauntletProvinceMapWall/);
+  assert.match(game, /车牌落城/);
+  assert.match(game, /二十六重试炼/);
+  assert.match(game, /优先避开最近 90 道已出现题目/);
+  assert.match(game, /答对后自动进入下一题；答错才会展示正确答案与知识解释/);
+  assert.match(game, /不再依赖地图，直接根据省份名称判断/);
+  assert.match(game, /neighbor-text-options/);
+  assert.match(game, /NationalCityAtlas/);
+  assert.match(game, /全国车牌图鉴/);
+  assert.match(game, /PROVINCE_PLATE_PREFIXES/);
+  assert.match(game, /atlasPointerPosition/);
+  assert.match(game, /onWheel=\{handleWheel\}/);
   assert.match(game, /已辨认本轮所选的/);
   assert.match(game, /已完成本轮所选的/);
   assert.match(game, /已完成目标：/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
   assert.match(css, /--red:\s*#b43b32/i);
+  assert.match(css, /\.gauntlet-province-map-wall/);
+  assert.match(css, /\.gauntlet-province-map-panel path\.is-correct-answer/);
   assert.match(css, /--green:\s*#2d7d5f/i);
   assert.match(css, /map-region\.is-province-tinted/);
   assert.match(css, /joined-province-strip > button\.is-hidden/);
@@ -159,6 +191,11 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /confusable-options/);
   assert.match(css, /is-city-route/);
   assert.match(css, /city-count-question/);
+  assert.match(css, /neighbor-text-options button\.is-selected/);
+  assert.match(css, /city-atlas-shell/);
+  assert.match(css, /city-atlas-region/);
+  assert.match(css, /city-atlas-province-outline/);
+  assert.match(css, /city-atlas-toolbar/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(universityData, /UNIVERSITY_QUIZ_DATA/);
