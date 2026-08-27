@@ -33,11 +33,12 @@ test("server-renders the city challenge shell", async () => {
   assert.match(html, /中国城市填充挑战/);
   assert.match(html, /从一省出发/);
   assert.match(html, /34 个省级行政区/);
+  assert.match(html, /地理知识馆/);
   assert.doesNotMatch(html, /codex-preview/);
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData] = await Promise.all([
+  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, knowledgeBase, knowledgeData] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
@@ -45,6 +46,8 @@ test("includes map and interaction affordances", async () => {
     readFile(new URL("../app/university-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/confusable-city-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/province-city-count-data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/KnowledgeBase.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/knowledge-data.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(game, /draggable=\{!isPlaced\}/);
@@ -156,6 +159,9 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /neighbor-text-options/);
   assert.match(game, /NationalCityAtlas/);
   assert.match(game, /全国车牌图鉴/);
+  assert.match(game, /KnowledgeBase/);
+  assert.match(game, /地理知识馆/);
+  assert.match(game, /knowledgeOpen/);
   assert.match(game, /PROVINCE_PLATE_PREFIXES/);
   assert.match(game, /atlasPointerPosition/);
   assert.match(game, /onWheel=\{handleWheel\}/);
@@ -196,6 +202,27 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /city-atlas-region/);
   assert.match(css, /city-atlas-province-outline/);
   assert.match(css, /city-atlas-toolbar/);
+  assert.match(css, /knowledge-category-grid/);
+  assert.match(css, /knowledge-neighbor-stage/);
+  assert.match(css, /knowledge-river-card/);
+  assert.match(knowledgeBase, /中国地理知识馆/);
+  assert.match(knowledgeBase, /关卡知识覆盖/);
+  assert.match(knowledgeBase, /CITY_QUIZ_DATA/);
+  assert.match(knowledgeBase, /UNIVERSITY_QUIZ_DATA/);
+  assert.match(knowledgeBase, /PROVINCE_CITY_COUNT_DATA/);
+  assert.match(knowledgeBase, /CONFUSABLE_CITY_PAIRS/);
+  assert.match(knowledgeData, /KNOWLEDGE_CATEGORIES/);
+  assert.match(knowledgeData, /RIVER_KNOWLEDGE/);
+  assert.match(knowledgeData, /省份全景名片/);
+  assert.match(knowledgeData, /城市与车牌密码/);
+  assert.match(knowledgeData, /985 · 211 名校坐标/);
+  assert.match(knowledgeData, /陆地邻省关系/);
+  assert.match(knowledgeData, /每省有几座城市/);
+  assert.match(knowledgeData, /长江 · 黄河路线/);
+  assert.match(knowledgeData, /易混城市辨析/);
+  assert.match(knowledgeData, /地图落点与路线诀窍/);
+  assert.match(knowledgeData, /青藏川滇渝，鄂湘赣皖苏沪/);
+  assert.match(knowledgeData, /青川甘宁内蒙古，陕晋豫鲁入渤海/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(universityData, /UNIVERSITY_QUIZ_DATA/);

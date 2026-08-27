@@ -20,6 +20,8 @@ import {
   PROVINCE_CITY_COUNT_DATA,
   type ProvinceCityCountItem,
 } from "./province-city-count-data";
+import KnowledgeBase from "./KnowledgeBase";
+import { RIVER_KNOWLEDGE } from "./knowledge-data";
 
 type Position = [number, number];
 
@@ -1288,10 +1290,8 @@ const PROVINCE_GROUP_QUESTIONS: ProvinceGroupQuestion[] = [
   {
     title: "长江干流流经省级行政区",
     description: "选择长江干流流经或作为省界经过的省级行政区",
-    codes: [
-      "310000", "320000", "340000", "360000", "420000", "430000",
-      "500000", "510000", "530000", "540000", "630000",
-    ],
+    codes:
+      RIVER_KNOWLEDGE.find((river) => river.id === "yangtze")?.provinceCodes ?? [],
   },
 ];
 
@@ -5083,6 +5083,7 @@ function GauntletGame({
 export default function CityGame() {
   const [gauntletOpen, setGauntletOpen] = useState(false);
   const [atlasOpen, setAtlasOpen] = useState(false);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [province, setProvince] = useState<Province | null>(null);
   const [hardMode, setHardMode] = useState(false);
   const [neighborMode, setNeighborMode] = useState(false);
@@ -5534,6 +5535,23 @@ export default function CityGame() {
     );
   }
 
+  if (knowledgeOpen) {
+    return (
+      <KnowledgeBase
+        provinces={PROVINCES}
+        provinceCapitals={PROVINCE_CAPITALS}
+        provinceNeighbors={PROVINCE_NEIGHBORS}
+        provincePlatePrefixes={PROVINCE_PLATE_PREFIXES}
+        provinceGroups={PROVINCE_GROUP_QUESTIONS}
+        onExit={() => setKnowledgeOpen(false)}
+        onOpenAtlas={() => {
+          setKnowledgeOpen(false);
+          setAtlasOpen(true);
+        }}
+      />
+    );
+  }
+
   if (gauntletOpen) {
     return (
       <GauntletGame
@@ -5564,6 +5582,14 @@ export default function CityGame() {
               >
                 <span aria-hidden="true">图</span>
                 全国车牌图鉴
+              </button>
+              <button
+                className="knowledge-mode-button"
+                type="button"
+                onClick={() => setKnowledgeOpen(true)}
+              >
+                <span aria-hidden="true">知</span>
+                地理知识馆
               </button>
               <button
                 className="gauntlet-mode-button"
