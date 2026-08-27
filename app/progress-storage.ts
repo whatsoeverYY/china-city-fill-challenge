@@ -403,7 +403,7 @@ function applyResetBoundary(
   }
 
   const values: ProgressSnapshot["values"] = {};
-  for (const key of PROGRESS_STORAGE_KEYS) {
+  for (const key of Object.keys(snapshot.values)) {
     const value = snapshot.values[key];
     if (typeof value !== "string") continue;
 

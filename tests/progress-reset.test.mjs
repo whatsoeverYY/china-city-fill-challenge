@@ -84,6 +84,18 @@ test("unknown values from the current schema survive a merge", () => {
   assert.equal(merged.values["future-compatible-key"], "future value");
 });
 
+test("unknown values written after an acknowledged reset survive a merge", () => {
+  const acknowledged = createResetProgressSnapshot(RESET_AT);
+  acknowledged.savedAt = AFTER_RESET;
+  acknowledged.values["future-compatible-key"] = "future value";
+  acknowledged.meta.keys["future-compatible-key"] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(staleSnapshot(), acknowledged);
+
+  assert.equal(merged.values["future-compatible-key"], "future value");
+  assert.equal(merged.resetAt, RESET_AT);
+});
+
 test("a newer cloud schema is never accepted by an older client", () => {
   assert.throws(
     () => assertSupportedProgressVersion(2, { schemaVersion: 2 }),
