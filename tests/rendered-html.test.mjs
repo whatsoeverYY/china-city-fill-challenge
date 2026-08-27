@@ -188,7 +188,9 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /knowledgeOpen/);
   assert.match(game, /PROVINCE_PLATE_PREFIXES/);
   assert.match(game, /atlasPointerPosition/);
-  assert.match(game, /onWheel=\{handleWheel\}/);
+  assert.match(game, /addEventListener\("wheel", handleWheel, \{ passive: false \}\)/);
+  assert.match(game, /隐藏全部文字/);
+  assert.match(game, /city-atlas-hover-label/);
   assert.match(game, /已辨认本轮所选的/);
   assert.match(game, /已完成本轮所选的/);
   assert.match(game, /已完成目标：/);

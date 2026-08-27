@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -703,8 +704,109 @@ type AtlasView = {
   y: number;
 };
 
+type AtlasRegionDrawing = {
+  key: string;
+  path: string;
+  fill: string;
+  name: string;
+  plate: string;
+  labelX: number;
+  labelY: number;
+  longLabel: boolean;
+};
+
+type AtlasProvinceDrawing = {
+  key: string;
+  path: string;
+};
+
+type AtlasHoverLabel = {
+  name: string;
+  plate: string;
+  left: number;
+  top: number;
+};
+
 const ATLAS_MIN_SCALE = 1;
 const ATLAS_MAX_SCALE = 8;
+
+const AtlasRegionShapes = memo(function AtlasRegionShapes({
+  regions,
+  onRegionEnter,
+  onRegionLeave,
+}: {
+  regions: AtlasRegionDrawing[];
+  onRegionEnter: (
+    region: AtlasRegionDrawing,
+    event: React.PointerEvent<SVGPathElement>,
+  ) => void;
+  onRegionLeave: () => void;
+}) {
+  return (
+    <g className="city-atlas-region-layer">
+      {regions.map((region) => (
+        <path
+          key={region.key}
+          className="city-atlas-region"
+          d={region.path}
+          fill={region.fill}
+          fillRule="evenodd"
+          vectorEffect="non-scaling-stroke"
+          data-region-name={region.name}
+          onPointerEnter={(event) => onRegionEnter(region, event)}
+          onPointerLeave={onRegionLeave}
+        />
+      ))}
+    </g>
+  );
+});
+
+const AtlasProvinceOutlines = memo(function AtlasProvinceOutlines({
+  provinces,
+}: {
+  provinces: AtlasProvinceDrawing[];
+}) {
+  return (
+    <g className="city-atlas-province-layer">
+      {provinces.map((province) => (
+        <path
+          key={province.key}
+          className="city-atlas-province-outline"
+          d={province.path}
+          fill="none"
+          fillRule="evenodd"
+          vectorEffect="non-scaling-stroke"
+        />
+      ))}
+    </g>
+  );
+});
+
+const AtlasLabels = memo(function AtlasLabels({
+  regions,
+}: {
+  regions: AtlasRegionDrawing[];
+}) {
+  return (
+    <g className="city-atlas-labels">
+      {regions.map((region) => (
+        <text
+          key={`label-${region.key}`}
+          x={region.labelX}
+          y={region.labelY}
+          className={region.longLabel ? "is-long" : ""}
+          textAnchor="middle"
+          aria-hidden="true"
+        >
+          <tspan x={region.labelX} dy="-0.1em">{region.name}</tspan>
+          <tspan className="city-atlas-plate" x={region.labelX} dy="1.2em">
+            {region.plate}
+          </tspan>
+        </text>
+      ))}
+    </g>
+  );
+});
 
 function atlasPointerPosition(
   svg: SVGSVGElement,
@@ -739,6 +841,9 @@ function NationalCityAtlas({
 }) {
   const [view, setView] = useState<AtlasView>({ scale: 1, x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [labelsVisible, setLabelsVisible] = useState(true);
+  const [hoverLabel, setHoverLabel] = useState<AtlasHoverLabel | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{
     pointerId: number;
     viewX: number;
@@ -758,6 +863,34 @@ function NationalCityAtlas({
       ),
     [],
   );
+  const atlasRegions = useMemo<AtlasRegionDrawing[]>(() => {
+    if (!map || !project) return [];
+    return map.features.map((feature) => {
+      const provinceCode = feature.properties.provinceCode ?? "";
+      const name = feature.properties.name;
+      const [labelX, labelY] = featureLabelPosition(feature, project);
+      return {
+        key: `${provinceCode}-${String(feature.properties.adcode)}`,
+        path: geometryToPath(feature.geometry, project),
+        fill: provinceFillColors[provinceCode] ?? "#ece4d4",
+        name,
+        plate:
+          CITY_PLATE_BY_NAME.get(compactName(name)) ??
+          PROVINCE_PLATE_PREFIXES[provinceCode] ??
+          "—",
+        labelX,
+        labelY,
+        longLabel: name.length > 6,
+      };
+    });
+  }, [map, project, provinceFillColors]);
+  const atlasProvinces = useMemo<AtlasProvinceDrawing[]>(() => {
+    if (!nationalMap || !project) return [];
+    return nationalMap.features.map((feature) => ({
+      key: String(feature.properties.adcode),
+      path: geometryToPath(feature.geometry, project),
+    }));
+  }, [nationalMap, project]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -767,10 +900,13 @@ function NationalCityAtlas({
     };
   }, []);
 
-  const zoomAt = useCallback(
-    (nextScale: number, anchorX = MAP_WIDTH / 2, anchorY = MAP_HEIGHT / 2) => {
+  const zoomBy = useCallback(
+    (factor: number, anchorX = MAP_WIDTH / 2, anchorY = MAP_HEIGHT / 2) => {
       setView((current) => {
-        const scale = Math.min(ATLAS_MAX_SCALE, Math.max(ATLAS_MIN_SCALE, nextScale));
+        const scale = Math.min(
+          ATLAS_MAX_SCALE,
+          Math.max(ATLAS_MIN_SCALE, current.scale * factor),
+        );
         if (scale === current.scale) return current;
         const mapX = (anchorX - current.x) / current.scale;
         const mapY = (anchorY - current.y) / current.scale;
@@ -784,12 +920,33 @@ function NationalCityAtlas({
     [],
   );
 
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const [anchorX, anchorY] = atlasPointerPosition(
+        svg,
+        event.clientX,
+        event.clientY,
+      );
+      const deltaPixels = event.deltaY * (
+        event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? svg.clientHeight : 1
+      );
+      const limitedDelta = Math.max(-120, Math.min(120, deltaPixels));
+      zoomBy(Math.exp(-limitedDelta * 0.002), anchorX, anchorY);
+    };
+    svg.addEventListener("wheel", handleWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", handleWheel);
+  }, [atlasRegions.length, zoomBy]);
+
   const resetView = useCallback(() => {
     setView({ scale: 1, x: 0, y: 0 });
   }, []);
 
   const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
     if (event.button !== 0) return;
+    setHoverLabel(null);
     const [viewX, viewY] = atlasPointerPosition(
       event.currentTarget,
       event.clientX,
@@ -835,15 +992,28 @@ function NationalCityAtlas({
     setDragging(false);
   };
 
-  const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
-    event.preventDefault();
-    const [anchorX, anchorY] = atlasPointerPosition(
-      event.currentTarget,
-      event.clientX,
-      event.clientY,
-    );
-    const factor = event.deltaY < 0 ? 1.22 : 1 / 1.22;
-    zoomAt(view.scale * factor, anchorX, anchorY);
+  const handleRegionEnter = useCallback((
+    region: AtlasRegionDrawing,
+    event: React.PointerEvent<SVGPathElement>,
+  ) => {
+    if (labelsVisible || dragRef.current) return;
+    const bounds = svgRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    setHoverLabel({
+      name: region.name,
+      plate: region.plate,
+      left: Math.max(8, Math.min(bounds.width - 170, event.clientX - bounds.left + 14)),
+      top: Math.max(8, Math.min(bounds.height - 70, event.clientY - bounds.top + 14)),
+    });
+  }, [labelsVisible]);
+
+  const handleRegionLeave = useCallback(() => {
+    setHoverLabel(null);
+  }, []);
+
+  const toggleLabels = () => {
+    setLabelsVisible((current) => !current);
+    setHoverLabel(null);
   };
 
   return (
@@ -870,7 +1040,17 @@ function NationalCityAtlas({
         <div className="city-atlas-help">
           <p><span className="legend-line legend-line--red" />红色省界</p>
           <p><span className="legend-line legend-line--green" />绿色市界 / 区县界</p>
-          <p>滚轮缩放 · 按住鼠标拖动</p>
+          <p>鼠标滚轮直接缩放 · 按住拖动</p>
+          <button
+            className={`city-atlas-label-toggle ${labelsVisible ? "is-active" : ""}`}
+            type="button"
+            aria-label={labelsVisible ? "隐藏全部文字" : "显示全部文字"}
+            aria-pressed={labelsVisible}
+            onClick={toggleLabels}
+          >
+            <span aria-hidden="true">文</span>
+            {labelsVisible ? "隐藏文字" : "显示文字"}
+          </button>
           <small>有独立号段的城市显示完整前缀；其余区县或地区显示省级车牌简称。</small>
         </div>
 
@@ -883,6 +1063,7 @@ function NationalCityAtlas({
             <LoadingMap />
           ) : (
             <svg
+              ref={svgRef}
               className={`city-atlas-map ${dragging ? "is-dragging" : ""}`}
               viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
               role="img"
@@ -891,75 +1072,36 @@ function NationalCityAtlas({
               onPointerMove={handlePointerMove}
               onPointerUp={endPointerDrag}
               onPointerCancel={endPointerDrag}
-              onWheel={handleWheel}
             >
-              <defs>
-                <filter id="atlas-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="5" stdDeviation="7" floodOpacity="0.12" />
-                </filter>
-              </defs>
               <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
-                <g filter="url(#atlas-shadow)">
-                  {map.features.map((feature) => {
-                    const provinceCode = feature.properties.provinceCode ?? "";
-                    return (
-                      <path
-                        key={`atlas-region-${provinceCode}-${String(feature.properties.adcode)}`}
-                        className="city-atlas-region"
-                        d={geometryToPath(feature.geometry, project)}
-                        fill={provinceFillColors[provinceCode] ?? "#ece4d4"}
-                        fillRule="evenodd"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    );
-                  })}
-                </g>
-
-                {nationalMap.features.map((feature) => (
-                  <path
-                    key={`atlas-province-${String(feature.properties.adcode)}`}
-                    className="city-atlas-province-outline"
-                    d={geometryToPath(feature.geometry, project)}
-                    fill="none"
-                    fillRule="evenodd"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                ))}
-
-                <g className="city-atlas-labels">
-                  {map.features.map((feature) => {
-                    const name = feature.properties.name;
-                    const provinceCode = feature.properties.provinceCode ?? "";
-                    const plate =
-                      CITY_PLATE_BY_NAME.get(compactName(name)) ??
-                      PROVINCE_PLATE_PREFIXES[provinceCode] ??
-                      "—";
-                    const [x, y] = featureLabelPosition(feature, project);
-                    return (
-                      <text
-                        key={`atlas-label-${provinceCode}-${String(feature.properties.adcode)}`}
-                        x={x}
-                        y={y}
-                        className={name.length > 6 ? "is-long" : ""}
-                        textAnchor="middle"
-                        aria-hidden="true"
-                      >
-                        <tspan x={x} dy="-0.1em">{name}</tspan>
-                        <tspan className="city-atlas-plate" x={x} dy="1.25em">{plate}</tspan>
-                      </text>
-                    );
-                  })}
-                </g>
+                <AtlasRegionShapes
+                  regions={atlasRegions}
+                  onRegionEnter={handleRegionEnter}
+                  onRegionLeave={handleRegionLeave}
+                />
+                <AtlasProvinceOutlines provinces={atlasProvinces} />
+                {labelsVisible ? <AtlasLabels regions={atlasRegions} /> : null}
               </g>
             </svg>
           )}
+
+          {!labelsVisible && hoverLabel ? (
+            <div
+              className="city-atlas-hover-label"
+              style={{ left: hoverLabel.left, top: hoverLabel.top }}
+              role="status"
+            >
+              <strong>{hoverLabel.name}</strong>
+              <span>{hoverLabel.plate}</span>
+            </div>
+          ) : null}
 
           <div className="city-atlas-toolbar" aria-label="地图缩放工具栏">
             <button
               type="button"
               aria-label="放大地图"
               disabled={view.scale >= ATLAS_MAX_SCALE}
-              onClick={() => zoomAt(view.scale * 1.35)}
+              onClick={() => zoomBy(1.35)}
             >
               <span aria-hidden="true">＋</span> 放大
             </button>
@@ -968,7 +1110,7 @@ function NationalCityAtlas({
               type="button"
               aria-label="缩小地图"
               disabled={view.scale <= ATLAS_MIN_SCALE}
-              onClick={() => zoomAt(view.scale / 1.35)}
+              onClick={() => zoomBy(1 / 1.35)}
             >
               <span aria-hidden="true">−</span> 缩小
             </button>

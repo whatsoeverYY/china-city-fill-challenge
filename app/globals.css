@@ -955,7 +955,7 @@ button:focus-visible,
 .city-atlas-shell {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 1500;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   width: 100vw;
@@ -1098,6 +1098,40 @@ button:focus-visible,
   line-height: 1.5;
 }
 
+.city-atlas-label-toggle {
+  display: inline-flex;
+  min-height: 30px;
+  padding: 5px 9px;
+  align-items: center;
+  gap: 5px;
+  color: #315b51;
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 999px;
+  background: rgba(237, 244, 233, 0.92);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.city-atlas-label-toggle:hover,
+.city-atlas-label-toggle.is-active {
+  border-color: rgba(45, 125, 95, 0.48);
+  background: #dfece0;
+}
+
+.city-atlas-label-toggle > span {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: "Songti SC", STSong, serif;
+  font-size: 9px;
+}
+
 .city-atlas-canvas {
   position: relative;
   width: 100%;
@@ -1130,6 +1164,10 @@ button:focus-visible,
   stroke-width: 0.72px;
 }
 
+.city-atlas-region:hover {
+  filter: brightness(0.96) saturate(1.08);
+}
+
 .city-atlas-province-outline {
   stroke: var(--red);
   stroke-linejoin: round;
@@ -1144,22 +1182,47 @@ button:focus-visible,
 .city-atlas-labels text {
   fill: #27362f;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 4.7px;
+  font-size: 3.7px;
   font-weight: 900;
   paint-order: stroke;
   stroke: rgba(255, 253, 247, 0.95);
   stroke-linejoin: round;
-  stroke-width: 1.25px;
+  stroke-width: 0.86px;
 }
 
 .city-atlas-labels text.is-long {
-  font-size: 3.8px;
+  font-size: 2.95px;
 }
 
 .city-atlas-labels .city-atlas-plate {
   fill: #9c2f28;
-  font-size: 0.94em;
-  stroke-width: 1.1px;
+  font-size: 0.9em;
+  stroke-width: 0.78px;
+}
+
+.city-atlas-hover-label {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  min-width: 112px;
+  padding: 8px 10px;
+  pointer-events: none;
+  border: 1px solid rgba(38, 47, 41, 0.18);
+  border-radius: 10px 10px 10px 3px;
+  background: rgba(251, 248, 240, 0.97);
+  box-shadow: 0 10px 26px rgba(57, 46, 31, 0.18);
+}
+
+.city-atlas-hover-label strong {
+  font-family: "Songti SC", STSong, serif;
+  font-size: 13px;
+}
+
+.city-atlas-hover-label span {
+  margin-top: 2px;
+  color: var(--red-dark);
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .city-atlas-toolbar {
@@ -6284,6 +6347,10 @@ footer {
     padding: 5px 0 0;
     border-top: 1px solid rgba(38, 47, 41, 0.12);
     border-left: 0;
+  }
+
+  .city-atlas-label-toggle {
+    margin-left: auto;
   }
 
   .city-atlas-toolbar {
