@@ -1,3 +1,8 @@
+import {
+  CURRENT_PROGRESS_SCHEMA_VERSION,
+} from "./progress-config.ts";
+import { normalizeMistakeList } from "./mistake-data.ts";
+
 export const STORAGE_KEY = "china-city-fill-progress-v1";
 export const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
 export const NEIGHBOR_MODE_KEY = "china-city-fill-neighbor-mode-v1";
@@ -41,10 +46,10 @@ type SyncMeta = {
 };
 
 export type ProgressSnapshot = {
-  schemaVersion: 1;
+  schemaVersion: number;
   savedAt: string;
   resetAt?: string;
-  values: Partial<Record<ProgressStorageKey, string>>;
+  values: Partial<Record<ProgressStorageKey, string>> & Record<string, string | undefined>;
   meta: SyncMeta;
 };
 
@@ -125,6 +130,37 @@ function parseNumberList(raw: string | undefined) {
       : [];
   } catch {
     return [];
+  }
+}
+
+function normalizeMistakeValue(raw: string) {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return JSON.stringify(normalizeMistakeList(parsed));
+  } catch {
+    return "[]";
+  }
+}
+
+export function progressPayloadByteLength(snapshot: ProgressSnapshot) {
+  return new TextEncoder().encode(JSON.stringify(snapshot)).byteLength;
+}
+
+export function assertSupportedProgressVersion(
+  rowSchemaVersion: number | null | undefined,
+  payload: unknown,
+) {
+  const payloadVersion = payload && typeof payload === "object" &&
+    "schemaVersion" in payload &&
+    typeof payload.schemaVersion === "number"
+    ? payload.schemaVersion
+    : CURRENT_PROGRESS_SCHEMA_VERSION;
+  const newestVersion = Math.max(
+    rowSchemaVersion ?? CURRENT_PROGRESS_SCHEMA_VERSION,
+    payloadVersion,
+  );
+  if (newestVersion > CURRENT_PROGRESS_SCHEMA_VERSION) {
+    throw new Error("云存档来自更新版本，请刷新页面后再同步");
   }
 }
 
@@ -270,7 +306,7 @@ export function readLocalProgressSnapshot(userId: string): ProgressSnapshot {
   }
   localStorage.setItem(metaKey, JSON.stringify(meta));
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_PROGRESS_SCHEMA_VERSION,
     savedAt: latestIso(meta.resetAll, ...Object.values(meta.keys)),
     resetAt: meta.resetAll,
     values,
@@ -282,7 +318,7 @@ export function createResetProgressSnapshot(
   resetAt = new Date().toISOString(),
 ): ProgressSnapshot {
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_PROGRESS_SCHEMA_VERSION,
     savedAt: resetAt,
     resetAt,
     values: {},
@@ -316,7 +352,12 @@ export function writeLocalProgressSnapshot(
 
 export function normalizeProgressSnapshot(value: unknown): ProgressSnapshot {
   if (!value || typeof value !== "object") {
-    return { schemaVersion: 1, savedAt: new Date(0).toISOString(), values: {}, meta: emptyMeta() };
+    return {
+      schemaVersion: CURRENT_PROGRESS_SCHEMA_VERSION,
+      savedAt: new Date(0).toISOString(),
+      values: {},
+      meta: emptyMeta(),
+    };
   }
   const candidate = value as Partial<ProgressSnapshot>;
   const meta = parseMeta(JSON.stringify(candidate.meta ?? {}));
@@ -328,11 +369,19 @@ export function normalizeProgressSnapshot(value: unknown): ProgressSnapshot {
     ? candidate.values
     : {};
   const values: ProgressSnapshot["values"] = {};
-  for (const key of PROGRESS_STORAGE_KEYS) {
-    if (typeof rawValues[key] === "string") values[key] = rawValues[key];
+  for (const [key, rawValue] of Object.entries(rawValues)) {
+    if (typeof rawValue !== "string") continue;
+    values[key] = key === GAUNTLET_MISTAKES_KEY
+      ? normalizeMistakeValue(rawValue)
+      : rawValue;
   }
   return {
-    schemaVersion: 1,
+    schemaVersion:
+      typeof candidate.schemaVersion === "number" &&
+      Number.isInteger(candidate.schemaVersion) &&
+      candidate.schemaVersion > 0
+        ? candidate.schemaVersion
+        : CURRENT_PROGRESS_SCHEMA_VERSION,
     savedAt:
       typeof candidate.savedAt === "string"
         ? candidate.savedAt
@@ -406,7 +455,11 @@ function mergeMapValue(
     const localValue = localMap[provinceCode] ?? [];
     const remoteValue = remoteMap[provinceCode] ?? [];
 
-    if (localReset > remoteTime) {
+    if (localReset && !remoteReset) {
+      mergedMap[provinceCode] = localValue;
+    } else if (remoteReset && !localReset) {
+      mergedMap[provinceCode] = remoteValue;
+    } else if (localReset > remoteTime) {
       mergedMap[provinceCode] = localValue;
     } else if (remoteReset > localTime) {
       mergedMap[provinceCode] = remoteValue;
@@ -453,7 +506,12 @@ export function mergeProgressSnapshots(
 
   if (timestamp(resetAt)) meta.resetAll = resetAt;
 
-  for (const key of PROGRESS_STORAGE_KEYS) {
+  const allValueKeys = new Set([
+    ...Object.keys(local.values),
+    ...Object.keys(remote.values),
+    ...PROGRESS_STORAGE_KEYS,
+  ]);
+  for (const key of allValueKeys) {
     meta.keys[key] = latestIso(local.meta.keys[key], remote.meta.keys[key]);
   }
   values[STORAGE_KEY] = mergeMapValue(STORAGE_KEY, local, remote, meta);
@@ -495,8 +553,17 @@ export function mergeProgressSnapshots(
       : remote.values[key] ?? local.values[key];
   }
 
+  for (const key of allValueKeys) {
+    if ((PROGRESS_STORAGE_KEYS as readonly string[]).includes(key)) continue;
+    const localTime = timestamp(local.meta.keys[key]);
+    const remoteTime = timestamp(remote.meta.keys[key]);
+    values[key] = localTime >= remoteTime
+      ? local.values[key] ?? remote.values[key]
+      : remote.values[key] ?? local.values[key];
+  }
+
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_PROGRESS_SCHEMA_VERSION,
     savedAt: latestIso(
       resetAt,
       local.savedAt,

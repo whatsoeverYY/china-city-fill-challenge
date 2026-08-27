@@ -236,6 +236,14 @@ function normalizePlateToken(value: string) {
   return value.trim().replace(/[·.-]/g, "").toUpperCase();
 }
 
+export function plateCollectionsOverlap(
+  left: readonly string[],
+  right: readonly string[],
+) {
+  const normalizedLeft = new Set(left.map(normalizePlateToken));
+  return right.some((plate) => normalizedLeft.has(normalizePlateToken(plate)));
+}
+
 function splitPlateAnswer(value: string) {
   return value
     .trim()

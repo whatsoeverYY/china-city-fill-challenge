@@ -652,6 +652,44 @@ body {
   font-size: 9px;
 }
 
+.admin-pagination {
+  display: flex;
+  padding: 14px 22px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+}
+
+.admin-pagination div {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-pagination button {
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid rgba(45, 125, 95, 0.22);
+  border-radius: 9px;
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.07);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.admin-detail-loading {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
 .admin-error,
 .admin-notice,
 .admin-empty {

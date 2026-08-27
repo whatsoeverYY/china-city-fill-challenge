@@ -12,6 +12,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 import { adminPath, appPath } from "./app-path";
 import {
+  assertSupportedProgressVersion,
   claimLegacyProgress,
   createResetProgressSnapshot,
   createTrialProgressStorage,
@@ -19,12 +20,18 @@ import {
   mergeProgressSnapshots,
   normalizeProgressSnapshot,
   PROGRESS_STORAGE_EVENT,
+  progressPayloadByteLength,
   readLocalProgressSnapshot,
   writeLocalProgressSnapshot,
   type ProgressStorage,
   type ProgressSnapshot,
 } from "./progress-storage";
-import { getSupabaseClient } from "./supabase-client";
+import {
+  CURRENT_PROGRESS_SCHEMA_VERSION,
+  MAX_PROGRESS_PAYLOAD_BYTES,
+} from "./progress-config";
+import { operationErrorMessage } from "./error-utils";
+import { getSupabaseClient, isSupabaseConfigured } from "./supabase-client";
 
 export type PlayerRole = "player" | "admin";
 
@@ -142,30 +149,22 @@ function authErrorMessage(message: string) {
   return message;
 }
 
-function operationErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error) return error.message;
-  if (
-    error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof error.message === "string"
-  ) {
-    return error.message;
-  }
-  return fallback;
-}
-
 export function PlayerDataProvider({ children }: { children: React.ReactNode }) {
+  const supabaseConfigured = isSupabaseConfigured();
   const [trialProgressStorage] = useState(() =>
     createTrialProgressStorage(new Map<string, string>()),
   );
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(!supabaseConfigured);
   const [identity, setIdentity] = useState<PlayerIdentity | null>(null);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [offlineIdentity, setOfflineIdentity] = useState(false);
   const [progressEpoch, setProgressEpoch] = useState(0);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("trial");
-  const [syncMessage, setSyncMessage] = useState("游客试玩不会保存进度");
+  const [syncMessage, setSyncMessage] = useState(
+    supabaseConfigured
+      ? "游客试玩不会保存进度"
+      : "本地开发未连接云存档，当前为游客试玩",
+  );
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const syncTimerRef = useRef<number | null>(null);
   const activeUserRef = useRef<string | null>(null);
@@ -203,16 +202,24 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
           .maybeSingle<ProgressRow>();
         if (readError) throw readError;
 
+        assertSupportedProgressVersion(
+          remoteRow?.schema_version,
+          remoteRow?.payload,
+        );
+
         const merged = mergeProgressSnapshots(
           local,
           remoteRow ? normalizeProgressSnapshot(remoteRow.payload) : null,
         );
+        if (progressPayloadByteLength(merged) > MAX_PROGRESS_PAYLOAD_BYTES) {
+          throw new Error("游戏存档过大，请先清理部分错题后再同步");
+        }
 
         if (remoteRow) {
           const { data, error } = await supabase
             .from("user_progress")
             .update({
-              schema_version: 1,
+              schema_version: CURRENT_PROGRESS_SCHEMA_VERSION,
               revision: remoteRow.revision + 1,
               payload: merged,
             })
@@ -231,7 +238,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
             .from("user_progress")
             .insert({
               user_id: userId,
-              schema_version: 1,
+              schema_version: CURRENT_PROGRESS_SCHEMA_VERSION,
               revision: 1,
               payload: merged,
             })
@@ -475,6 +482,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
   );
 
   useEffect(() => {
+    if (!supabaseConfigured) return;
     const supabase = getSupabaseClient();
     let disposed = false;
     void supabase.auth.getSession().then(({ data }) => {
@@ -518,7 +526,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
       document.removeEventListener("visibilitychange", handleVisibility);
       if (syncTimerRef.current !== null) window.clearTimeout(syncTimerRef.current);
     };
-  }, [activateSession, syncNow, syncProgress]);
+  }, [activateSession, supabaseConfigured, syncNow, syncProgress]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await getSupabaseClient().auth.signInWithPassword({

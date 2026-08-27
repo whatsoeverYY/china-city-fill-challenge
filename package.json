@@ -7,20 +7,19 @@
   },
   "scripts": {
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
-    "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
-    "build:pages": "GITHUB_PAGES=true NEXT_PUBLIC_BASE_PATH=/china-city-fill-challenge NEXT_PUBLIC_SITE_URL=https://whatsoeveryy.github.io/china-city-fill-challenge WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "npm run build && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/progress-reset.test.mjs",
+    "build": "NEXT_PUBLIC_ALLOW_PRODUCTION_SUPABASE_FALLBACK=true WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
+    "build:pages": "GITHUB_PAGES=true NEXT_PUBLIC_ALLOW_PRODUCTION_SUPABASE_FALLBACK=true NEXT_PUBLIC_BASE_PATH=/china-city-fill-challenge NEXT_PUBLIC_SITE_URL=https://whatsoeveryy.github.io/china-city-fill-challenge WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
+    "start": "NEXT_PUBLIC_ALLOW_PRODUCTION_SUPABASE_FALLBACK=true WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "test": "npm run build && npm run test:unit && node --test tests/rendered-html.test.mjs",
+    "test:unit": "node --experimental-strip-types --test tests/progress-reset.test.mjs tests/gauntlet-data.test.mjs tests/mistake-data.test.mjs tests/data-integrity.test.mjs tests/supabase-config.test.mjs tests/supabase-migrations.test.mjs",
     "test:pages": "npm run build:pages && node --test tests/static-export.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
-    "drizzle-orm": "0.45.2",
     "react": "19.2.6",
-    "react-dom": "19.2.6",
-    "react-loading-skeleton": "3.5.0"
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
@@ -32,7 +31,6 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
-    "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react": "7.37.5",

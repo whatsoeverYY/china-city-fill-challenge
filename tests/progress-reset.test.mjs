@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   GAUNTLET_PROGRESS_KEY,
   STORAGE_KEY,
+  assertSupportedProgressVersion,
   createResetProgressSnapshot,
   mergeProgressSnapshots,
 } from "../app/progress-storage.ts";
@@ -55,4 +56,37 @@ test("progress created after acknowledging the reset remains available", () => {
   assert.deepEqual(JSON.parse(merged.values[GAUNTLET_PROGRESS_KEY] ?? "[]"), [4]);
   assert.deepEqual(JSON.parse(merged.values[STORAGE_KEY] ?? "{}"), {});
   assert.equal(merged.resetAt, RESET_AT);
+});
+
+test("a province reset beats stale progress from a device with a future clock", () => {
+  const resetDevice = staleSnapshot(RESET_AT);
+  resetDevice.values[STORAGE_KEY] = JSON.stringify({ "320000": [] });
+  resetDevice.meta.scopes[`${STORAGE_KEY}:320000`] = RESET_AT;
+  resetDevice.meta.resets[`${STORAGE_KEY}:320000`] = RESET_AT;
+
+  const merged = mergeProgressSnapshots(
+    resetDevice,
+    staleSnapshot(AFTER_RESET),
+  );
+
+  assert.deepEqual(JSON.parse(merged.values[STORAGE_KEY] ?? "{}"), {
+    "320000": [],
+  });
+});
+
+test("unknown values from the current schema survive a merge", () => {
+  const remote = staleSnapshot();
+  remote.values["future-compatible-key"] = "future value";
+  remote.meta.keys["future-compatible-key"] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(null, remote);
+
+  assert.equal(merged.values["future-compatible-key"], "future value");
+});
+
+test("a newer cloud schema is never accepted by an older client", () => {
+  assert.throws(
+    () => assertSupportedProgressVersion(2, { schemaVersion: 2 }),
+    /更新版本/,
+  );
 });

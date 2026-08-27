@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  lazy,
   memo,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -12,6 +14,7 @@ import {
   CITY_PLATE_PREFIX_COUNT,
   CITY_QUIZ_DATA,
   plateAnswerMatches,
+  plateCollectionsOverlap,
   type CityQuizItem,
 } from "./gauntlet-data";
 import {
@@ -26,8 +29,32 @@ import {
   PROVINCE_CITY_COUNT_DATA,
   type ProvinceCityCountItem,
 } from "./province-city-count-data";
-import KnowledgeBase from "./KnowledgeBase";
 import { RIVER_KNOWLEDGE } from "./knowledge-data";
+import {
+  normalizeMistakeList,
+  type MistakeQuestion,
+  type MistakeSeed,
+  upsertMistake,
+} from "./mistake-data";
+import {
+  useMapCollection,
+  useMapData,
+  type Geometry,
+  type MapData,
+  type MapFeature,
+  type Position,
+} from "./map-data";
+import {
+  ALL_PROVINCE_CODES,
+  PROVINCE_BY_CODE,
+  PROVINCE_BY_NAME,
+  PROVINCE_BY_SHORT_NAME,
+  PROVINCE_CAPITALS,
+  PROVINCE_NEIGHBORS,
+  PROVINCE_PLATE_PREFIXES,
+  PROVINCES,
+  type Province,
+} from "./province-data";
 import { usePlayerData } from "./PlayerDataProvider";
 import {
   GAUNTLET_LEVEL_13_HISTORY_KEY,
@@ -42,98 +69,7 @@ import {
   type ProgressStorage,
 } from "./progress-storage";
 
-type Position = [number, number];
-
-type Geometry = {
-  type: "Polygon" | "MultiPolygon";
-  coordinates: unknown;
-};
-
-type MapFeature = {
-  type: "Feature";
-  properties: {
-    name: string;
-    adcode?: string | number;
-    center?: Position;
-    centroid?: Position;
-    provinceCode?: string;
-  };
-  geometry: Geometry;
-};
-
-type MapData = {
-  type: "FeatureCollection";
-  features: MapFeature[];
-};
-
-type Province = {
-  code: string;
-  name: string;
-  shortName: string;
-  kind: "省" | "自治区" | "直辖市" | "特别行政区";
-};
-
-const PROVINCES: Province[] = [
-  { code: "110000", name: "北京市", shortName: "北京", kind: "直辖市" },
-  { code: "120000", name: "天津市", shortName: "天津", kind: "直辖市" },
-  { code: "130000", name: "河北省", shortName: "河北", kind: "省" },
-  { code: "140000", name: "山西省", shortName: "山西", kind: "省" },
-  { code: "150000", name: "内蒙古自治区", shortName: "内蒙古", kind: "自治区" },
-  { code: "210000", name: "辽宁省", shortName: "辽宁", kind: "省" },
-  { code: "220000", name: "吉林省", shortName: "吉林", kind: "省" },
-  { code: "230000", name: "黑龙江省", shortName: "黑龙江", kind: "省" },
-  { code: "310000", name: "上海市", shortName: "上海", kind: "直辖市" },
-  { code: "320000", name: "江苏省", shortName: "江苏", kind: "省" },
-  { code: "330000", name: "浙江省", shortName: "浙江", kind: "省" },
-  { code: "340000", name: "安徽省", shortName: "安徽", kind: "省" },
-  { code: "350000", name: "福建省", shortName: "福建", kind: "省" },
-  { code: "360000", name: "江西省", shortName: "江西", kind: "省" },
-  { code: "370000", name: "山东省", shortName: "山东", kind: "省" },
-  { code: "410000", name: "河南省", shortName: "河南", kind: "省" },
-  { code: "420000", name: "湖北省", shortName: "湖北", kind: "省" },
-  { code: "430000", name: "湖南省", shortName: "湖南", kind: "省" },
-  { code: "440000", name: "广东省", shortName: "广东", kind: "省" },
-  { code: "450000", name: "广西壮族自治区", shortName: "广西", kind: "自治区" },
-  { code: "460000", name: "海南省", shortName: "海南", kind: "省" },
-  { code: "500000", name: "重庆市", shortName: "重庆", kind: "直辖市" },
-  { code: "510000", name: "四川省", shortName: "四川", kind: "省" },
-  { code: "520000", name: "贵州省", shortName: "贵州", kind: "省" },
-  { code: "530000", name: "云南省", shortName: "云南", kind: "省" },
-  { code: "540000", name: "西藏自治区", shortName: "西藏", kind: "自治区" },
-  { code: "610000", name: "陕西省", shortName: "陕西", kind: "省" },
-  { code: "620000", name: "甘肃省", shortName: "甘肃", kind: "省" },
-  { code: "630000", name: "青海省", shortName: "青海", kind: "省" },
-  { code: "640000", name: "宁夏回族自治区", shortName: "宁夏", kind: "自治区" },
-  { code: "650000", name: "新疆维吾尔自治区", shortName: "新疆", kind: "自治区" },
-  { code: "710000", name: "台湾省", shortName: "台湾", kind: "省" },
-  { code: "810000", name: "香港特别行政区", shortName: "香港", kind: "特别行政区" },
-  { code: "820000", name: "澳门特别行政区", shortName: "澳门", kind: "特别行政区" },
-];
-
-const TAIWAN_NAME_MAP: Record<string, string> = {
-  連江縣: "连江县",
-  宜蘭縣: "宜兰县",
-  彰化縣: "彰化县",
-  南投縣: "南投县",
-  雲林縣: "云林县",
-  基隆市: "基隆市",
-  臺北市: "台北市",
-  新北市: "新北市",
-  臺中市: "台中市",
-  臺南市: "台南市",
-  桃園市: "桃园市",
-  苗栗縣: "苗栗县",
-  嘉義市: "嘉义市",
-  嘉義縣: "嘉义县",
-  金門縣: "金门县",
-  高雄市: "高雄市",
-  臺東縣: "台东县",
-  花蓮縣: "花莲县",
-  澎湖縣: "澎湖县",
-  新竹市: "新竹市",
-  新竹縣: "新竹县",
-  屏東縣: "屏东县",
-};
+const KnowledgeBase = lazy(() => import("./KnowledgeBase"));
 
 const MAP_WIDTH = 920;
 const MAP_HEIGHT = 600;
@@ -146,43 +82,6 @@ const [
 const CITY_MAP_RECENT_QUESTION_LIMIT = 90;
 const CITY_MAP_MINIMUM_QUEUE_LENGTH = 90;
 
-const PROVINCE_NEIGHBORS: Record<string, string[]> = {
-  "110000": ["120000", "130000"],
-  "120000": ["110000", "130000"],
-  "130000": ["110000", "120000", "140000", "150000", "210000", "370000", "410000"],
-  "140000": ["130000", "150000", "410000", "610000"],
-  "150000": ["130000", "140000", "210000", "220000", "230000", "610000", "620000", "640000"],
-  "210000": ["130000", "150000", "220000"],
-  "220000": ["150000", "210000", "230000"],
-  "230000": ["150000", "220000"],
-  "310000": ["320000", "330000"],
-  "320000": ["310000", "330000", "340000", "370000"],
-  "330000": ["310000", "320000", "340000", "350000", "360000"],
-  "340000": ["320000", "330000", "360000", "370000", "410000", "420000"],
-  "350000": ["330000", "360000", "440000"],
-  "360000": ["330000", "340000", "350000", "420000", "430000", "440000"],
-  "370000": ["130000", "320000", "340000", "410000"],
-  "410000": ["130000", "140000", "340000", "370000", "420000", "610000"],
-  "420000": ["340000", "360000", "410000", "430000", "500000", "610000"],
-  "430000": ["360000", "420000", "440000", "450000", "500000", "520000"],
-  "440000": ["350000", "360000", "430000", "450000", "810000", "820000"],
-  "450000": ["430000", "440000", "520000", "530000"],
-  "460000": [],
-  "500000": ["420000", "430000", "510000", "520000", "610000"],
-  "510000": ["500000", "520000", "530000", "540000", "610000", "620000", "630000"],
-  "520000": ["430000", "450000", "500000", "510000", "530000"],
-  "530000": ["450000", "510000", "520000", "540000"],
-  "540000": ["510000", "530000", "630000", "650000"],
-  "610000": ["140000", "150000", "410000", "420000", "500000", "510000", "620000", "640000"],
-  "620000": ["150000", "510000", "610000", "630000", "640000", "650000"],
-  "630000": ["510000", "540000", "620000", "650000"],
-  "640000": ["150000", "610000", "620000"],
-  "650000": ["540000", "620000", "630000"],
-  "710000": [],
-  "810000": ["440000"],
-  "820000": ["440000"],
-};
-
 const PROVINCE_FILL_COLORS = [
   "#f0beb8",
   "#f3c99b",
@@ -194,54 +93,6 @@ const PROVINCE_FILL_COLORS = [
   "#d9c1a8",
   "#c2d0da",
 ];
-
-const PROVINCE_PLATE_PREFIXES: Record<string, string> = {
-  "110000": "京",
-  "120000": "津",
-  "130000": "冀",
-  "140000": "晋",
-  "150000": "蒙",
-  "210000": "辽",
-  "220000": "吉",
-  "230000": "黑",
-  "310000": "沪",
-  "320000": "苏",
-  "330000": "浙",
-  "340000": "皖",
-  "350000": "闽",
-  "360000": "赣",
-  "370000": "鲁",
-  "410000": "豫",
-  "420000": "鄂",
-  "430000": "湘",
-  "440000": "粤",
-  "450000": "桂",
-  "460000": "琼",
-  "500000": "渝",
-  "510000": "川",
-  "520000": "贵",
-  "530000": "云",
-  "540000": "藏",
-  "610000": "陕",
-  "620000": "甘",
-  "630000": "青",
-  "640000": "宁",
-  "650000": "新",
-  "710000": "台",
-  "810000": "港",
-  "820000": "澳",
-};
-
-const ALL_PROVINCE_CODES = PROVINCES.map((province) => province.code);
-const PROVINCE_BY_CODE = new Map(
-  PROVINCES.map((province) => [province.code, province]),
-);
-const PROVINCE_BY_NAME = new Map(
-  PROVINCES.map((province) => [province.name, province]),
-);
-const PROVINCE_BY_SHORT_NAME = new Map(
-  PROVINCES.map((province) => [province.shortName, province]),
-);
 
 function compactName(value: string) {
   return value.trim().replace(/\s+/g, "").replace(/臺/g, "台");
@@ -274,89 +125,6 @@ function nationalChallengeMessage(hardMode: boolean, neighborMode: boolean) {
   if (hardMode) return "难度提升：点击省级行政区并输入名称解锁";
   if (neighborMode) return "邻省连城：选择一个省份，联动它的所有接壤省份";
   return "请选择一个省级行政区开始挑战";
-}
-
-function normalizeMap(data: MapData, code: string): MapData {
-  return {
-    ...data,
-    features: data.features
-      .filter((feature) => Boolean(feature.properties.name))
-      .map((feature) => ({
-        ...feature,
-        properties: {
-          ...feature.properties,
-          name:
-            code === "710000"
-              ? TAIWAN_NAME_MAP[feature.properties.name] ?? feature.properties.name
-              : feature.properties.name,
-        },
-      })),
-  };
-}
-
-function mapDataUrl(code: string) {
-  return new URL(`data/maps/${code}.json`, document.baseURI).toString();
-}
-
-async function fetchMapData(code: string) {
-  const response = await fetch(mapDataUrl(code));
-  if (!response.ok) throw new Error("地图载入失败");
-  return normalizeMap((await response.json()) as MapData, code);
-}
-
-function useMapData(code: string) {
-  return useMapCollection([code]);
-}
-
-function useMapCollection(codes: string[]) {
-  const codeKey = codes.join(",");
-  const [result, setResult] = useState<{
-    key: string;
-    data: MapData | null;
-    error: boolean;
-  }>({ key: "", data: null, error: false });
-  const data = result.key === codeKey ? result.data : null;
-  const error = result.key === codeKey ? result.error : false;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!codeKey) return () => {
-      cancelled = true;
-    };
-
-    const requestedCodes = codeKey.split(",");
-    Promise.all(requestedCodes.map(fetchMapData))
-      .then((maps) => {
-        if (cancelled) return;
-        setResult({
-          key: codeKey,
-          error: false,
-          data: {
-            type: "FeatureCollection",
-            features: maps.flatMap((map, index) => {
-              const code = requestedCodes[index];
-              return map.features.map((feature) => ({
-                ...feature,
-                properties: {
-                  ...feature.properties,
-                  provinceCode: code,
-                },
-              }));
-            }),
-          },
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setResult({ key: codeKey, data: null, error: true });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [codeKey]);
-
-  return { data, error };
 }
 
 function visitPositions(value: unknown, callback: (position: Position) => void) {
@@ -1385,43 +1153,6 @@ const GAUNTLET_ROUND_HEADINGS: Record<GauntletLevel, string> = {
   26: "三条生命闯过三段终极混战",
 };
 
-const PROVINCE_CAPITALS: Record<string, string> = {
-  "110000": "北京市",
-  "120000": "天津市",
-  "130000": "石家庄市",
-  "140000": "太原市",
-  "150000": "呼和浩特市",
-  "210000": "沈阳市",
-  "220000": "长春市",
-  "230000": "哈尔滨市",
-  "310000": "上海市",
-  "320000": "南京市",
-  "330000": "杭州市",
-  "340000": "合肥市",
-  "350000": "福州市",
-  "360000": "南昌市",
-  "370000": "济南市",
-  "410000": "郑州市",
-  "420000": "武汉市",
-  "430000": "长沙市",
-  "440000": "广州市",
-  "450000": "南宁市",
-  "460000": "海口市",
-  "500000": "重庆市",
-  "510000": "成都市",
-  "520000": "贵阳市",
-  "530000": "昆明市",
-  "540000": "拉萨市",
-  "610000": "西安市",
-  "620000": "兰州市",
-  "630000": "西宁市",
-  "640000": "银川市",
-  "650000": "乌鲁木齐市",
-  "710000": "台北市",
-  "810000": "香港",
-  "820000": "澳门",
-};
-
 const GAUNTLET_TIME_LIMIT = 90;
 
 type ProvinceGroupQuestion = {
@@ -1482,19 +1213,6 @@ type RouteChallenge = {
   endCode: string;
   shortestPath: string[];
 };
-
-type MistakeQuestion = {
-  id: string;
-  category: "省份" | "城市" | "城市数量" | "车牌" | "省会" | "高校" | "判断";
-  prompt: string;
-  answers: string[];
-  correctAnswer: string;
-  explanation: string;
-  wrongCount: number;
-  answerMode?: "all-plates" | "all-plate-letters";
-};
-
-type MistakeSeed = Omit<MistakeQuestion, "wrongCount">;
 
 type ConfusableCityQuestion = {
   id: string;
@@ -1579,24 +1297,6 @@ function createEmptyBossStats(): Record<BossSkill, BossSkillStat> {
   return Object.fromEntries(
     BOSS_SKILLS.map((skill) => [skill, { correct: 0, total: 0 }]),
   ) as Record<BossSkill, BossSkillStat>;
-}
-
-function isMistakeQuestion(value: unknown): value is MistakeQuestion {
-  if (!value || typeof value !== "object") return false;
-  const item = value as Partial<MistakeQuestion>;
-  return (
-    typeof item.id === "string" &&
-    typeof item.category === "string" &&
-    typeof item.prompt === "string" &&
-    Array.isArray(item.answers) &&
-    item.answers.every((answer) => typeof answer === "string") &&
-    typeof item.correctAnswer === "string" &&
-    typeof item.explanation === "string" &&
-    typeof item.wrongCount === "number" &&
-    (item.answerMode === undefined ||
-      item.answerMode === "all-plates" ||
-      item.answerMode === "all-plate-letters")
-  );
 }
 
 type ProvinceQuestionSummary = {
@@ -1999,7 +1699,7 @@ function createPlateFaultQuestions(pool: CityQuizItem[]) {
     const items = randomShuffle(source).slice(0, 4);
     const wrongIndex = index % items.length;
     const wrongPlate = randomShuffle(CITY_QUIZ_DATA).find(
-      (item) => normalizePlate(item.plate) !== normalizePlate(items[wrongIndex].plate),
+      (item) => !plateCollectionsOverlap(item.plates, items[wrongIndex].plates),
     )!.plate;
     const options = items.map((item, optionIndex) => ({
       id: `${index}-${optionIndex}`,
@@ -2358,7 +2058,7 @@ function createTruthQuestions(pool: CityQuizItem[]) {
     }
 
     const alternative = randomShuffle(fallbackPool).find(
-      (candidate) => normalizePlate(candidate.plate) !== normalizePlate(item.plate),
+      (candidate) => !plateCollectionsOverlap(candidate.plates, item.plates),
     );
     const shownPlate = isTrue ? item.plate : alternative?.plate ?? "京A";
     return {
@@ -2644,7 +2344,7 @@ function GauntletGame({
         const savedMistakes = JSON.parse(
           progressStorage.getItem(GAUNTLET_MISTAKES_KEY) ?? "[]",
         ) as unknown[];
-        setMistakes(savedMistakes.filter(isMistakeQuestion));
+        setMistakes(normalizeMistakeList(savedMistakes));
       } catch {
         setMistakes([]);
       }
@@ -3260,14 +2960,7 @@ function GauntletGame({
 
   const recordMistake = (seed: MistakeSeed) => {
     setMistakes((current) => {
-      const existing = current.find((item) => item.id === seed.id);
-      const next = existing
-        ? current.map((item) =>
-            item.id === seed.id
-              ? { ...item, ...seed, wrongCount: item.wrongCount + 1 }
-              : item,
-          )
-        : [...current, { ...seed, wrongCount: 1 }];
+      const next = upsertMistake(current, seed);
       progressStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
       return next;
     });
@@ -5787,18 +5480,20 @@ export default function CityGame() {
 
   if (knowledgeOpen) {
     return (
-      <KnowledgeBase
-        provinces={PROVINCES}
-        provinceCapitals={PROVINCE_CAPITALS}
-        provinceNeighbors={PROVINCE_NEIGHBORS}
-        provincePlatePrefixes={PROVINCE_PLATE_PREFIXES}
-        provinceGroups={PROVINCE_GROUP_QUESTIONS}
-        onExit={() => setKnowledgeOpen(false)}
-        onOpenAtlas={() => {
-          setKnowledgeOpen(false);
-          setAtlasOpen(true);
-        }}
-      />
+      <Suspense fallback={<main className="game-shell"><LoadingMap /></main>}>
+        <KnowledgeBase
+          provinces={PROVINCES}
+          provinceCapitals={PROVINCE_CAPITALS}
+          provinceNeighbors={PROVINCE_NEIGHBORS}
+          provincePlatePrefixes={PROVINCE_PLATE_PREFIXES}
+          provinceGroups={PROVINCE_GROUP_QUESTIONS}
+          onExit={() => setKnowledgeOpen(false)}
+          onOpenAtlas={() => {
+            setKnowledgeOpen(false);
+            setAtlasOpen(true);
+          }}
+        />
+      </Suspense>
     );
   }
 

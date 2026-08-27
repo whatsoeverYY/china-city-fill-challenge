@@ -39,22 +39,26 @@ npm run dev
 
 ## Supabase 云存档
 
-前端已配置 Supabase publishable key。首次启用前还需要在 Supabase SQL Editor 执行数据库迁移，并创建首位管理员。完整步骤见 [supabase/SETUP.md](supabase/SETUP.md)。
+正式构建已配置 Supabase publishable key。首次启用前还需要在 Supabase SQL Editor 执行数据库迁移，并创建首位管理员。完整步骤见 [supabase/SETUP.md](supabase/SETUP.md)。
 
-本地如需覆盖默认项目配置，可复制 `.env.example` 为 `.env.local` 后填写：
+为避免开发数据误写入正式库，`npm run dev` 默认不连接仓库内置的 Supabase 项目。本地需要云存档时，复制 `.env.example` 为 `.env.local` 并填写独立项目配置：
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
 ```
 
+如果确实需要在本地连接内置的正式项目，可在 `.env.local` 显式设置 `NEXT_PUBLIC_ALLOW_PRODUCTION_SUPABASE_FALLBACK=true`。
+
 管理员登录后从账户面板进入管理后台（GitHub Pages 静态地址为 `/admin.html`）。管理员账号与普通账号一样可以正常游戏和保存进度。
 
 ## 校验
 
 ```bash
-npm run build
-node --test tests/rendered-html.test.mjs
+npm run lint
+npm run typecheck
+npm test
+npm run test:pages
 ```
 
 ## GitHub Pages 部署

@@ -12,6 +12,14 @@
 
 `supabase/migrations/202608270002_clear_player_progress.sql`
 
+最后执行管理员分页、统计与存档版本保护迁移：
+
+`supabase/migrations/202608270003_admin_pagination_and_stats.sql`
+
+然后执行清除存档的版本兼容补丁：
+
+`supabase/migrations/202608270004_clear_progress_schema_compatibility.sql`
+
 迁移会创建：
 
 - `player_profiles`：玩家邮箱、角色、注册时间和最近活跃时间；
@@ -19,6 +27,8 @@
 - `progress_backups`：自动保留每位玩家最近 20 个旧版本；
 - RLS：玩家只能读写自己的存档，管理员可以查看全部玩家和存档；
 - `clear_player_progress`：玩家可清除自己的全部游戏记录，管理员可清除任意玩家记录，同时删除历史备份并阻止旧设备恢复已删存档。
+- `admin_progress_summaries`：只暴露列表所需的轻量汇总，后台按页读取玩家，打开详情时才读取完整 JSON；
+- 存档版本触发器：禁止旧客户端把更高版本云存档降级覆盖。
 
 ## 2. 配置邮箱登录
 
@@ -49,6 +59,7 @@ where lower(email) = lower('<ADMIN_EMAIL>');
 
 - 游戏内：管理员登录后点击账户面板中的入口（线上静态地址为 `/admin.html`）；
 - Supabase Dashboard：`Table Editor → player_profiles / user_progress / progress_backups`；
+- SQL Editor：可直接使用 `supabase/queries/view_user_progress.sql` 中的分页摘要、按邮箱查完整存档等只读查询；
 - Auth 用户：`Authentication → Users`。
 
 不要在浏览器或仓库中放入 Supabase secret/service-role key。所有管理员读取都通过登录用户 JWT 与 RLS 授权。
