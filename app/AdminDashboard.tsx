@@ -92,6 +92,19 @@ function formatDate(value: string) {
   });
 }
 
+function operationErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function AdminDashboard() {
   const { initialized, identity, isAdmin, offlineIdentity } = usePlayerData();
   const [players, setPlayers] = useState<PlayerRow[]>([]);
@@ -100,6 +113,9 @@ export default function AdminDashboard() {
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "player" | "admin">("all");
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PlayerRow | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
   const [activeThreshold] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const loadPlayers = useCallback(async () => {
@@ -173,6 +189,32 @@ export default function AdminDashboard() {
       passedLevels,
     };
   }, [activeThreshold, players]);
+
+  const clearPlayerProgress = async (player: PlayerRow) => {
+    setDeletingUserId(player.id);
+    setError("");
+    setNotice("");
+    try {
+      const { error: clearError } = await getSupabaseClient().rpc(
+        "clear_player_progress",
+        { target_user_id: player.id },
+      );
+      if (clearError) throw clearError;
+      setDeleteTarget(null);
+      setSelectedPlayer(null);
+      setNotice(`${player.email} 的全部游戏记录已清除，玩家账号仍然保留。`);
+      await loadPlayers();
+    } catch (caught) {
+      const message = operationErrorMessage(caught, "无法清除玩家存档");
+      setError(
+        message.includes("clear_player_progress") || message.includes("schema cache")
+          ? "删档功能尚未初始化，请先在 Supabase 执行最新迁移。"
+          : message,
+      );
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
 
   if (!initialized) {
     return <main className="admin-state-page"><strong>正在确认管理员身份…</strong></main>;
@@ -264,6 +306,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {notice ? <div className="admin-notice" role="status">{notice}</div> : null}
         {error ? <div className="admin-error" role="alert">{error}</div> : null}
         <div className="admin-table-wrap">
           <table className="admin-player-table">
@@ -291,11 +334,10 @@ export default function AdminDashboard() {
                     <td><strong>{summary.completedLevels}<i>/26</i></strong><small>{summary.mistakes} 道待复习错题</small></td>
                     <td><strong>{formatDate(player.last_seen_at)}</strong><small>注册于 {formatDate(player.created_at)}</small></td>
                     <td>
-                      {player.progress ? (
-                        <button type="button" onClick={() => setSelectedPlayer(player)}>查看详情</button>
-                      ) : (
-                        <span className="admin-no-save">尚未同步</span>
-                      )}
+                      <button type="button" onClick={() => setSelectedPlayer(player)}>
+                        {player.progress ? "查看 / 管理" : "管理存档"}
+                      </button>
+                      {!player.progress ? <span className="admin-no-save">尚未同步</span> : null}
                     </td>
                   </tr>
                 );
@@ -311,7 +353,17 @@ export default function AdminDashboard() {
       {selectedPlayer ? (
         <div className="admin-detail-backdrop" role="presentation">
           <section className="admin-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-detail-title">
-            <button className="dialog-close" type="button" aria-label="关闭玩家详情" onClick={() => setSelectedPlayer(null)}>×</button>
+            <button
+              className="dialog-close"
+              type="button"
+              aria-label="关闭玩家详情"
+              onClick={() => {
+                setSelectedPlayer(null);
+                setDeleteTarget(null);
+              }}
+            >
+              ×
+            </button>
             <p className="eyebrow">PLAYER DETAIL</p>
             <h2 id="admin-detail-title">{selectedPlayer.email}</h2>
             {(() => {
@@ -328,13 +380,56 @@ export default function AdminDashboard() {
             <dl className="admin-account-details">
               <div><dt>用户 ID</dt><dd>{selectedPlayer.id}</dd></div>
               <div><dt>最近活跃</dt><dd>{formatDate(selectedPlayer.last_seen_at)}</dd></div>
-              <div><dt>存档版本</dt><dd>schema {selectedPlayer.progress?.schema_version} · revision {selectedPlayer.progress?.revision}</dd></div>
+              <div><dt>存档版本</dt><dd>{selectedPlayer.progress ? `schema ${selectedPlayer.progress.schema_version} · revision ${selectedPlayer.progress.revision}` : "尚无云存档"}</dd></div>
               <div><dt>最后同步</dt><dd>{formatDate(selectedPlayer.progress?.updated_at ?? "")}</dd></div>
+              <div><dt>最近删档</dt><dd>{formatDate(normalizeProgressSnapshot(selectedPlayer.progress?.payload).resetAt ?? "")}</dd></div>
             </dl>
-            <details className="admin-json-details">
-              <summary>查看完整存档 JSON</summary>
-              <pre>{JSON.stringify(selectedPlayer.progress?.payload, null, 2)}</pre>
-            </details>
+            {selectedPlayer.progress ? (
+              <details className="admin-json-details">
+                <summary>查看完整存档 JSON</summary>
+                <pre>{JSON.stringify(selectedPlayer.progress.payload, null, 2)}</pre>
+              </details>
+            ) : null}
+            <button
+              className="admin-delete-progress"
+              type="button"
+              onClick={() => setDeleteTarget(selectedPlayer)}
+              disabled={deletingUserId !== null}
+            >
+              清除该玩家全部游戏记录
+            </button>
+            {deleteTarget?.id === selectedPlayer.id ? (
+              <section
+                className="admin-delete-confirm"
+                role="alertdialog"
+                aria-labelledby="admin-delete-confirm-title"
+                aria-describedby="admin-delete-confirm-description"
+              >
+                <strong id="admin-delete-confirm-title">再次确认清除 {selectedPlayer.email} 的存档</strong>
+                <p id="admin-delete-confirm-description">
+                  全国地图、邻省挑战、全部关卡、错题、答题历史和云端备份都会被清除。账号不会删除，此操作不可恢复。
+                </p>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(null)}
+                    disabled={deletingUserId !== null}
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    className="is-danger"
+                    onClick={() => void clearPlayerProgress(selectedPlayer)}
+                    disabled={deletingUserId !== null}
+                  >
+                    {deletingUserId === selectedPlayer.id
+                      ? "正在清除…"
+                      : "确认清除全部记录"}
+                  </button>
+                </div>
+              </section>
+            ) : null}
           </section>
         </div>
       ) : null}

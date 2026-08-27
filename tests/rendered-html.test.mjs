@@ -38,7 +38,7 @@ test("server-renders the city challenge shell", async () => {
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, provinceAdministrativeProfileData, knowledgeBase, knowledgeData, playerData, progressStorage, adminDashboard, supabaseMigration, xinjiangMapSource] = await Promise.all([
+  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, provinceAdministrativeProfileData, knowledgeBase, knowledgeData, playerData, progressStorage, adminDashboard, supabaseMigration, clearProgressMigration, xinjiangMapSource] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
@@ -53,6 +53,7 @@ test("includes map and interaction affordances", async () => {
     readFile(new URL("../app/progress-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/AdminDashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../supabase/migrations/202608270001_player_accounts_and_progress.sql", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/migrations/202608270002_clear_player_progress.sql", import.meta.url), "utf8"),
     readFile(new URL("../public/data/maps/650000.json", import.meta.url), "utf8"),
   ]);
 
@@ -263,19 +264,30 @@ test("includes map and interaction affordances", async () => {
   assert.match(playerData, /游客试玩不会保存进度/);
   assert.match(playerData, /离线游玩中，联网后会自动同步/);
   assert.match(playerData, /进入管理员后台/);
+  assert.match(playerData, /一键清除全部游戏记录/);
+  assert.match(playerData, /confirmClearProgress/);
   assert.doesNotMatch(playerData, /from ["']next\/link["']/);
   assert.match(playerData, /<a href=\{adminPath\(\)\}/);
   assert.match(progressStorage, /createUserProgressStorage/);
   assert.match(progressStorage, /mergeProgressSnapshots/);
+  assert.match(progressStorage, /createResetProgressSnapshot/);
+  assert.match(progressStorage, /applyResetBoundary/);
   assert.match(progressStorage, /LEGACY_CLAIM_KEY/);
   assert.match(adminDashboard, /玩家与进度中心/);
   assert.match(adminDashboard, /查看完整存档 JSON/);
+  assert.match(adminDashboard, /清除该玩家全部游戏记录/);
+  assert.match(adminDashboard, /确认清除全部记录/);
   assert.doesNotMatch(adminDashboard, /from ["']next\/link["']/);
   assert.match(adminDashboard, /<a href=\{appPath\("\/"\)\}/);
   assert.match(supabaseMigration, /enable row level security/);
   assert.match(supabaseMigration, /profiles_select_self_or_admin/);
   assert.match(supabaseMigration, /progress_update_self/);
   assert.match(supabaseMigration, /progress_backups/);
+  assert.match(clearProgressMigration, /clear_player_progress/);
+  assert.match(clearProgressMigration, /administrator permission required/);
+  assert.match(clearProgressMigration, /delete from public\.progress_backups/);
+  assert.match(clearProgressMigration, /enforce_user_progress_reset_marker/);
+  assert.match(clearProgressMigration, /progress reset acknowledgement required/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(gauntletData, /\["苏E", "苏U"\]/);

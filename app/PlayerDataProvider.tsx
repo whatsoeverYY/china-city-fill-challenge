@@ -13,6 +13,7 @@ import type { Session } from "@supabase/supabase-js";
 import { adminPath, appPath } from "./app-path";
 import {
   claimLegacyProgress,
+  createResetProgressSnapshot,
   createTrialProgressStorage,
   createUserProgressStorage,
   mergeProgressSnapshots,
@@ -70,6 +71,7 @@ type PlayerDataContextValue = {
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   syncNow: () => Promise<void>;
+  clearProgress: () => Promise<void>;
 };
 
 type OfflineAccount = PlayerIdentity & { role: PlayerRole };
@@ -100,6 +102,7 @@ const defaultContext: PlayerDataContextValue = {
   signUp: async () => ({ message: "账号服务尚未初始化" }),
   signOut: async () => undefined,
   syncNow: async () => undefined,
+  clearProgress: async () => undefined,
 };
 
 const PlayerDataContext = createContext<PlayerDataContextValue>(defaultContext);
@@ -137,6 +140,19 @@ function authErrorMessage(message: string) {
     return "当前网络不可用，请联网后重试";
   }
   return message;
+}
+
+function operationErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export function PlayerDataProvider({ children }: { children: React.ReactNode }) {
@@ -281,6 +297,59 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     if (!userId) return;
     await syncProgress(userId);
   }, [syncProgress]);
+
+  const clearProgress = useCallback(async () => {
+    const userId = activeUserRef.current;
+    if (!userId) throw new Error("请先登录后再清除存档");
+    if (offlineIdentity || !navigator.onLine) {
+      throw new Error("清除全部存档需要联网，请恢复网络后重试");
+    }
+    if (syncTimerRef.current !== null) {
+      window.clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = null;
+    }
+    while (syncingRef.current) {
+      await new Promise<void>((resolve) => {
+        syncWaitersRef.current.add(resolve);
+      });
+    }
+
+    syncingRef.current = true;
+    setSyncStatus("syncing");
+    setSyncMessage("正在清除本机与云端存档…");
+    const supabase = getSupabaseClient();
+    try {
+      const { data, error } = await supabase.rpc("clear_player_progress", {
+        target_user_id: userId,
+      });
+      if (error) throw error;
+      const resetAt = typeof data === "string" ? data : new Date().toISOString();
+      writeLocalProgressSnapshot(userId, createResetProgressSnapshot(resetAt));
+      setProgressEpoch((value) => value + 1);
+      setLastSyncedAt(resetAt);
+      setSyncStatus("synced");
+      setSyncMessage("全部游戏记录已清除");
+      void supabase.rpc("touch_player_profile");
+    } catch (error) {
+      const message = operationErrorMessage(error, "未知删档错误");
+      setSyncStatus("error");
+      setSyncMessage(
+        message.includes("clear_player_progress") || message.includes("schema cache")
+          ? "删档功能尚未初始化，请管理员执行最新 Supabase 迁移"
+          : `删档失败：${message}`,
+      );
+      throw new Error(
+        message.includes("clear_player_progress") || message.includes("schema cache")
+          ? "删档功能尚未初始化，请先执行最新 Supabase 迁移"
+          : message,
+      );
+    } finally {
+      syncingRef.current = false;
+      const waiters = Array.from(syncWaitersRef.current);
+      syncWaitersRef.current.clear();
+      waiters.forEach((resolve) => resolve());
+    }
+  }, [offlineIdentity]);
 
   const markProgressDirty = useCallback(() => {
     if (!activeUserRef.current) return;
@@ -503,6 +572,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
       signUp,
       signOut,
       syncNow,
+      clearProgress,
     }),
     [
       identity,
@@ -515,6 +585,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
       signIn,
       signOut,
       signUp,
+      clearProgress,
       syncMessage,
       syncNow,
       syncStatus,
@@ -546,6 +617,7 @@ function AccountControl() {
     signUp,
     signOut,
     syncNow,
+    clearProgress,
   } = usePlayerData();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -554,6 +626,7 @@ function AccountControl() {
   const [busy, setBusy] = useState(false);
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -577,6 +650,28 @@ function AccountControl() {
     setMode(nextMode);
     setFormError("");
     setFormMessage("");
+  };
+
+  const closeAccount = () => {
+    setOpen(false);
+    setDeleteConfirmOpen(false);
+    setFormError("");
+    setFormMessage("");
+  };
+
+  const confirmClearProgress = async () => {
+    setBusy(true);
+    setFormError("");
+    setFormMessage("");
+    try {
+      await clearProgress();
+      setDeleteConfirmOpen(false);
+      setFormMessage("全部游戏记录已清除，账号本身仍然保留。");
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "删档失败，请稍后重试");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -604,7 +699,7 @@ function AccountControl() {
               className="dialog-close"
               type="button"
               aria-label="关闭账户面板"
-              onClick={() => setOpen(false)}
+              onClick={closeAccount}
             >
               ×
             </button>
@@ -660,7 +755,50 @@ function AccountControl() {
                   >
                     退出登录
                   </button>
+                  <button
+                    type="button"
+                    className="account-delete-progress"
+                    onClick={() => {
+                      setDeleteConfirmOpen(true);
+                      setFormError("");
+                      setFormMessage("");
+                    }}
+                    disabled={busy || offlineIdentity || syncStatus === "offline"}
+                  >
+                    一键清除全部游戏记录
+                  </button>
                 </div>
+                {deleteConfirmOpen ? (
+                  <section
+                    className="account-delete-confirm"
+                    role="alertdialog"
+                    aria-labelledby="account-delete-confirm-title"
+                    aria-describedby="account-delete-confirm-description"
+                  >
+                    <strong id="account-delete-confirm-title">确认清除全部游戏记录？</strong>
+                    <p id="account-delete-confirm-description">
+                      全国地图、邻省挑战、全部关卡、错题与答题历史都会从本机和云端清除。账号仍会保留，此操作不可恢复。
+                    </p>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmOpen(false)}
+                        disabled={busy}
+                      >
+                        取消
+                      </button>
+                      <button
+                        type="button"
+                        className="is-danger"
+                        onClick={() => void confirmClearProgress()}
+                        disabled={busy}
+                      >
+                        {busy ? "正在清除…" : "确认清除全部记录"}
+                      </button>
+                    </div>
+                  </section>
+                ) : null}
+                {formMessage ? <p className="account-form-success">{formMessage}</p> : null}
                 {formError ? <p className="account-form-error">{formError}</p> : null}
               </>
             ) : (

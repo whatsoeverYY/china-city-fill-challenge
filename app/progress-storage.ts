@@ -37,11 +37,13 @@ type SyncMeta = {
   keys: Record<string, string>;
   scopes: Record<string, string>;
   resets: Record<string, string>;
+  resetAll?: string;
 };
 
 export type ProgressSnapshot = {
   schemaVersion: 1;
   savedAt: string;
+  resetAt?: string;
   values: Partial<Record<ProgressStorageKey, string>>;
   meta: SyncMeta;
 };
@@ -78,6 +80,8 @@ function parseMeta(raw: string | null): SyncMeta {
         parsed.scopes && typeof parsed.scopes === "object" ? parsed.scopes : {},
       resets:
         parsed.resets && typeof parsed.resets === "object" ? parsed.resets : {},
+      resetAll:
+        typeof parsed.resetAll === "string" ? parsed.resetAll : undefined,
     };
   } catch {
     return emptyMeta();
@@ -168,6 +172,7 @@ function updateMetadataForWrite(
 function migrateGauntletProgress(userId: string, meta: SyncMeta) {
   const currentKey = userKey(userId, GAUNTLET_PROGRESS_KEY);
   if (localStorage.getItem(currentKey)) return;
+  if (timestamp(meta.resetAll)) return;
 
   for (const [index, legacyKey] of LEGACY_GAUNTLET_PROGRESS_KEYS.entries()) {
     const raw = localStorage.getItem(userKey(userId, legacyKey));
@@ -219,9 +224,12 @@ export function createUserProgressStorage(
 }
 
 export function claimLegacyProgress(userId: string) {
+  const existingMeta = parseMeta(
+    localStorage.getItem(userKey(userId, SYNC_META_KEY)),
+  );
   const hasUserProgress = PROGRESS_STORAGE_KEYS.some((key) =>
     localStorage.getItem(userKey(userId, key)),
-  );
+  ) || timestamp(existingMeta.resetAll) > 0;
   if (hasUserProgress) return false;
 
   const claimedBy = localStorage.getItem(LEGACY_CLAIM_KEY);
@@ -263,9 +271,22 @@ export function readLocalProgressSnapshot(userId: string): ProgressSnapshot {
   localStorage.setItem(metaKey, JSON.stringify(meta));
   return {
     schemaVersion: 1,
-    savedAt: latestIso(...Object.values(meta.keys)),
+    savedAt: latestIso(meta.resetAll, ...Object.values(meta.keys)),
+    resetAt: meta.resetAll,
     values,
     meta,
+  };
+}
+
+export function createResetProgressSnapshot(
+  resetAt = new Date().toISOString(),
+): ProgressSnapshot {
+  return {
+    schemaVersion: 1,
+    savedAt: resetAt,
+    resetAt,
+    values: {},
+    meta: { ...emptyMeta(), resetAll: resetAt },
   };
 }
 
@@ -281,10 +302,16 @@ export function writeLocalProgressSnapshot(
       localStorage.removeItem(userKey(userId, key));
     }
   }
-  localStorage.setItem(
-    userKey(userId, SYNC_META_KEY),
-    JSON.stringify(snapshot.meta),
-  );
+  const resetAt = latestIso(snapshot.resetAt, snapshot.meta.resetAll);
+  const meta = timestamp(resetAt)
+    ? { ...snapshot.meta, resetAll: resetAt }
+    : snapshot.meta;
+  if (timestamp(resetAt)) {
+    for (const key of LEGACY_GAUNTLET_PROGRESS_KEYS) {
+      localStorage.removeItem(userKey(userId, key));
+    }
+  }
+  localStorage.setItem(userKey(userId, SYNC_META_KEY), JSON.stringify(meta));
 }
 
 export function normalizeProgressSnapshot(value: unknown): ProgressSnapshot {
@@ -292,6 +319,11 @@ export function normalizeProgressSnapshot(value: unknown): ProgressSnapshot {
     return { schemaVersion: 1, savedAt: new Date(0).toISOString(), values: {}, meta: emptyMeta() };
   }
   const candidate = value as Partial<ProgressSnapshot>;
+  const meta = parseMeta(JSON.stringify(candidate.meta ?? {}));
+  const resetAt = latestIso(
+    typeof candidate.resetAt === "string" ? candidate.resetAt : undefined,
+    meta.resetAll,
+  );
   const rawValues = candidate.values && typeof candidate.values === "object"
     ? candidate.values
     : {};
@@ -305,8 +337,50 @@ export function normalizeProgressSnapshot(value: unknown): ProgressSnapshot {
       typeof candidate.savedAt === "string"
         ? candidate.savedAt
         : new Date(0).toISOString(),
+    resetAt: timestamp(resetAt) ? resetAt : undefined,
     values,
-    meta: parseMeta(JSON.stringify(candidate.meta ?? {})),
+    meta: timestamp(resetAt) ? { ...meta, resetAll: resetAt } : meta,
+  };
+}
+
+function applyResetBoundary(
+  snapshot: ProgressSnapshot,
+  resetAt: string,
+): ProgressSnapshot {
+  const resetTime = timestamp(resetAt);
+  if (!resetTime) return snapshot;
+  if (timestamp(snapshot.resetAt) < resetTime) {
+    return createResetProgressSnapshot(resetAt);
+  }
+
+  const values: ProgressSnapshot["values"] = {};
+  for (const key of PROGRESS_STORAGE_KEYS) {
+    const value = snapshot.values[key];
+    if (typeof value !== "string") continue;
+
+    if (MAP_PROGRESS_KEYS.has(key)) {
+      const mapValue = parseMapProgress(value);
+      const keptEntries = Object.entries(mapValue).filter(([provinceCode]) =>
+        timestamp(
+          snapshot.meta.scopes[progressScope(key, provinceCode)] ??
+          snapshot.meta.keys[key],
+        ) > resetTime,
+      );
+      if (keptEntries.length > 0) {
+        values[key] = JSON.stringify(Object.fromEntries(keptEntries));
+      }
+      continue;
+    }
+
+    if (timestamp(snapshot.meta.keys[key]) > resetTime) values[key] = value;
+  }
+
+  return {
+    ...snapshot,
+    savedAt: latestIso(resetAt, ...Object.values(snapshot.meta.keys)),
+    resetAt,
+    values,
+    meta: { ...snapshot.meta, resetAll: resetAt },
   };
 }
 
@@ -366,10 +440,18 @@ export function mergeProgressSnapshots(
   localValue: unknown,
   remoteValue: unknown,
 ): ProgressSnapshot {
-  const local = normalizeProgressSnapshot(localValue);
-  const remote = normalizeProgressSnapshot(remoteValue);
+  const normalizedLocal = normalizeProgressSnapshot(localValue);
+  const normalizedRemote = normalizeProgressSnapshot(remoteValue);
+  const resetAt = latestIso(
+    normalizedLocal.resetAt,
+    normalizedRemote.resetAt,
+  );
+  const local = applyResetBoundary(normalizedLocal, resetAt);
+  const remote = applyResetBoundary(normalizedRemote, resetAt);
   const meta = emptyMeta();
   const values: ProgressSnapshot["values"] = {};
+
+  if (timestamp(resetAt)) meta.resetAll = resetAt;
 
   for (const key of PROGRESS_STORAGE_KEYS) {
     meta.keys[key] = latestIso(local.meta.keys[key], remote.meta.keys[key]);
@@ -415,7 +497,13 @@ export function mergeProgressSnapshots(
 
   return {
     schemaVersion: 1,
-    savedAt: latestIso(local.savedAt, remote.savedAt, ...Object.values(meta.keys)),
+    savedAt: latestIso(
+      resetAt,
+      local.savedAt,
+      remote.savedAt,
+      ...Object.values(meta.keys),
+    ),
+    resetAt: timestamp(resetAt) ? resetAt : undefined,
     values,
     meta,
   };

@@ -354,6 +354,77 @@ body {
   color: var(--red-dark);
 }
 
+.account-actions button.account-delete-progress {
+  grid-column: 1 / -1;
+  color: var(--red-dark);
+  border-color: rgba(180, 59, 50, 0.24);
+  background: rgba(180, 59, 50, 0.06);
+}
+
+.account-actions button.account-delete-progress:hover:not(:disabled),
+.admin-delete-progress:hover:not(:disabled) {
+  border-color: rgba(180, 59, 50, 0.48);
+  background: rgba(180, 59, 50, 0.11);
+}
+
+.account-delete-confirm,
+.admin-delete-confirm {
+  margin-top: 14px;
+  padding: 14px;
+  color: var(--red-dark);
+  border: 1px solid rgba(180, 59, 50, 0.2);
+  border-radius: 13px;
+  background: rgba(180, 59, 50, 0.07);
+}
+
+.account-delete-confirm > strong,
+.admin-delete-confirm > strong {
+  display: block;
+  font-size: 12px;
+}
+
+.account-delete-confirm > p,
+.admin-delete-confirm > p {
+  margin: 7px 0 12px;
+  color: #765653;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.account-delete-confirm > div,
+.admin-delete-confirm > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.account-delete-confirm button,
+.admin-delete-confirm button,
+.admin-delete-progress {
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid rgba(38, 47, 41, 0.16);
+  border-radius: 9px;
+  background: #fffdf8;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.account-delete-confirm button.is-danger,
+.admin-delete-confirm button.is-danger {
+  color: #fff;
+  border-color: var(--red-dark);
+  background: var(--red-dark);
+}
+
+.account-delete-confirm button:disabled,
+.admin-delete-confirm button:disabled,
+.admin-delete-progress:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .admin-shell {
   width: min(1460px, calc(100% - 48px));
   min-height: 100vh;
@@ -582,6 +653,7 @@ body {
 }
 
 .admin-error,
+.admin-notice,
 .admin-empty {
   margin: 18px 22px;
   padding: 14px;
@@ -592,6 +664,11 @@ body {
 .admin-error {
   color: var(--red-dark);
   background: rgba(180, 59, 50, 0.09);
+}
+
+.admin-notice {
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.1);
 }
 
 .admin-empty {
@@ -693,6 +770,14 @@ body {
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.admin-delete-progress {
+  width: 100%;
+  margin-top: 14px;
+  color: var(--red-dark);
+  border-color: rgba(180, 59, 50, 0.24);
+  background: rgba(180, 59, 50, 0.06);
 }
 
 .admin-state-page {

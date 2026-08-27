@@ -8,12 +8,17 @@
 
 `supabase/migrations/202608270001_player_accounts_and_progress.sql`
 
+然后继续执行：
+
+`supabase/migrations/202608270002_clear_player_progress.sql`
+
 迁移会创建：
 
 - `player_profiles`：玩家邮箱、角色、注册时间和最近活跃时间；
 - `user_progress`：每位玩家一份版本化 JSON 云存档；
 - `progress_backups`：自动保留每位玩家最近 20 个旧版本；
-- RLS：玩家只能读写自己的存档，管理员可以只读查看全部玩家和存档。
+- RLS：玩家只能读写自己的存档，管理员可以查看全部玩家和存档；
+- `clear_player_progress`：玩家可清除自己的全部游戏记录，管理员可清除任意玩家记录，同时删除历史备份并阻止旧设备恢复已删存档。
 
 ## 2. 配置邮箱登录
 
