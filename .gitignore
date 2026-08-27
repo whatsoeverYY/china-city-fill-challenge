@@ -21,6 +21,8 @@
 # misc
 .DS_Store
 *.pem
+/.idea/
+/app/_sites-preview/
 
 # debug
 npm-debug.log*
