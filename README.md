@@ -5,7 +5,7 @@
 ## 功能
 
 - 覆盖 23 个省、4 个直辖市、5 个自治区和 2 个特别行政区
-- 共 34 个省级行政区、497 个待归位名称
+- 共 34 个省级行政区、500 个待归位名称
 - 省级边界使用红色，地市或区县边界使用绿色
 - 支持鼠标拖拽、触屏拖拽以及“先点名称、再点地图”
 - 名称栏位于地图右侧并可独立滚动，窄屏时自动移至地图下方
@@ -79,4 +79,4 @@ npm run test:pages
 - 原生 SVG 地图渲染
 - Cloudflare Workers 兼容构建
 
-地图数据仅用于地理学习与游戏展示。
+地图数据仅用于地理学习与游戏展示。新疆地图已更新为 27 个区块，包含新星市、白杨市和草湖市；边界数据参考 [GeoJSON.CN](https://geojson.cn/data/atlas/china) 与 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。

@@ -38,7 +38,7 @@ test("server-renders the city challenge shell", async () => {
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, knowledgeBase, knowledgeData, playerData, progressStorage, adminDashboard, supabaseMigration] = await Promise.all([
+  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, provinceAdministrativeProfileData, knowledgeBase, knowledgeData, playerData, progressStorage, adminDashboard, supabaseMigration, xinjiangMapSource] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
@@ -46,13 +46,29 @@ test("includes map and interaction affordances", async () => {
     readFile(new URL("../app/university-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/confusable-city-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/province-city-count-data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/province-administrative-profile-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/KnowledgeBase.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/knowledge-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/PlayerDataProvider.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/progress-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/AdminDashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../supabase/migrations/202608270001_player_accounts_and_progress.sql", import.meta.url), "utf8"),
+    readFile(new URL("../public/data/maps/650000.json", import.meta.url), "utf8"),
   ]);
+
+  const xinjiangMap = JSON.parse(xinjiangMapSource);
+  assert.equal(xinjiangMap.features.length, 27);
+  assert.deepEqual(
+    xinjiangMap.features.slice(-3).map((feature) => [
+      feature.properties.name,
+      feature.properties.adcode,
+    ]),
+    [
+      ["新星市", 659011],
+      ["白杨市", 659012],
+      ["草湖市", 659013],
+    ],
+  );
 
   assert.match(game, /draggable=\{!isPlaced\}/);
   assert.match(game, /data-region-name/);
@@ -133,6 +149,10 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /passedLevel < 26/);
   assert.match(game, /GAUNTLET_PROGRESS_KEY/);
   assert.match(game, /normalizePlate/);
+  assert.match(game, /plateAnswerMatches/);
+  assert.match(game, /全部车牌前缀/);
+  assert.match(game, /answerMode: "all-plates"/);
+  assert.match(game, /answerMode: "all-plate-letters"/);
   assert.match(game, /选择省份（可多选）/);
   assert.match(game, /selectedQuizProvinces/);
   assert.match(game, /selectedShapeProvinceCodes/);
@@ -174,6 +194,8 @@ test("includes map and interaction affordances", async () => {
   assert.match(game, /已完成目标：/);
   assert.match(game, /submitManualAnswer/);
   assert.match(game, /manual-answer/);
+  assert.match(game, /500 个待归位的名字/);
+  assert.match(game, /OpenStreetMap contributors/);
   assert.match(css, /--red:\s*#b43b32/i);
   assert.match(css, /\.gauntlet-province-map-wall/);
   assert.match(css, /\.gauntlet-province-map-panel path\.is-correct-answer/);
@@ -209,11 +231,18 @@ test("includes map and interaction affordances", async () => {
   assert.match(css, /knowledge-category-grid/);
   assert.match(css, /knowledge-neighbor-stage/);
   assert.match(css, /knowledge-river-card/);
+  assert.match(css, /knowledge-special-regions/);
+  assert.match(css, /knowledge-plate-grid article\.is-multi-plate/);
   assert.match(knowledgeBase, /中国地理知识馆/);
   assert.match(knowledgeBase, /关卡知识覆盖/);
   assert.match(knowledgeBase, /CITY_QUIZ_DATA/);
   assert.match(knowledgeBase, /UNIVERSITY_QUIZ_DATA/);
   assert.match(knowledgeBase, /PROVINCE_CITY_COUNT_DATA/);
+  assert.match(knowledgeBase, /getProvinceAdministrativeProfile/);
+  assert.match(knowledgeBase, /综合总量/);
+  assert.match(knowledgeBase, /特殊车牌辖区/);
+  assert.match(knowledgeBase, /MULTI_PLATE_CITY_COUNT/);
+  assert.match(knowledgeBase, /关卡中必须全部答出/);
   assert.match(knowledgeBase, /CONFUSABLE_CITY_PAIRS/);
   assert.match(knowledgeData, /KNOWLEDGE_CATEGORIES/);
   assert.match(knowledgeData, /RIVER_KNOWLEDGE/);
@@ -247,6 +276,11 @@ test("includes map and interaction affordances", async () => {
   assert.match(supabaseMigration, /progress_backups/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
+  assert.match(gauntletData, /\["苏E", "苏U"\]/);
+  assert.match(gauntletData, /\["粤E", "粤X", "粤Y"\]/);
+  assert.match(gauntletData, /\["浙A", "浙M"\]/);
+  assert.match(gauntletData, /plateAnswerMatches/);
+  assert.match(gauntletData, /MULTI_PLATE_CITY_COUNT/);
   assert.match(universityData, /UNIVERSITY_QUIZ_DATA/);
   assert.match(universityData, /北京大学/);
   assert.match(universityData, /石河子大学/);
@@ -275,5 +309,25 @@ test("includes map and interaction affordances", async () => {
   assert.match(provinceCityCountData, /台湾地区有6个‘直辖市’和3个市，共9座城市/);
   assert.match(provinceCityCountData, /香港特别行政区现行划分为18区/);
   assert.match(provinceCityCountData, /PROVINCE_CITY_COUNT_DATA/);
+  assert.match(provinceAdministrativeProfileData, /PROVINCE_ADMINISTRATIVE_PROFILE_DATA/);
+  assert.match(
+    provinceAdministrativeProfileData,
+    /"420000",\s*17,[\s\S]*?恩施土家族苗族自治州[\s\S]*?神农架林区/,
+  );
+  assert.match(provinceAdministrativeProfileData, /雄安新区[\s\S]*?冀X/);
+  assert.match(provinceAdministrativeProfileData, /杨凌农业高新技术产业示范区[\s\S]*?陕V/);
+  assert.match(provinceAdministrativeProfileData, /阿拉善盟[\s\S]*?蒙M/);
+  assert.match(
+    provinceAdministrativeProfileData,
+    /"460000",\s*19,[\s\S]*?省直辖县级市[\s\S]*?省直辖县[\s\S]*?省直辖自治县/,
+  );
+  assert.match(
+    provinceAdministrativeProfileData,
+    /"820000",\s*8,[\s\S]*?堂区[\s\S]*?路凼填海区/,
+  );
+  assert.match(
+    provinceAdministrativeProfileData,
+    /"650000",\s*27,[\s\S]*?自治区直辖县级市", count: 13[\s\S]*?昆玉市[\s\S]*?新S[\s\S]*?草湖市/,
+  );
   assert.match(layout, /lang="zh-CN"/);
 });

@@ -7,7 +7,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { CITY_QUIZ_DATA, type CityQuizItem } from "./gauntlet-data";
+import {
+  CITY_PLATE_PREFIX_COUNT,
+  CITY_QUIZ_DATA,
+  plateAnswerMatches,
+  type CityQuizItem,
+} from "./gauntlet-data";
 import {
   UNIVERSITY_QUIZ_DATA,
   type UniversityQuizItem,
@@ -303,14 +308,17 @@ function useMapData(code: string) {
 }
 
 function useMapCollection(codes: string[]) {
-  const [data, setData] = useState<MapData | null>(null);
-  const [error, setError] = useState(false);
   const codeKey = codes.join(",");
+  const [result, setResult] = useState<{
+    key: string;
+    data: MapData | null;
+    error: boolean;
+  }>({ key: "", data: null, error: false });
+  const data = result.key === codeKey ? result.data : null;
+  const error = result.key === codeKey ? result.error : false;
 
   useEffect(() => {
     let cancelled = false;
-    setData(null);
-    setError(false);
 
     if (!codeKey) return () => {
       cancelled = true;
@@ -320,22 +328,26 @@ function useMapCollection(codes: string[]) {
     Promise.all(requestedCodes.map(fetchMapData))
       .then((maps) => {
         if (cancelled) return;
-        setData({
-          type: "FeatureCollection",
-          features: maps.flatMap((map, index) => {
-            const code = requestedCodes[index];
-            return map.features.map((feature) => ({
-              ...feature,
-              properties: {
-                ...feature.properties,
-                provinceCode: code,
-              },
-            }));
-          }),
+        setResult({
+          key: codeKey,
+          error: false,
+          data: {
+            type: "FeatureCollection",
+            features: maps.flatMap((map, index) => {
+              const code = requestedCodes[index];
+              return map.features.map((feature) => ({
+                ...feature,
+                properties: {
+                  ...feature.properties,
+                  provinceCode: code,
+                },
+              }));
+            }),
+          },
         });
       })
       .catch(() => {
-        if (!cancelled) setError(true);
+        if (!cancelled) setResult({ key: codeKey, data: null, error: true });
       });
 
     return () => {
@@ -847,7 +859,7 @@ function NationalCityAtlas({
         <div className="city-atlas-summary" aria-label="图鉴数据范围">
           <span><strong>34</strong> 省级行政区</span>
           <span><strong>{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
-          <span><strong>{CITY_QUIZ_DATA.length}</strong> 个城市车牌前缀</span>
+          <span><strong>{CITY_PLATE_PREFIX_COUNT}</strong> 个城市车牌前缀</span>
         </div>
         <button className="city-atlas-exit" type="button" onClick={onExit}>
           <span aria-hidden="true">←</span> 返回挑战首页
@@ -1000,7 +1012,7 @@ const GAUNTLET_LEVELS: Array<{
     level: 3,
     title: "省牌双答",
     badge: "车牌",
-    description: "根据城市名称，同时写出所属省份与车牌前缀。",
+    description: "根据城市名称，同时写出所属省份与全部车牌前缀；多号牌城市必须答全。",
     target: "连续答对 20 题",
   },
   {
@@ -1021,7 +1033,7 @@ const GAUNTLET_LEVELS: Array<{
     level: 6,
     title: "车牌补全",
     badge: "补牌",
-    description: "根据城市和车牌简称，补出缺失的车牌字母。",
+    description: "根据城市和车牌简称，补出全部车牌字母；多号牌城市必须答全。",
     target: "连续答对 20 题",
   },
   {
@@ -1176,10 +1188,10 @@ const NO_PICKER_LEVELS = new Set<GauntletLevel>([10, 14, 15, 21, 22, 26]);
 const GAUNTLET_OPENING_FEEDBACK: Record<GauntletLevel, string> = {
   1: "观察轮廓，写出省级行政区名称",
   2: "写出这座城市所属的省级行政区",
-  3: "省份和车牌前缀都答对才计入连胜",
+  3: "省份和全部车牌前缀都答对才计入连胜",
   4: "省份和城市都答对才计入连胜",
   5: "从文字选项中选出全部陆地邻省，再确认答案",
-  6: "补出车牌简称后缺失的字母",
+  6: "补出车牌简称后缺失的全部字母",
   7: "省份与行政中心会交替双向出题",
   8: "直接点击城市所属的省级行政区",
   9: "判断屏幕上的对应关系是真是假",
@@ -1337,6 +1349,7 @@ type MistakeQuestion = {
   correctAnswer: string;
   explanation: string;
   wrongCount: number;
+  answerMode?: "all-plates" | "all-plate-letters";
 };
 
 type MistakeSeed = Omit<MistakeQuestion, "wrongCount">;
@@ -1372,6 +1385,7 @@ type BossQuestion = {
       value: string;
       targets: string[];
       explanation: string;
+      matchAllTargets?: boolean;
     }
   | {
       kind: "truth";
@@ -1436,7 +1450,10 @@ function isMistakeQuestion(value: unknown): value is MistakeQuestion {
     item.answers.every((answer) => typeof answer === "string") &&
     typeof item.correctAnswer === "string" &&
     typeof item.explanation === "string" &&
-    typeof item.wrongCount === "number"
+    typeof item.wrongCount === "number" &&
+    (item.answerMode === undefined ||
+      item.answerMode === "all-plates" ||
+      item.answerMode === "all-plate-letters")
   );
 }
 
@@ -1898,8 +1915,9 @@ function createBossQuestions() {
         badge: "牌",
         prompt: "写出这座城市的车牌前缀",
         value: city.city,
-        targets: [city.plate],
+        targets: city.plates,
         explanation: `${city.city}的车牌前缀是 ${city.plate}`,
+        matchAllTargets: true,
       };
     }
     if (index % 6 === 2) {
@@ -2448,51 +2466,59 @@ function GauntletGame({
   const timedMode = timeLimit > 0;
 
   useEffect(() => {
-    try {
-      const savedCurrent = progressStorage.getItem(GAUNTLET_PROGRESS_KEY);
-      const savedV4 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V4_KEY);
-      const savedV3 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V3_KEY);
-      const savedV2 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V2_KEY);
-      const savedV1 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_KEY);
-      const saved = JSON.parse(
-        savedCurrent ?? savedV4 ?? savedV3 ?? savedV2 ?? savedV1 ?? "[]",
-      ) as number[];
-      const migrated = savedCurrent
-        ? saved
-        : savedV4
-          ? saved.map((item) => item === 25 ? 26 : item)
-          : savedV3
-            ? saved.map((item) => item === 24 ? 26 : item)
-          : savedV2
-            ? saved.map((item) => item === 21 ? 26 : item)
-            : saved.map((item) => item === 20 ? 26 : item);
-      setCompletedLevels(
-        new Set(
-          migrated.filter(
-            (item): item is GauntletLevel =>
-              GAUNTLET_LEVELS.some((config) => config.level === item),
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const savedCurrent = progressStorage.getItem(GAUNTLET_PROGRESS_KEY);
+        const savedV4 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V4_KEY);
+        const savedV3 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V3_KEY);
+        const savedV2 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V2_KEY);
+        const savedV1 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_KEY);
+        const saved = JSON.parse(
+          savedCurrent ?? savedV4 ?? savedV3 ?? savedV2 ?? savedV1 ?? "[]",
+        ) as number[];
+        const migrated = savedCurrent
+          ? saved
+          : savedV4
+            ? saved.map((item) => item === 25 ? 26 : item)
+            : savedV3
+              ? saved.map((item) => item === 24 ? 26 : item)
+            : savedV2
+              ? saved.map((item) => item === 21 ? 26 : item)
+              : saved.map((item) => item === 20 ? 26 : item);
+        setCompletedLevels(
+          new Set(
+            migrated.filter(
+              (item): item is GauntletLevel =>
+                GAUNTLET_LEVELS.some((config) => config.level === item),
+            ),
           ),
-        ),
+        );
+      } catch {
+        setCompletedLevels(new Set());
+      }
+      try {
+        const savedMistakes = JSON.parse(
+          progressStorage.getItem(GAUNTLET_MISTAKES_KEY) ?? "[]",
+        ) as unknown[];
+        setMistakes(savedMistakes.filter(isMistakeQuestion));
+      } catch {
+        setMistakes([]);
+      }
+      level13HistoryRef.current = readRecentQuestionHistory(
+        progressStorage,
+        GAUNTLET_LEVEL_13_HISTORY_KEY,
       );
-    } catch {
-      setCompletedLevels(new Set());
-    }
-    try {
-      const savedMistakes = JSON.parse(
-        progressStorage.getItem(GAUNTLET_MISTAKES_KEY) ?? "[]",
-      ) as unknown[];
-      setMistakes(savedMistakes.filter(isMistakeQuestion));
-    } catch {
-      setMistakes([]);
-    }
-    level13HistoryRef.current = readRecentQuestionHistory(
-      progressStorage,
-      GAUNTLET_LEVEL_13_HISTORY_KEY,
-    );
-    level25HistoryRef.current = readRecentQuestionHistory(
-      progressStorage,
-      GAUNTLET_LEVEL_25_HISTORY_KEY,
-    );
+      level25HistoryRef.current = readRecentQuestionHistory(
+        progressStorage,
+        GAUNTLET_LEVEL_25_HISTORY_KEY,
+      );
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [progressStorage]);
 
   useEffect(() => {
@@ -3208,6 +3234,11 @@ function GauntletGame({
         answers: targets,
         correctAnswer,
         explanation,
+        answerMode:
+          currentBossQuestion.kind === "text" &&
+          currentBossQuestion.matchAllTargets
+            ? "all-plates"
+            : undefined,
       });
     }
     const nextLives = correct ? bossLives : bossLives - 1;
@@ -3297,11 +3328,15 @@ function GauntletGame({
       currentBossQuestion &&
       (currentBossQuestion.kind === "text" || currentBossQuestion.kind === "shape")
     ) {
-      const correct = currentBossQuestion.targets.some(
-        (targetAnswer) =>
-          answerMatches(provinceAnswer, [targetAnswer]) ||
-          normalizePlate(provinceAnswer) === normalizePlate(targetAnswer),
-      );
+      const correct =
+        currentBossQuestion.kind === "text" &&
+        currentBossQuestion.matchAllTargets
+          ? plateAnswerMatches(provinceAnswer, currentBossQuestion.targets)
+          : currentBossQuestion.targets.some(
+              (targetAnswer) =>
+                answerMatches(provinceAnswer, [targetAnswer]) ||
+                normalizePlate(provinceAnswer) === normalizePlate(targetAnswer),
+            );
       advanceBossQuestion(
         correct,
         currentBossQuestion.targets.join(" / "),
@@ -3341,11 +3376,17 @@ function GauntletGame({
 
     if (level === 21) {
       if (!currentMistake) return;
-      const correct = currentMistake.answers.some(
-        (answer) =>
-          answerMatches(provinceAnswer, [answer]) ||
-          normalizePlate(provinceAnswer) === normalizePlate(answer),
-      );
+      const correct = currentMistake.answerMode
+        ? plateAnswerMatches(
+            provinceAnswer,
+            currentMistake.answers,
+            currentMistake.answerMode === "all-plate-letters",
+          )
+        : currentMistake.answers.some(
+            (answer) =>
+              answerMatches(provinceAnswer, [answer]) ||
+              normalizePlate(provinceAnswer) === normalizePlate(answer),
+          );
       if (correct) {
         masterMistake(currentMistake.id);
         setMistakeOrder((current) => current.slice(1));
@@ -3366,6 +3407,7 @@ function GauntletGame({
         answers: currentMistake.answers,
         correctAnswer: currentMistake.correctAnswer,
         explanation: currentMistake.explanation,
+        answerMode: currentMistake.answerMode,
       });
       setMistakeOrder((current) => [...current.slice(1), current[0]]);
       setFeedbackType("wrong");
@@ -3487,11 +3529,11 @@ function GauntletGame({
 
     if (level === 6) {
       if (!currentCity) return;
-      const expectedLetter = normalizePlate(currentCity.plate).slice(1);
-      const normalizedAnswer = normalizePlate(plateAnswer);
-      const correct =
-        normalizedAnswer === expectedLetter ||
-        normalizedAnswer === normalizePlate(currentCity.plate);
+      const correct = plateAnswerMatches(
+        plateAnswer,
+        currentCity.plates,
+        true,
+      );
       advanceStreakChallenge(
         6,
         correct,
@@ -3503,9 +3545,10 @@ function GauntletGame({
           id: `plate-${currentCity.city}`,
           category: "车牌",
           prompt: `${currentCity.city}的车牌前缀是什么？`,
-          answers: [currentCity.plate, expectedLetter],
+          answers: currentCity.plates,
           correctAnswer: currentCity.plate,
           explanation: `${currentCity.city}的车牌前缀是 ${currentCity.plate}`,
+          answerMode: "all-plate-letters",
         },
       );
       return;
@@ -3522,7 +3565,7 @@ function GauntletGame({
       level === 2
         ? true
         : level === 3
-          ? normalizePlate(plateAnswer) === normalizePlate(currentCity.plate)
+          ? plateAnswerMatches(plateAnswer, currentCity.plates)
           : answerMatches(cityAnswer, [currentCity.city]);
     const correct = provinceCorrect && secondaryCorrect;
     const winTarget = level === 2 ? 30 : 20;
@@ -3552,9 +3595,10 @@ function GauntletGame({
           id: `plate-${currentCity.city}`,
           category: "车牌",
           prompt: `${currentCity.city}的车牌前缀是什么？`,
-          answers: [currentCity.plate],
+          answers: currentCity.plates,
           correctAnswer: currentCity.plate,
           explanation: `${currentCity.city}的车牌前缀是 ${currentCity.plate}`,
+          answerMode: "all-plates",
         });
       }
     }
@@ -4525,7 +4569,13 @@ function GauntletGame({
                     <span aria-hidden="true">{currentBossQuestion.badge}</span>
                     <p>{currentBossQuestion.prompt}</p>
                     <strong>{currentBossQuestion.value}</strong>
-                    <small>终极混战题型会随时切换</small>
+                    <small>
+                      {currentBossQuestion.kind === "text" &&
+                      currentBossQuestion.matchAllTargets &&
+                      currentBossQuestion.targets.length > 1
+                        ? `多号牌城市：${currentBossQuestion.targets.length} 个前缀必须全部答出`
+                        : "终极混战题型会随时切换"}
+                    </small>
                   </div>
                 ) : <LoadingMap />
               ) : level === 5 ? (
@@ -4594,16 +4644,29 @@ function GauntletGame({
               ) : level === 6 ? (
                 <div className="city-question plate-fill-question">
                   <span aria-hidden="true">补</span>
-                  <p>补出这座城市的车牌字母</p>
+                  <p>补出这座城市的全部车牌字母</p>
                   <strong>{currentCity?.city ?? "载入中…"}</strong>
-                  <small className="plate-blank">{currentCity ? `${currentCity.plate.slice(0, 1)} ？` : "？"}</small>
+                  <small className="plate-blank">
+                    {currentCity
+                      ? `${currentCity.plate.slice(0, 1)} ${currentCity.plates.map(() => "？").join(" / ")}`
+                      : "？"}
+                  </small>
+                  {currentCity && currentCity.plates.length > 1 ? (
+                    <small>多号牌城市：用顿号或空格分隔，必须全部答出</small>
+                  ) : null}
                 </div>
               ) : (
                 <div className={`city-question ${level === 4 ? "is-plate-question" : ""}`}>
                   <span aria-hidden="true">{level === 4 ? "牌" : "城"}</span>
                   <p>{level === 4 ? "这组车牌属于哪里？" : "这座城市属于哪里？"}</p>
                   <strong>{(level === 4 ? currentCity?.plate : currentCity?.city) ?? "载入中…"}</strong>
-                  {level === 3 ? <small>还需要写出它的车牌前缀</small> : null}
+                  {level === 3 ? (
+                    <small>
+                      {currentCity && currentCity.plates.length > 1
+                        ? `这是多号牌城市，需要写出全部 ${currentCity.plates.length} 个前缀`
+                        : "还需要写出它的车牌前缀"}
+                    </small>
+                  ) : null}
                   {level === 4 ? <small>需要同时写出省份和城市</small> : null}
                 </div>
               )}
@@ -4907,15 +4970,19 @@ function GauntletGame({
                   <form onSubmit={submitAnswer}>
                     {level === 6 ? (
                       <>
-                        <label htmlFor="gauntlet-plate-answer">车牌字母</label>
+                        <label htmlFor="gauntlet-plate-answer">全部车牌字母</label>
                         <input
                           ref={provinceInputRef}
                           id="gauntlet-plate-answer"
                           value={plateAnswer}
                           onChange={(event) => setPlateAnswer(event.target.value)}
-                          placeholder="例如：A"
+                          placeholder={
+                            currentCity && currentCity.plates.length > 1
+                              ? "例如：A、S"
+                              : "例如：A"
+                          }
                           autoComplete="off"
-                          maxLength={5}
+                          maxLength={32}
                         />
                       </>
                     ) : (
@@ -4943,14 +5010,18 @@ function GauntletGame({
                     )}
                     {level === 3 ? (
                       <>
-                        <label htmlFor="gauntlet-plate-answer">车牌前缀</label>
+                        <label htmlFor="gauntlet-plate-answer">全部车牌前缀</label>
                         <input
                           id="gauntlet-plate-answer"
                           value={plateAnswer}
                           onChange={(event) => setPlateAnswer(event.target.value)}
-                          placeholder="例如：苏A"
+                          placeholder={
+                            currentCity && currentCity.plates.length > 1
+                              ? "例如：鲁A、鲁S"
+                              : "例如：苏A"
+                          }
                           autoComplete="off"
-                          maxLength={5}
+                          maxLength={32}
                         />
                       </>
                     ) : null}
@@ -5131,6 +5202,7 @@ export default function CityGame() {
   } | null>(null);
   const progressRef = useRef<Record<string, string[]>>({});
   const neighborProgressRef = useRef<Record<string, string[]>>({});
+  const manualAnswerInputRef = useRef<HTMLInputElement>(null);
   const touchDragRef = useRef<{
     name: string;
     startX: number;
@@ -5157,44 +5229,58 @@ export default function CityGame() {
   const { data: detailMap, error: detailError } = useMapCollection(challengeCodes);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(progressStorage.getItem(STORAGE_KEY) ?? "{}") as Record<
-        string,
-        string[]
-      >;
-      progressRef.current = saved;
-      const savedHardMode = progressStorage.getItem(HARD_MODE_KEY) === "true";
-      const savedNeighborMode = progressStorage.getItem(NEIGHBOR_MODE_KEY) === "true";
-      const savedNeighborProgress = JSON.parse(
-        progressStorage.getItem(NEIGHBOR_PROGRESS_KEY) ?? "{}",
-      ) as Record<string, string[]>;
-      neighborProgressRef.current = savedNeighborProgress;
-      setHardMode(savedHardMode);
-      setNeighborMode(savedNeighborMode);
-      if (savedHardMode || savedNeighborMode) {
-        setMessage(nationalChallengeMessage(savedHardMode, savedNeighborMode));
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const saved = JSON.parse(progressStorage.getItem(STORAGE_KEY) ?? "{}") as Record<
+          string,
+          string[]
+        >;
+        progressRef.current = saved;
+        const savedHardMode = progressStorage.getItem(HARD_MODE_KEY) === "true";
+        const savedNeighborMode = progressStorage.getItem(NEIGHBOR_MODE_KEY) === "true";
+        const savedNeighborProgress = JSON.parse(
+          progressStorage.getItem(NEIGHBOR_PROGRESS_KEY) ?? "{}",
+        ) as Record<string, string[]>;
+        neighborProgressRef.current = savedNeighborProgress;
+        setHardMode(savedHardMode);
+        setNeighborMode(savedNeighborMode);
+        if (savedHardMode || savedNeighborMode) {
+          setMessage(nationalChallengeMessage(savedHardMode, savedNeighborMode));
+        }
+        setCompletedProvinceCodes(
+          new Set(
+            PROVINCES.filter(
+              (item) => saved[item.code]?.length && saved[item.code][0] === "__complete__",
+            ).map((item) => item.code),
+          ),
+        );
+        setCompletedNeighborCodes(
+          new Set(
+            PROVINCES.filter(
+              (item) =>
+                savedNeighborProgress[item.code]?.length &&
+                savedNeighborProgress[item.code][0] === "__complete__",
+            ).map((item) => item.code),
+          ),
+        );
+      } catch {
+        progressRef.current = {};
+        neighborProgressRef.current = {};
       }
-      setCompletedProvinceCodes(
-        new Set(
-          PROVINCES.filter(
-            (item) => saved[item.code]?.length && saved[item.code][0] === "__complete__",
-          ).map((item) => item.code),
-        ),
-      );
-      setCompletedNeighborCodes(
-        new Set(
-          PROVINCES.filter(
-            (item) =>
-              savedNeighborProgress[item.code]?.length &&
-              savedNeighborProgress[item.code][0] === "__complete__",
-          ).map((item) => item.code),
-        ),
-      );
-    } catch {
-      progressRef.current = {};
-      neighborProgressRef.current = {};
-    }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [progressStorage]);
+
+  useEffect(() => {
+    if (!pendingFeature) return;
+    const frame = window.requestAnimationFrame(() => manualAnswerInputRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [pendingFeature]);
 
   const answerNames = useMemo(
     () => detailMap?.features.map((feature) => feature.properties.name) ?? [],
@@ -5283,10 +5369,16 @@ export default function CityGame() {
   useEffect(() => {
     if (!province || !detailMap) return;
     const validNames = new Set(answerNames);
-    setCompletedNames((current) => {
-      const filtered = new Set(Array.from(current).filter((name) => validNames.has(name)));
-      return filtered;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setCompletedNames((current) =>
+        new Set(Array.from(current).filter((name) => validNames.has(name))),
+      );
     });
+    return () => {
+      cancelled = true;
+    };
   }, [answerNames, detailMap, province]);
 
   const handleGuess = useCallback(
@@ -5987,7 +6079,13 @@ export default function CityGame() {
       </div>
 
       <footer>
-        <span>一张地图，497 个待归位的名字</span>
+        <span>一张地图，500 个待归位的名字</span>
+        <span>
+          边界数据：
+          <a href="https://geojson.cn/data/atlas/china" target="_blank" rel="noreferrer">GeoJSON.CN</a>
+          {" · "}
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
+        </span>
         <span>
           {identity
             ? syncStatus === "offline"
@@ -6035,8 +6133,8 @@ export default function CityGame() {
               <div className="manual-answer-row">
                 <input
                   id="manual-answer"
+                  ref={manualAnswerInputRef}
                   value={manualAnswer}
-                  autoFocus
                   autoComplete="off"
                   placeholder={province ? "输入名称" : "输入省份名称"}
                   onChange={(event) => {

@@ -28,4 +28,13 @@ test("copies static maps and disables Jekyll processing", async () => {
     access(new URL("favicon.svg", exportRoot)),
     access(new URL("og.png", exportRoot)),
   ]);
+
+  const xinjiangMap = JSON.parse(
+    await readFile(new URL("data/maps/650000.json", exportRoot), "utf8"),
+  );
+  assert.equal(xinjiangMap.features.length, 27);
+  assert.deepEqual(
+    xinjiangMap.features.slice(-3).map((feature) => feature.properties.name),
+    ["新星市", "白杨市", "草湖市"],
+  );
 });
