@@ -22,6 +22,19 @@ import {
 } from "./province-city-count-data";
 import KnowledgeBase from "./KnowledgeBase";
 import { RIVER_KNOWLEDGE } from "./knowledge-data";
+import { usePlayerData } from "./PlayerDataProvider";
+import {
+  GAUNTLET_LEVEL_13_HISTORY_KEY,
+  GAUNTLET_LEVEL_25_HISTORY_KEY,
+  GAUNTLET_MISTAKES_KEY,
+  GAUNTLET_PROGRESS_KEY,
+  HARD_MODE_KEY,
+  LEGACY_GAUNTLET_PROGRESS_KEYS,
+  NEIGHBOR_MODE_KEY,
+  NEIGHBOR_PROGRESS_KEY,
+  STORAGE_KEY,
+  type ProgressStorage,
+} from "./progress-storage";
 
 type Position = [number, number];
 
@@ -118,18 +131,12 @@ const TAIWAN_NAME_MAP: Record<string, string> = {
 
 const MAP_WIDTH = 920;
 const MAP_HEIGHT = 600;
-const STORAGE_KEY = "china-city-fill-progress-v1";
-const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
-const NEIGHBOR_MODE_KEY = "china-city-fill-neighbor-mode-v1";
-const NEIGHBOR_PROGRESS_KEY = "china-city-fill-neighbor-progress-v1";
-const GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v5";
-const LEGACY_GAUNTLET_PROGRESS_V4_KEY = "china-city-fill-gauntlet-progress-v4";
-const LEGACY_GAUNTLET_PROGRESS_V3_KEY = "china-city-fill-gauntlet-progress-v3";
-const LEGACY_GAUNTLET_PROGRESS_V2_KEY = "china-city-fill-gauntlet-progress-v2";
-const LEGACY_GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v1";
-const GAUNTLET_MISTAKES_KEY = "china-city-fill-gauntlet-mistakes-v1";
-const GAUNTLET_LEVEL_13_HISTORY_KEY = "china-city-fill-level-13-history-v1";
-const GAUNTLET_LEVEL_25_HISTORY_KEY = "china-city-fill-level-25-history-v1";
+const [
+  LEGACY_GAUNTLET_PROGRESS_V4_KEY,
+  LEGACY_GAUNTLET_PROGRESS_V3_KEY,
+  LEGACY_GAUNTLET_PROGRESS_V2_KEY,
+  LEGACY_GAUNTLET_PROGRESS_KEY,
+] = LEGACY_GAUNTLET_PROGRESS_KEYS;
 const CITY_MAP_RECENT_QUESTION_LIMIT = 90;
 const CITY_MAP_MINIMUM_QUEUE_LENGTH = 90;
 
@@ -1577,9 +1584,9 @@ function createCityMapQuestionQueue(
   return queue.slice(0, targetLength);
 }
 
-function readRecentQuestionHistory(storageKey: string) {
+function readRecentQuestionHistory(storage: ProgressStorage, storageKey: string) {
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "[]") as unknown[];
+    const saved = JSON.parse(storage.getItem(storageKey) ?? "[]") as unknown[];
     return saved
       .filter((item): item is string => typeof item === "string")
       .slice(-CITY_MAP_RECENT_QUESTION_LIMIT);
@@ -1588,9 +1595,13 @@ function readRecentQuestionHistory(storageKey: string) {
   }
 }
 
-function writeRecentQuestionHistory(storageKey: string, history: string[]) {
+function writeRecentQuestionHistory(
+  storage: ProgressStorage,
+  storageKey: string,
+  history: string[],
+) {
   try {
-    localStorage.setItem(storageKey, JSON.stringify(history));
+    storage.setItem(storageKey, JSON.stringify(history));
   } catch {
     // 浏览器禁用本地存储时，当前页面内的去重队列仍然有效。
   }
@@ -2361,6 +2372,7 @@ function GauntletGame({
   nationalError: boolean;
   onExit: () => void;
 }) {
+  const { progressStorage } = usePlayerData();
   const [level, setLevel] = useState<GauntletLevel | null>(null);
   const [passedLevel, setPassedLevel] = useState<GauntletLevel | null>(null);
   const [completedLevels, setCompletedLevels] = useState<Set<GauntletLevel>>(
@@ -2437,11 +2449,11 @@ function GauntletGame({
 
   useEffect(() => {
     try {
-      const savedCurrent = localStorage.getItem(GAUNTLET_PROGRESS_KEY);
-      const savedV4 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V4_KEY);
-      const savedV3 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V3_KEY);
-      const savedV2 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V2_KEY);
-      const savedV1 = localStorage.getItem(LEGACY_GAUNTLET_PROGRESS_KEY);
+      const savedCurrent = progressStorage.getItem(GAUNTLET_PROGRESS_KEY);
+      const savedV4 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V4_KEY);
+      const savedV3 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V3_KEY);
+      const savedV2 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_V2_KEY);
+      const savedV1 = progressStorage.getItem(LEGACY_GAUNTLET_PROGRESS_KEY);
       const saved = JSON.parse(
         savedCurrent ?? savedV4 ?? savedV3 ?? savedV2 ?? savedV1 ?? "[]",
       ) as number[];
@@ -2467,19 +2479,21 @@ function GauntletGame({
     }
     try {
       const savedMistakes = JSON.parse(
-        localStorage.getItem(GAUNTLET_MISTAKES_KEY) ?? "[]",
+        progressStorage.getItem(GAUNTLET_MISTAKES_KEY) ?? "[]",
       ) as unknown[];
       setMistakes(savedMistakes.filter(isMistakeQuestion));
     } catch {
       setMistakes([]);
     }
     level13HistoryRef.current = readRecentQuestionHistory(
+      progressStorage,
       GAUNTLET_LEVEL_13_HISTORY_KEY,
     );
     level25HistoryRef.current = readRecentQuestionHistory(
+      progressStorage,
       GAUNTLET_LEVEL_25_HISTORY_KEY,
     );
-  }, []);
+  }, [progressStorage]);
 
   useEffect(() => {
     if (
@@ -3068,7 +3082,7 @@ function GauntletGame({
     const nextCompleted = new Set(completedLevels);
     nextCompleted.add(finishedLevel);
     setCompletedLevels(nextCompleted);
-    localStorage.setItem(
+    progressStorage.setItem(
       GAUNTLET_PROGRESS_KEY,
       JSON.stringify(Array.from(nextCompleted)),
     );
@@ -3086,7 +3100,7 @@ function GauntletGame({
               : item,
           )
         : [...current, { ...seed, wrongCount: 1 }];
-      localStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
+      progressStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
       return next;
     });
   };
@@ -3094,7 +3108,7 @@ function GauntletGame({
   const masterMistake = (id: string) => {
     setMistakes((current) => {
       const next = current.filter((item) => item.id !== id);
-      localStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
+      progressStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
       return next;
     });
   };
@@ -3113,6 +3127,7 @@ function GauntletGame({
     ].slice(-CITY_MAP_RECENT_QUESTION_LIMIT);
     historyRef.current = nextHistory;
     writeRecentQuestionHistory(
+      progressStorage,
       challengeLevel === 13
         ? GAUNTLET_LEVEL_13_HISTORY_KEY
         : GAUNTLET_LEVEL_25_HISTORY_KEY,
@@ -5081,6 +5096,7 @@ function GauntletGame({
 }
 
 export default function CityGame() {
+  const { identity, progressStorage, syncStatus } = usePlayerData();
   const [gauntletOpen, setGauntletOpen] = useState(false);
   const [atlasOpen, setAtlasOpen] = useState(false);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
@@ -5142,15 +5158,15 @@ export default function CityGame() {
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Record<
+      const saved = JSON.parse(progressStorage.getItem(STORAGE_KEY) ?? "{}") as Record<
         string,
         string[]
       >;
       progressRef.current = saved;
-      const savedHardMode = localStorage.getItem(HARD_MODE_KEY) === "true";
-      const savedNeighborMode = localStorage.getItem(NEIGHBOR_MODE_KEY) === "true";
+      const savedHardMode = progressStorage.getItem(HARD_MODE_KEY) === "true";
+      const savedNeighborMode = progressStorage.getItem(NEIGHBOR_MODE_KEY) === "true";
       const savedNeighborProgress = JSON.parse(
-        localStorage.getItem(NEIGHBOR_PROGRESS_KEY) ?? "{}",
+        progressStorage.getItem(NEIGHBOR_PROGRESS_KEY) ?? "{}",
       ) as Record<string, string[]>;
       neighborProgressRef.current = savedNeighborProgress;
       setHardMode(savedHardMode);
@@ -5178,7 +5194,7 @@ export default function CityGame() {
       progressRef.current = {};
       neighborProgressRef.current = {};
     }
-  }, []);
+  }, [progressStorage]);
 
   const answerNames = useMemo(
     () => detailMap?.features.map((feature) => feature.properties.name) ?? [],
@@ -5226,12 +5242,12 @@ export default function CityGame() {
       progress[code] = complete
         ? ["__complete__", ...Array.from(names)]
         : Array.from(names);
-      localStorage.setItem(
+      progressStorage.setItem(
         joined ? NEIGHBOR_PROGRESS_KEY : STORAGE_KEY,
         JSON.stringify(progress),
       );
     },
-    [],
+    [progressStorage],
   );
 
   const enterProvince = useCallback(
@@ -5389,7 +5405,7 @@ export default function CityGame() {
   const toggleHardMode = () => {
     const next = !hardMode;
     setHardMode(next);
-    localStorage.setItem(HARD_MODE_KEY, String(next));
+    progressStorage.setItem(HARD_MODE_KEY, String(next));
     setPendingFeature(null);
     setManualAnswer("");
     setManualError("");
@@ -5426,7 +5442,7 @@ export default function CityGame() {
   const toggleNeighborMode = () => {
     const next = !neighborMode;
     setNeighborMode(next);
-    localStorage.setItem(NEIGHBOR_MODE_KEY, String(next));
+    progressStorage.setItem(NEIGHBOR_MODE_KEY, String(next));
     clearProvinceView();
     setCompletedNames(new Set());
     setAttempts(0);
@@ -5445,7 +5461,7 @@ export default function CityGame() {
         return next;
       });
       neighborProgressRef.current[province.code] = [];
-      localStorage.setItem(
+      progressStorage.setItem(
         NEIGHBOR_PROGRESS_KEY,
         JSON.stringify(neighborProgressRef.current),
       );
@@ -5456,7 +5472,7 @@ export default function CityGame() {
         return next;
       });
       progressRef.current[province.code] = [];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
+      progressStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
     }
     setSelectedAnswer(null);
     setShowAllCityNames(false);
@@ -5972,7 +5988,17 @@ export default function CityGame() {
 
       <footer>
         <span>一张地图，497 个待归位的名字</span>
-        <span>进度自动保存在当前设备</span>
+        <span>
+          {identity
+            ? syncStatus === "offline"
+              ? "离线进度已保存在本机，联网后自动同步"
+              : syncStatus === "synced"
+                ? "进度已按账号保存并同步到云端"
+                : syncStatus === "error"
+                  ? "进度已保存在本机，云同步暂不可用"
+                  : "进度已保存在账号缓存，正在同步"
+            : "游客试玩不保存，登录后可固化进度"}
+        </span>
       </footer>
 
       {pendingFeature ? (

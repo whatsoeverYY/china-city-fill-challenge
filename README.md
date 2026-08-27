@@ -12,7 +12,9 @@
 - “难度提升”无提示模式：点击区块后手动输入省份、城市或区县名称
 - “邻省连城”模式：选择一省后联动所有陆地接壤省份，合并填充整片区域，并可一键显示全部城市名称
 - 错误答案自动回到名称区，完成后显示成功标记
-- 挑战进度保存在浏览器本机
+- 支持邮箱密码登录、按账号隔离的离线缓存与 Supabase 云存档
+- 游客可完整试玩但不保存；登录玩家在曾登录设备上可离线继续，联网后自动同步
+- 独立管理员后台：查看玩家信息、活跃时间、地图进度、关卡进度与完整存档
 
 ## 本地运行
 
@@ -34,6 +36,19 @@ npm run dev
 ```
 
 启动后访问 [http://localhost:3000](http://localhost:3000)。
+
+## Supabase 云存档
+
+前端已配置 Supabase publishable key。首次启用前还需要在 Supabase SQL Editor 执行数据库迁移，并创建首位管理员。完整步骤见 [supabase/SETUP.md](supabase/SETUP.md)。
+
+本地如需覆盖默认项目配置，可复制 `.env.example` 为 `.env.local` 后填写：
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+```
+
+管理员登录后从账户面板进入管理后台（GitHub Pages 静态地址为 `/admin.html`）。管理员账号与普通账号一样可以正常游戏和保存进度。
 
 ## 校验
 

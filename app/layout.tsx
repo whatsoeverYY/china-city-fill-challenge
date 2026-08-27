@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PlayerDataProvider } from "./PlayerDataProvider";
 
 const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -38,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body><PlayerDataProvider>{children}</PlayerDataProvider></body>
     </html>
   );
 }

@@ -13,6 +13,13 @@ test("exports a GitHub Pages entry document", async () => {
   assert.doesNotMatch(html, /http:\/\/localhost/);
 });
 
+test("exports the administrator dashboard route", async () => {
+  const html = await readFile(new URL("admin.html", exportRoot), "utf8");
+
+  assert.match(html, /<title>管理员后台｜中国城市填充挑战<\/title>/i);
+  assert.match(html, /玩家与进度中心|正在确认管理员身份/);
+});
+
 test("copies static maps and disables Jekyll processing", async () => {
   await Promise.all([
     access(new URL(".nojekyll", exportRoot)),

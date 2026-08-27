@@ -38,7 +38,7 @@ test("server-renders the city challenge shell", async () => {
 });
 
 test("includes map and interaction affordances", async () => {
-  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, knowledgeBase, knowledgeData] = await Promise.all([
+  const [game, css, layout, gauntletData, universityData, confusableCityData, provinceCityCountData, knowledgeBase, knowledgeData, playerData, progressStorage, adminDashboard, supabaseMigration] = await Promise.all([
     readFile(new URL("../app/CityGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
@@ -48,6 +48,10 @@ test("includes map and interaction affordances", async () => {
     readFile(new URL("../app/province-city-count-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/KnowledgeBase.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/knowledge-data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/PlayerDataProvider.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/progress-storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/AdminDashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/migrations/202608270001_player_accounts_and_progress.sql", import.meta.url), "utf8"),
   ]);
 
   assert.match(game, /draggable=\{!isPlaced\}/);
@@ -223,6 +227,20 @@ test("includes map and interaction affordances", async () => {
   assert.match(knowledgeData, /地图落点与路线诀窍/);
   assert.match(knowledgeData, /青藏川滇渝，鄂湘赣皖苏沪/);
   assert.match(knowledgeData, /青川甘宁内蒙古，陕晋豫鲁入渤海/);
+  assert.match(layout, /PlayerDataProvider/);
+  assert.match(playerData, /signInWithPassword/);
+  assert.match(playerData, /游客试玩不会保存进度/);
+  assert.match(playerData, /离线游玩中，联网后会自动同步/);
+  assert.match(playerData, /进入管理员后台/);
+  assert.match(progressStorage, /createUserProgressStorage/);
+  assert.match(progressStorage, /mergeProgressSnapshots/);
+  assert.match(progressStorage, /LEGACY_CLAIM_KEY/);
+  assert.match(adminDashboard, /玩家与进度中心/);
+  assert.match(adminDashboard, /查看完整存档 JSON/);
+  assert.match(supabaseMigration, /enable row level security/);
+  assert.match(supabaseMigration, /profiles_select_self_or_admin/);
+  assert.match(supabaseMigration, /progress_update_self/);
+  assert.match(supabaseMigration, /progress_backups/);
   assert.match(gauntletData, /CITY_QUIZ_DATA/);
   assert.match(gauntletData, /苏A/);
   assert.match(universityData, /UNIVERSITY_QUIZ_DATA/);

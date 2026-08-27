@@ -37,6 +37,786 @@ body {
   font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 
+/* 账号、云存档与管理员后台 */
+.account-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1400;
+  display: grid;
+  grid-template-columns: 30px auto 8px;
+  min-height: 46px;
+  padding: 7px 12px 7px 8px;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(25, 34, 29, 0.94);
+  box-shadow: 0 12px 34px rgba(25, 34, 29, 0.26);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.account-fab > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.account-fab > b {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.account-fab > i,
+.sync-state > i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa39e;
+  box-shadow: 0 0 0 3px rgba(154, 163, 158, 0.15);
+}
+
+.account-fab--synced > i,
+.sync-state--synced > i {
+  background: #67c693;
+  box-shadow: 0 0 0 3px rgba(103, 198, 147, 0.16);
+}
+
+.account-fab--pending > i,
+.account-fab--syncing > i,
+.account-fab--loading > i,
+.sync-state--pending > i,
+.sync-state--syncing > i,
+.sync-state--loading > i {
+  background: var(--gold);
+}
+
+.account-fab--offline > i,
+.sync-state--offline > i {
+  background: #81a5bb;
+}
+
+.account-fab--error > i,
+.sync-state--error > i {
+  background: #e07269;
+}
+
+.account-dialog-backdrop,
+.admin-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  padding: 22px;
+  place-items: center;
+  background: rgba(20, 28, 23, 0.56);
+  backdrop-filter: blur(7px);
+}
+
+.account-dialog {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 44px);
+  padding: 32px;
+  overflow: auto;
+  border: 1px solid rgba(56, 68, 59, 0.14);
+  border-radius: 24px 24px 24px 7px;
+  background: var(--card);
+  box-shadow: 0 30px 90px rgba(15, 25, 18, 0.3);
+}
+
+.account-dialog h2,
+.account-dialog p {
+  margin-top: 0;
+}
+
+.account-dialog h2 {
+  margin-bottom: 12px;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1.18;
+}
+
+.account-dialog-lede {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.account-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 24px 0 18px;
+  padding: 4px;
+  border-radius: 13px;
+  background: var(--paper-deep);
+}
+
+.account-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.account-tabs button.is-active {
+  color: var(--green-dark);
+  background: var(--card);
+  box-shadow: 0 3px 10px rgba(38, 47, 41, 0.08);
+}
+
+.account-form {
+  display: grid;
+  gap: 8px;
+}
+
+.account-form label {
+  margin-top: 6px;
+  color: #59645e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.account-form input,
+.admin-filters input,
+.admin-filters select {
+  min-height: 44px;
+  padding: 9px 12px;
+  color: var(--ink);
+  border: 1px solid rgba(38, 47, 41, 0.18);
+  border-radius: 11px;
+  outline: none;
+  background: #fffdf7;
+}
+
+.account-form input:focus,
+.admin-filters input:focus,
+.admin-filters select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(45, 125, 95, 0.12);
+}
+
+.account-form > button,
+.account-primary-link {
+  display: grid;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  place-items: center;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  background: var(--green);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.account-form > button:disabled,
+.account-actions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.account-form-success,
+.account-form-error {
+  margin: 13px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.account-form-success {
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.1);
+}
+
+.account-form-error {
+  color: var(--red-dark);
+  background: rgba(180, 59, 50, 0.1);
+}
+
+.account-privacy-note {
+  margin: 16px 0 0 !important;
+  color: #7b827d;
+  font-size: 10px;
+  text-align: center;
+}
+
+.account-identity-card {
+  display: flex;
+  padding: 14px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(38, 47, 41, 0.12);
+  border-radius: 14px;
+  background: #fffdf8;
+}
+
+.account-identity-card > span {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: white;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: Georgia, serif;
+  font-weight: 900;
+}
+
+.account-identity-card div {
+  min-width: 0;
+}
+
+.account-identity-card strong,
+.account-identity-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-identity-card strong {
+  font-size: 13px;
+}
+
+.account-identity-card small {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.sync-state {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  margin-top: 14px;
+  padding: 13px 14px;
+  align-items: center;
+  gap: 10px;
+  border-radius: 13px;
+  background: var(--paper);
+}
+
+.sync-state strong,
+.sync-state small {
+  display: block;
+}
+
+.sync-state strong {
+  font-size: 11px;
+}
+
+.sync-state small {
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 9px;
+}
+
+.account-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+  gap: 8px;
+}
+
+.account-actions .account-primary-link {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.account-actions button {
+  min-height: 40px;
+  border: 1px solid rgba(38, 47, 41, 0.16);
+  border-radius: 10px;
+  background: #fffdf8;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.account-actions button.account-signout {
+  color: var(--red-dark);
+}
+
+.admin-shell {
+  width: min(1460px, calc(100% - 48px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 30px 0 70px;
+}
+
+.admin-header {
+  display: flex;
+  padding: 12px 0 28px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-header h1,
+.admin-header p,
+.admin-panel-heading h2,
+.admin-panel-heading p {
+  margin-top: 0;
+}
+
+.admin-header h1 {
+  margin-bottom: 8px;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1;
+}
+
+.admin-header > div > p:last-child {
+  margin-bottom: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-header-actions a,
+.admin-header-actions button {
+  display: grid;
+  min-height: 42px;
+  padding: 8px 14px;
+  place-items: center;
+  border: 1px solid rgba(38, 47, 41, 0.16);
+  border-radius: 11px;
+  background: var(--card);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 24px 0;
+  gap: 14px;
+}
+
+.admin-stat-grid article {
+  min-height: 142px;
+  padding: 19px;
+  border: 1px solid rgba(38, 47, 41, 0.13);
+  border-radius: 16px 16px 16px 5px;
+  background: rgba(251, 248, 240, 0.88);
+  box-shadow: 0 10px 24px rgba(38, 47, 41, 0.05);
+}
+
+.admin-stat-grid span,
+.admin-stat-grid small,
+.admin-stat-grid strong {
+  display: block;
+}
+
+.admin-stat-grid span {
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.admin-stat-grid strong {
+  margin: 12px 0 3px;
+  color: var(--green-dark);
+  font-family: Georgia, serif;
+  font-size: 42px;
+}
+
+.admin-stat-grid small {
+  color: #7b827d;
+  font-size: 9px;
+}
+
+.admin-player-panel {
+  overflow: hidden;
+  border: 1px solid rgba(38, 47, 41, 0.14);
+  border-radius: 20px 20px 20px 7px;
+  background: var(--card);
+  box-shadow: 0 18px 45px rgba(38, 47, 41, 0.07);
+}
+
+.admin-panel-heading {
+  display: flex;
+  padding: 22px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-panel-heading h2 {
+  margin-bottom: 0;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 28px;
+}
+
+.admin-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-filters label {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-filters label > span {
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-filters input {
+  width: min(260px, 30vw);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-player-table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-player-table th {
+  padding: 11px 15px;
+  color: #6d756f;
+  border-bottom: 1px solid var(--line);
+  background: rgba(230, 223, 208, 0.38);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.admin-player-table td {
+  padding: 15px;
+  border-bottom: 1px solid rgba(38, 47, 41, 0.08);
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+.admin-player-table td > strong,
+.admin-player-table td > small {
+  display: block;
+}
+
+.admin-player-table td > strong {
+  max-width: 270px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-player-table td > strong i {
+  color: #8a918d;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.admin-player-table td > small {
+  max-width: 270px;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #818783;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-player-table td button {
+  min-height: 34px;
+  padding: 6px 10px;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 9px;
+  background: rgba(45, 125, 95, 0.08);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-role {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.1);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-role--admin {
+  color: #745719;
+  background: rgba(213, 169, 69, 0.18);
+}
+
+.admin-no-save {
+  color: #858c87;
+  font-size: 9px;
+}
+
+.admin-error,
+.admin-empty {
+  margin: 18px 22px;
+  padding: 14px;
+  border-radius: 11px;
+  font-size: 11px;
+}
+
+.admin-error {
+  color: var(--red-dark);
+  background: rgba(180, 59, 50, 0.09);
+}
+
+.admin-empty {
+  color: var(--ink-soft);
+  text-align: center;
+  background: var(--paper);
+}
+
+.admin-detail-dialog {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 44px);
+  padding: 30px;
+  overflow: auto;
+  border-radius: 22px 22px 22px 7px;
+  background: var(--card);
+  box-shadow: 0 30px 90px rgba(15, 25, 18, 0.32);
+}
+
+.admin-detail-dialog h2 {
+  margin: 0 0 20px;
+  overflow-wrap: anywhere;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 30px;
+}
+
+.admin-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.admin-detail-metrics div {
+  padding: 12px;
+  border-radius: 11px;
+  background: var(--paper);
+}
+
+.admin-detail-metrics span,
+.admin-detail-metrics strong {
+  display: block;
+}
+
+.admin-detail-metrics span {
+  color: var(--ink-soft);
+  font-size: 8px;
+}
+
+.admin-detail-metrics strong {
+  margin-top: 5px;
+  color: var(--green-dark);
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.admin-account-details {
+  display: grid;
+  margin: 18px 0;
+  gap: 8px;
+}
+
+.admin-account-details > div {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+  font-size: 10px;
+}
+
+.admin-account-details dt {
+  color: var(--ink-soft);
+  font-weight: 800;
+}
+
+.admin-account-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-json-details {
+  padding: 12px;
+  border-radius: 11px;
+  background: #202822;
+  color: #e5eee8;
+}
+
+.admin-json-details summary {
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-json-details pre {
+  max-height: 340px;
+  margin: 14px 0 0;
+  overflow: auto;
+  font-size: 9px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.admin-state-page {
+  display: grid;
+  min-height: 100dvh;
+  padding: 28px;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.admin-state-page h1 {
+  margin: 14px 0 8px;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(28px, 6vw, 48px);
+}
+
+.admin-state-page p {
+  max-width: 520px;
+  margin: 0 0 20px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.admin-state-page a {
+  padding: 10px 16px;
+  color: #fff;
+  border-radius: 10px;
+  background: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-state-mark {
+  display: grid;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  color: #fff;
+  border-radius: 20px 20px 20px 5px;
+  background: var(--red);
+  font-family: "Songti SC", STSong, serif;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-header,
+  .admin-panel-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-filters input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .account-fab {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .account-fab > b {
+    display: none;
+  }
+
+  .account-fab {
+    grid-template-columns: 30px 8px;
+  }
+
+  .account-dialog {
+    padding: 27px 20px 22px;
+  }
+
+  .admin-shell {
+    width: min(100% - 24px, 1460px);
+    padding-top: 18px;
+  }
+
+  .admin-header-actions,
+  .admin-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header-actions {
+    display: grid;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .admin-stat-grid article {
+    min-height: 120px;
+    padding: 14px;
+  }
+
+  .admin-stat-grid strong {
+    font-size: 34px;
+  }
+
+  .admin-detail-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-detail-dialog {
+    padding: 26px 18px 18px;
+  }
+}
+
 button,
 input {
   font: inherit;
