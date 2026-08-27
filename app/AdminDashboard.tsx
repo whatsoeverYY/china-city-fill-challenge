@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { appPath } from "./app-path";
 import {
@@ -185,7 +184,7 @@ export default function AdminDashboard() {
         <span className="admin-state-mark" aria-hidden="true">锁</span>
         <h1>请先登录管理员账号</h1>
         <p>回到游戏首页，点击右下角“登录保存”完成登录。</p>
-        <Link href={appPath("/")}>返回游戏首页</Link>
+        <a href={appPath("/")}>返回游戏首页</a>
       </main>
     );
   }
@@ -196,7 +195,7 @@ export default function AdminDashboard() {
         <span className="admin-state-mark" aria-hidden="true">止</span>
         <h1>当前账号没有管理员权限</h1>
         <p>{identity.email} 可以正常游戏，但不能查看其他玩家数据。</p>
-        <Link href={appPath("/")}>继续游戏</Link>
+        <a href={appPath("/")}>继续游戏</a>
       </main>
     );
   }
@@ -207,7 +206,7 @@ export default function AdminDashboard() {
         <span className="admin-state-mark" aria-hidden="true">离</span>
         <h1>管理员后台需要联网</h1>
         <p>游戏仍可离线继续；连接网络后刷新此页面即可查看玩家数据。</p>
-        <Link href={appPath("/")}>返回离线游戏</Link>
+        <a href={appPath("/")}>返回离线游戏</a>
       </main>
     );
   }
@@ -221,7 +220,7 @@ export default function AdminDashboard() {
           <p>查看玩家账号、活跃时间、地图完成度、闯关进度与完整云存档。</p>
         </div>
         <div className="admin-header-actions">
-          <Link href={appPath("/")}>← 返回游戏</Link>
+          <a href={appPath("/")}>← 返回游戏</a>
           <button type="button" onClick={() => void loadPlayers()} disabled={loading}>
             {loading ? "刷新中…" : "刷新数据"}
           </button>

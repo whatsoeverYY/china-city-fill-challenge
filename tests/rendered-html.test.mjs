@@ -232,11 +232,15 @@ test("includes map and interaction affordances", async () => {
   assert.match(playerData, /游客试玩不会保存进度/);
   assert.match(playerData, /离线游玩中，联网后会自动同步/);
   assert.match(playerData, /进入管理员后台/);
+  assert.doesNotMatch(playerData, /from ["']next\/link["']/);
+  assert.match(playerData, /<a href=\{adminPath\(\)\}/);
   assert.match(progressStorage, /createUserProgressStorage/);
   assert.match(progressStorage, /mergeProgressSnapshots/);
   assert.match(progressStorage, /LEGACY_CLAIM_KEY/);
   assert.match(adminDashboard, /玩家与进度中心/);
   assert.match(adminDashboard, /查看完整存档 JSON/);
+  assert.doesNotMatch(adminDashboard, /from ["']next\/link["']/);
+  assert.match(adminDashboard, /<a href=\{appPath\("\/"\)\}/);
   assert.match(supabaseMigration, /enable row level security/);
   assert.match(supabaseMigration, /profiles_select_self_or_admin/);
   assert.match(supabaseMigration, /progress_update_self/);

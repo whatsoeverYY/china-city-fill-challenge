@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   createContext,
   useCallback,
@@ -634,9 +633,9 @@ function AccountControl() {
                 </div>
                 <div className="account-actions">
                   {isAdmin ? (
-                    <Link href={adminPath()} className="account-primary-link">
+                    <a href={adminPath()} className="account-primary-link">
                       进入管理员后台
-                    </Link>
+                    </a>
                   ) : null}
                   <button
                     type="button"
