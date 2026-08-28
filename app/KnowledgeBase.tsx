@@ -41,7 +41,6 @@ type KnowledgeBaseProps = {
 };
 
 const SEARCHABLE_CATEGORIES = new Set<KnowledgeCategoryId>([
-  "province-profile",
   "city-plate",
   "universities",
   "confusable",
@@ -94,6 +93,9 @@ export default function KnowledgeBase({
   const [activeCategoryId, setActiveCategoryId] =
     useState<KnowledgeCategoryId | null>(null);
   const [query, setQuery] = useState("");
+  const [selectedProvinceCodes, setSelectedProvinceCodes] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [selectedNeighborCode, setSelectedNeighborCode] = useState("410000");
 
   const provinceByCode = useMemo(
@@ -133,37 +135,40 @@ export default function KnowledgeBase({
   );
   const normalizedQuery = compactSearch(query);
 
+  const clearProvinceFilters = () => {
+    setQuery("");
+    setSelectedProvinceCodes(new Set());
+  };
+
   const openCategory = (categoryId: KnowledgeCategoryId) => {
     setActiveCategoryId(categoryId);
-    setQuery("");
+    clearProvinceFilters();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const backToCatalog = () => {
     setActiveCategoryId(null);
-    setQuery("");
+    clearProvinceFilters();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const filteredProvinces = provinces.filter((province) => {
-    const administrativeProfile = administrativeProfileByCode.get(province.code);
-    return matchesSearch(
-      normalizedQuery,
-      province.name,
-      province.shortName,
-      province.kind,
-      provinceCapitals[province.code],
-      provincePlatePrefixes[province.code],
-      administrativeProfile?.totalUnitCount,
-      ...(administrativeProfile?.categories.flatMap((item) => [item.label, item.count]) ?? []),
-      ...(administrativeProfile?.plateRegions.flatMap((item) => [
-        item.name,
-        item.type,
-        item.plate,
-        item.note,
-      ]) ?? []),
-    );
-  });
+  const filteredProvinces = provinces.filter(
+    (province) =>
+      matchesSearch(normalizedQuery, province.name, province.shortName) &&
+      (selectedProvinceCodes.size === 0 || selectedProvinceCodes.has(province.code)),
+  );
+
+  const toggleProvince = (provinceCode: string) => {
+    setSelectedProvinceCodes((current) => {
+      const next = new Set(current);
+      if (next.has(provinceCode)) {
+        next.delete(provinceCode);
+      } else {
+        next.add(provinceCode);
+      }
+      return next;
+    });
+  };
 
   const filteredCities = CITY_QUIZ_DATA.filter((item) =>
     matchesSearch(
@@ -209,11 +214,45 @@ export default function KnowledgeBase({
     if (!activeCategoryId) return null;
 
     if (activeCategoryId === "province-profile") {
-      if (filteredProvinces.length === 0) {
-        return <KnowledgeSearchEmpty query={query} />;
-      }
       return (
         <div className="knowledge-stack">
+          <section className="knowledge-province-filter" aria-label="筛选省份名片">
+            <header>
+              <label>
+                <span>按名称检索</span>
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="输入省份全称或简称"
+                  type="search"
+                />
+              </label>
+              <div>
+                <strong aria-live="polite">显示 {filteredProvinces.length} / {provinces.length}</strong>
+                {query || selectedProvinceCodes.size > 0 ? (
+                  <button type="button" onClick={clearProvinceFilters}>清除筛选</button>
+                ) : null}
+              </div>
+            </header>
+            <p className="knowledge-province-filter-hint">点击省份可多选，未选择时显示全部</p>
+            <div className="knowledge-province-tags" role="group" aria-label="按省份多选">
+              {provinces.map((province) => {
+                const isSelected = selectedProvinceCodes.has(province.code);
+                return (
+                  <button
+                    key={province.code}
+                    type="button"
+                    className={isSelected ? "is-selected" : undefined}
+                    aria-pressed={isSelected}
+                    title={province.name}
+                    onClick={() => toggleProvince(province.code)}
+                  >
+                    {province.shortName}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
           <div className="knowledge-profile-guide">
             <span aria-hidden="true">总</span>
             <div>
@@ -221,78 +260,82 @@ export default function KnowledgeBase({
               <p>综合总量加入州、地区、盟、省直辖单位等；新区、示范区按独立号牌学习单元纳入，不改变统计年鉴的城市数。</p>
             </div>
           </div>
-          <div className="knowledge-profile-grid">
-            {filteredProvinces.map((province, index) => {
-              const cityCount = cityCountByCode.get(province.code);
-              const cityTotal = cityCount?.cityCount ?? 0;
-              const administrativeProfile = administrativeProfileByCode.get(province.code)
-                ?? getProvinceAdministrativeProfile(province.code, cityTotal);
-              const specialUnitCount = administrativeProfile.categories.reduce(
-                (total, item) => total + item.count,
-                0,
-              );
-              const quizCount = quizCityCountByProvince.get(province.name) ?? 0;
-              const universityCount = universityCountByProvince.get(province.name) ?? 0;
-              return (
-                <article className="knowledge-profile-card" key={province.code}>
-                  <div className="knowledge-profile-head">
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div>
-                      <h3>{province.name}</h3>
-                      <p>{province.kind}</p>
-                    </div>
-                    <b>{provincePlatePrefixes[province.code]}</b>
-                  </div>
-                  <dl>
-                    <div><dt>行政中心</dt><dd>{plainPlaceName(provinceCapitals[province.code])}</dd></div>
-                    <div><dt>城市数量</dt><dd>{cityCount?.cityCount ?? "—"}</dd></div>
-                    <div><dt>特殊单位</dt><dd>{specialUnitCount || 0}</dd></div>
-                    <div className="is-total"><dt>综合总量</dt><dd>{administrativeProfile.totalUnitCount}</dd></div>
-                    <div><dt>陆地邻省</dt><dd>{provinceNeighbors[province.code]?.length ?? 0}</dd></div>
-                    <div><dt>独立号牌</dt><dd>{administrativeProfile.plateRegions.length || "—"}</dd></div>
-                  </dl>
-                  <div className="knowledge-region-categories" aria-label={`${province.name}行政区域分类`}>
-                    <span><b>{cityTotal}</b> 地级及以上城市</span>
-                    {administrativeProfile.categories.map((item) => (
-                      <span key={`${province.code}-${item.label}`}><b>{item.count}</b> {item.label}</span>
-                    ))}
-                  </div>
-                  {administrativeProfile.plateRegions.length > 0 ? (
-                    <section className="knowledge-special-regions">
-                      <header>
-                        <strong>特殊车牌辖区</strong>
-                        <small>{administrativeProfile.plateRegions.length} 组</small>
-                      </header>
+          {filteredProvinces.length === 0 ? (
+            <KnowledgeSearchEmpty query={query} />
+          ) : (
+            <div className="knowledge-profile-grid">
+              {filteredProvinces.map((province, index) => {
+                const cityCount = cityCountByCode.get(province.code);
+                const cityTotal = cityCount?.cityCount ?? 0;
+                const administrativeProfile = administrativeProfileByCode.get(province.code)
+                  ?? getProvinceAdministrativeProfile(province.code, cityTotal);
+                const specialUnitCount = administrativeProfile.categories.reduce(
+                  (total, item) => total + item.count,
+                  0,
+                );
+                const quizCount = quizCityCountByProvince.get(province.name) ?? 0;
+                const universityCount = universityCountByProvince.get(province.name) ?? 0;
+                return (
+                  <article className="knowledge-profile-card" key={province.code}>
+                    <div className="knowledge-profile-head">
+                      <span>{String(index + 1).padStart(2, "0")}</span>
                       <div>
-                        {administrativeProfile.plateRegions.map((item) => (
-                          <article key={`${province.code}-${item.plate}-${item.name}`}>
-                            <span>
-                              <strong>{item.name}</strong>
-                              <small>{item.type}</small>
-                              {item.note ? <em>{item.note}</em> : null}
-                            </span>
-                            <b>{item.plate}</b>
-                          </article>
-                        ))}
+                        <h3>{province.name}</h3>
+                        <p>{province.kind}</p>
                       </div>
-                    </section>
-                  ) : (
-                    <p className="knowledge-no-special-region">
-                      {administrativeProfile.note ?? "无城市口径外的独立车牌辖区"}
+                      <b>{provincePlatePrefixes[province.code]}</b>
+                    </div>
+                    <dl>
+                      <div><dt>行政中心</dt><dd>{plainPlaceName(provinceCapitals[province.code])}</dd></div>
+                      <div><dt>城市数量</dt><dd>{cityCount?.cityCount ?? "—"}</dd></div>
+                      <div><dt>特殊单位</dt><dd>{specialUnitCount || 0}</dd></div>
+                      <div className="is-total"><dt>综合总量</dt><dd>{administrativeProfile.totalUnitCount}</dd></div>
+                      <div><dt>陆地邻省</dt><dd>{provinceNeighbors[province.code]?.length ?? 0}</dd></div>
+                      <div><dt>独立号牌</dt><dd>{administrativeProfile.plateRegions.length || "—"}</dd></div>
+                    </dl>
+                    <div className="knowledge-region-categories" aria-label={`${province.name}行政区域分类`}>
+                      <span><b>{cityTotal}</b> 地级及以上城市</span>
+                      {administrativeProfile.categories.map((item) => (
+                        <span key={`${province.code}-${item.label}`}><b>{item.count}</b> {item.label}</span>
+                      ))}
+                    </div>
+                    {administrativeProfile.plateRegions.length > 0 ? (
+                      <section className="knowledge-special-regions">
+                        <header>
+                          <strong>特殊车牌辖区</strong>
+                          <small>{administrativeProfile.plateRegions.length} 组</small>
+                        </header>
+                        <div>
+                          {administrativeProfile.plateRegions.map((item) => (
+                            <article key={`${province.code}-${item.plate}-${item.name}`}>
+                              <span>
+                                <strong>{item.name}</strong>
+                                <small>{item.type}</small>
+                                {item.note ? <em>{item.note}</em> : null}
+                              </span>
+                              <b>{item.plate}</b>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+                    ) : (
+                      <p className="knowledge-no-special-region">
+                        {administrativeProfile.note ?? "无城市口径外的独立车牌辖区"}
+                      </p>
+                    )}
+                    {administrativeProfile.plateRegions.length > 0 && administrativeProfile.note ? (
+                      <p className="knowledge-profile-note">{administrativeProfile.note}</p>
+                    ) : null}
+                    <p className="knowledge-card-note">
+                      {universityCount > 0
+                        ? `名校专题收录 ${universityCount} 所 · 车牌题库 ${quizCount || 0} 组`
+                        : `简称印章：${provincePlatePrefixes[province.code]} · 车牌题库 ${quizCount || 0} 组`}
                     </p>
-                  )}
-                  {administrativeProfile.plateRegions.length > 0 && administrativeProfile.note ? (
-                    <p className="knowledge-profile-note">{administrativeProfile.note}</p>
-                  ) : null}
-                  <p className="knowledge-card-note">
-                    {universityCount > 0
-                      ? `名校专题收录 ${universityCount} 所 · 车牌题库 ${quizCount || 0} 组`
-                      : `简称印章：${provincePlatePrefixes[province.code]} · 车牌题库 ${quizCount || 0} 组`}
-                  </p>
-                </article>
-              );
-            })}
-          </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       );
     }
