@@ -58,6 +58,8 @@ const CATEGORY_TOTAL_LABELS: Partial<Record<KnowledgeCategoryId, string>> = {
   "map-reading": `${MAP_READING_TIPS.length} 个诀窍`,
 };
 
+const PROFILE_BATCH_SIZE = 8;
+
 function compactSearch(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, "").replace(/臺/g, "台");
 }
@@ -96,6 +98,7 @@ export default function KnowledgeBase({
   const [selectedProvinceCodes, setSelectedProvinceCodes] = useState<Set<string>>(
     () => new Set(),
   );
+  const [visibleProfileCount, setVisibleProfileCount] = useState(PROFILE_BATCH_SIZE);
   const [selectedNeighborCode, setSelectedNeighborCode] = useState("410000");
 
   const provinceByCode = useMemo(
@@ -138,6 +141,7 @@ export default function KnowledgeBase({
   const clearProvinceFilters = () => {
     setQuery("");
     setSelectedProvinceCodes(new Set());
+    setVisibleProfileCount(PROFILE_BATCH_SIZE);
   };
 
   const openCategory = (categoryId: KnowledgeCategoryId) => {
@@ -157,8 +161,15 @@ export default function KnowledgeBase({
       matchesSearch(normalizedQuery, province.name, province.shortName) &&
       (selectedProvinceCodes.size === 0 || selectedProvinceCodes.has(province.code)),
   );
+  const hasActiveProvinceFilter = Boolean(
+    normalizedQuery || selectedProvinceCodes.size > 0,
+  );
+  const visibleProfileProvinces = hasActiveProvinceFilter
+    ? filteredProvinces
+    : filteredProvinces.slice(0, visibleProfileCount);
 
   const toggleProvince = (provinceCode: string) => {
+    setVisibleProfileCount(PROFILE_BATCH_SIZE);
     setSelectedProvinceCodes((current) => {
       const next = new Set(current);
       if (next.has(provinceCode)) {
@@ -222,7 +233,10 @@ export default function KnowledgeBase({
                 <span>按名称检索</span>
                 <input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setVisibleProfileCount(PROFILE_BATCH_SIZE);
+                  }}
                   placeholder="输入省份全称或简称"
                   type="search"
                 />
@@ -263,8 +277,9 @@ export default function KnowledgeBase({
           {filteredProvinces.length === 0 ? (
             <KnowledgeSearchEmpty query={query} />
           ) : (
-            <div className="knowledge-profile-grid">
-              {filteredProvinces.map((province, index) => {
+            <>
+              <div className="knowledge-profile-grid">
+                {visibleProfileProvinces.map((province, index) => {
                 const cityCount = cityCountByCode.get(province.code);
                 const cityTotal = cityCount?.cityCount ?? 0;
                 const administrativeProfile = administrativeProfileByCode.get(province.code)
@@ -333,8 +348,31 @@ export default function KnowledgeBase({
                     </p>
                   </article>
                 );
-              })}
-            </div>
+                })}
+              </div>
+              {!hasActiveProvinceFilter && visibleProfileProvinces.length < filteredProvinces.length ? (
+                <div className="knowledge-profile-more">
+                  <span>
+                    已展示 {visibleProfileProvinces.length} / {filteredProvinces.length}
+                  </span>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setVisibleProfileCount((count) => count + PROFILE_BATCH_SIZE)}
+                    >
+                      再显示 {Math.min(PROFILE_BATCH_SIZE, filteredProvinces.length - visibleProfileProvinces.length)} 个
+                    </button>
+                    <button
+                      className="is-text"
+                      type="button"
+                      onClick={() => setVisibleProfileCount(filteredProvinces.length)}
+                    >
+                      显示全部
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       );

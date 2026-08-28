@@ -334,12 +334,12 @@ export default function AdminDashboard() {
                 const summary = player.progress;
                 return (
                   <tr key={player.id}>
-                    <td><strong>{player.email}</strong><small>{player.id}</small></td>
-                    <td><span className={`admin-role admin-role--${player.role}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
-                    <td><strong>{summary?.completed_provinces ?? 0}<i>/34</i></strong><small>{summary?.placed_names ?? 0} 个名称已归位</small></td>
-                    <td><strong>{summary?.completed_levels ?? 0}<i>/26</i></strong><small>{summary?.mistakes ?? 0} 道待复习错题</small></td>
-                    <td><strong>{formatDate(player.last_seen_at)}</strong><small>注册于 {formatDate(player.created_at)}</small></td>
-                    <td>
+                    <td data-label="玩家"><strong>{player.email}</strong><small>{player.id}</small></td>
+                    <td data-label="角色"><span className={`admin-role admin-role--${player.role}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
+                    <td data-label="全国地图"><strong>{summary?.completed_provinces ?? 0}<i>/34</i></strong><small>{summary?.placed_names ?? 0} 个名称已归位</small></td>
+                    <td data-label="闯关进度"><strong>{summary?.completed_levels ?? 0}<i>/26</i></strong><small>{summary?.mistakes ?? 0} 道待复习错题</small></td>
+                    <td data-label="最近活跃"><strong>{formatDate(player.last_seen_at)}</strong><small>注册于 {formatDate(player.created_at)}</small></td>
+                    <td data-label="云存档">
                       <button type="button" onClick={() => void openPlayerDetails(player)}>
                         {player.progress ? "查看 / 管理" : "管理存档"}
                       </button>

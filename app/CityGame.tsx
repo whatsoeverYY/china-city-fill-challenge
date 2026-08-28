@@ -354,6 +354,26 @@ function MapCanvas({
           <circle cx="2" cy="2" r="0.7" fill="#967d59" opacity="0.12" />
         </pattern>
       </defs>
+      {mode === "detail" ? (
+        <g className="map-touch-hit-layer" aria-hidden="true">
+          {visibleFeatures.map((feature) => (
+            <path
+              key={`hit-${feature.properties.name}-${String(feature.properties.adcode)}`}
+              d={geometryToPath(feature.geometry, project)}
+              className="map-region-hit"
+              data-region-name={feature.properties.name}
+              fill="none"
+              fillRule="evenodd"
+              onClick={() => onRegion(feature)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                onRegion(feature, event.dataTransfer.getData("text/plain"));
+              }}
+            />
+          ))}
+        </g>
+      ) : null}
       <g className="map-shadow-layer" filter="url(#map-shadow)">
         {visibleFeatures.map((feature) => {
           const province = provinceForFeature(feature);
@@ -428,31 +448,33 @@ function MapCanvas({
             ))
         : null}
 
-      {mode === "detail"
-        ? visibleFeatures
-            .filter(
-              (feature) =>
-                (showAllLabels || completedNames.has(feature.properties.name)),
-            )
-            .map((feature) => {
-              const [x, y] = featureLabelPosition(feature, project);
-              const name = feature.properties.name;
-              const isHint = !completedNames.has(name);
-              return (
-                <text
-                  key={`label-${String(feature.properties.adcode)}-${name}`}
-                  x={x}
-                  y={y}
-                  className={`region-label ${name.length > 7 ? "is-long" : ""} ${isHint ? "is-hint" : ""}`}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  aria-hidden="true"
-                >
-                  {name}
-                </text>
-              );
-            })
-        : null}
+      {visibleFeatures
+        .filter((feature) =>
+          mode === "national"
+            ? showAllLabels && !hideProvinceNames
+            : showAllLabels || completedNames.has(feature.properties.name),
+        )
+        .map((feature) => {
+          const [x, y] = featureLabelPosition(feature, project);
+          const fullName = feature.properties.name;
+          const name = mode === "national"
+            ? provinceForFeature(feature)?.shortName ?? fullName
+            : fullName;
+          const isHint = mode === "detail" && !completedNames.has(fullName);
+          return (
+            <text
+              key={`label-${String(feature.properties.adcode)}-${fullName}`}
+              x={x}
+              y={y}
+              className={`region-label ${mode === "national" ? "is-national" : ""} ${name.length > 7 ? "is-long" : ""} ${isHint ? "is-hint" : ""}`}
+              textAnchor="middle"
+              dominantBaseline="central"
+              aria-hidden="true"
+            >
+              {name}
+            </text>
+          );
+        })}
     </svg>
   );
 }
@@ -617,6 +639,13 @@ function NationalCityAtlas({
     viewX: number;
     viewY: number;
   } | null>(null);
+  const activePointersRef = useRef(
+    new Map<number, { clientX: number; clientY: number }>(),
+  );
+  const pinchRef = useRef<{
+    distance: number;
+    midpoint: Position;
+  } | null>(null);
   const project = useMemo(
     () => (map?.features.length ? makeProjection(map.features) : null),
     [map],
@@ -713,8 +742,34 @@ function NationalCityAtlas({
   }, []);
 
   const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
     setHoverLabel(null);
+    activePointersRef.current.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    if (activePointersRef.current.size >= 2) {
+      const [first, second] = Array.from(activePointersRef.current.values());
+      const midpointClientX = (first.clientX + second.clientX) / 2;
+      const midpointClientY = (first.clientY + second.clientY) / 2;
+      pinchRef.current = {
+        distance: Math.hypot(
+          second.clientX - first.clientX,
+          second.clientY - first.clientY,
+        ),
+        midpoint: atlasPointerPosition(
+          event.currentTarget,
+          midpointClientX,
+          midpointClientY,
+        ),
+      };
+      dragRef.current = null;
+      setDragging(true);
+      return;
+    }
+
     const [viewX, viewY] = atlasPointerPosition(
       event.currentTarget,
       event.clientX,
@@ -725,11 +780,50 @@ function NationalCityAtlas({
       viewX,
       viewY,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(true);
   };
 
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (!activePointersRef.current.has(event.pointerId)) return;
+    activePointersRef.current.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    if (activePointersRef.current.size >= 2) {
+      const [first, second] = Array.from(activePointersRef.current.values());
+      const nextDistance = Math.hypot(
+        second.clientX - first.clientX,
+        second.clientY - first.clientY,
+      );
+      const nextMidpoint = atlasPointerPosition(
+        event.currentTarget,
+        (first.clientX + second.clientX) / 2,
+        (first.clientY + second.clientY) / 2,
+      );
+      const previousPinch = pinchRef.current;
+      if (previousPinch && previousPinch.distance > 0 && nextDistance > 0) {
+        setView((current) => {
+          const scale = Math.min(
+            ATLAS_MAX_SCALE,
+            Math.max(
+              ATLAS_MIN_SCALE,
+              current.scale * (nextDistance / previousPinch.distance),
+            ),
+          );
+          const mapX = (previousPinch.midpoint[0] - current.x) / current.scale;
+          const mapY = (previousPinch.midpoint[1] - current.y) / current.scale;
+          return {
+            scale,
+            x: nextMidpoint[0] - mapX * scale,
+            y: nextMidpoint[1] - mapY * scale,
+          };
+        });
+      }
+      pinchRef.current = { distance: nextDistance, midpoint: nextMidpoint };
+      return;
+    }
+
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     const [viewX, viewY] = atlasPointerPosition(
@@ -752,11 +846,28 @@ function NationalCityAtlas({
   };
 
   const endPointerDrag = (event: React.PointerEvent<SVGSVGElement>) => {
-    if (dragRef.current?.pointerId !== event.pointerId) return;
-    dragRef.current = null;
+    activePointersRef.current.delete(event.pointerId);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
+    pinchRef.current = null;
+
+    const remainingPointer = activePointersRef.current.entries().next().value as
+      | [number, { clientX: number; clientY: number }]
+      | undefined;
+    if (remainingPointer) {
+      const [pointerId, pointer] = remainingPointer;
+      const [viewX, viewY] = atlasPointerPosition(
+        event.currentTarget,
+        pointer.clientX,
+        pointer.clientY,
+      );
+      dragRef.current = { pointerId, viewX, viewY };
+      setDragging(true);
+      return;
+    }
+
+    dragRef.current = null;
     setDragging(false);
   };
 
@@ -764,7 +875,7 @@ function NationalCityAtlas({
     region: AtlasRegionDrawing,
     event: React.PointerEvent<SVGPathElement>,
   ) => {
-    if (labelsVisible || dragRef.current) return;
+    if (labelsVisible || activePointersRef.current.size > 0) return;
     const bounds = svgRef.current?.getBoundingClientRect();
     if (!bounds) return;
     setHoverLabel({
@@ -808,7 +919,7 @@ function NationalCityAtlas({
         <div className="city-atlas-help">
           <p><span className="legend-line legend-line--red" />红色省界</p>
           <p><span className="legend-line legend-line--green" />绿色市界 / 区县界</p>
-          <p>鼠标滚轮直接缩放 · 按住拖动</p>
+          <p>滚轮或双指缩放 · 按住拖动</p>
           <button
             className={`city-atlas-label-toggle ${labelsVisible ? "is-active" : ""}`}
             type="button"
@@ -5009,6 +5120,7 @@ export default function CityGame() {
   const [province, setProvince] = useState<Province | null>(null);
   const [hardMode, setHardMode] = useState(false);
   const [neighborMode, setNeighborMode] = useState(false);
+  const [showAllProvinceNames, setShowAllProvinceNames] = useState(false);
   const [showAllCityNames, setShowAllCityNames] = useState(false);
   const [hiddenProvinceCodes, setHiddenProvinceCodes] = useState<Set<string>>(
     new Set(),
@@ -5332,6 +5444,7 @@ export default function CityGame() {
   const toggleHardMode = () => {
     const next = !hardMode;
     setHardMode(next);
+    if (next) setShowAllProvinceNames(false);
     progressStorage.setItem(HARD_MODE_KEY, String(next));
     setPendingFeature(null);
     setManualAnswer("");
@@ -5665,9 +5778,22 @@ export default function CityGame() {
               </button>
             </div>
           ) : (
-            <span className="map-total">
-              {neighborMode ? "选择一省 · 联动接壤省份" : "34 个省级行政区"}
-            </span>
+            <div className="map-overview-actions">
+              {!hardMode ? (
+                <button
+                  className={`reveal-cities-button province-label-toggle ${showAllProvinceNames ? "is-active" : ""}`}
+                  type="button"
+                  aria-pressed={showAllProvinceNames}
+                  onClick={() => setShowAllProvinceNames((value) => !value)}
+                >
+                  <span aria-hidden="true">名</span>
+                  {showAllProvinceNames ? "隐藏省名" : "省名标注"}
+                </button>
+              ) : null}
+              <span className="map-total">
+                {neighborMode ? "选择一省 · 联动接壤省份" : "34 个省级行政区"}
+              </span>
+            </div>
           )}
         </div>
 
@@ -5720,7 +5846,7 @@ export default function CityGame() {
               onRegion={handleMapRegion}
               onHover={setHoveredName}
               hideProvinceNames={hardMode}
-              showAllLabels={showAllCityNames}
+              showAllLabels={province ? showAllCityNames : showAllProvinceNames}
               joined={neighborMode && Boolean(province)}
               hiddenProvinceCodes={hiddenProvinceCodes}
             />
