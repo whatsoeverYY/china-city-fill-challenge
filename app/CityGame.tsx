@@ -1999,6 +1999,7 @@ function GauntletDetailMap({
   originRegionName,
   targetRegionName,
   showLabels = false,
+  readOnly = false,
 }: {
   map: MapData;
   onRegion: (name: string) => void;
@@ -2008,6 +2009,7 @@ function GauntletDetailMap({
   originRegionName?: string;
   targetRegionName?: string;
   showLabels?: boolean;
+  readOnly?: boolean;
 }) {
   const project = useMemo(() => makeProjection(map.features), [map.features]);
   const routeSet = new Set(routeRegionNames);
@@ -2016,9 +2018,11 @@ function GauntletDetailMap({
       className="gauntlet-detail-map"
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
-      aria-label={showLabels
+      aria-label={readOnly
         ? "显示城市名称和答题结果的省内市级行政区地图"
-        : "无名称省内市级行政区地图"}
+        : showLabels
+          ? "显示城市名称的省内市级行政区地图"
+          : "无名称省内市级行政区地图"}
     >
       {map.features.map((feature) => {
         const name = feature.properties.name;
@@ -2036,7 +2040,8 @@ function GauntletDetailMap({
             className={className || undefined}
             fillRule="evenodd"
             role="button"
-            tabIndex={showLabels ? -1 : 0}
+            tabIndex={readOnly ? -1 : 0}
+            aria-disabled={readOnly || undefined}
             aria-label={correctRegionName === name
               ? `${name}，正确答案`
               : selectedRegionName === name
@@ -2044,10 +2049,14 @@ function GauntletDetailMap({
                 : showLabels
                   ? name
                   : "待选择市级区块"}
-            onClick={() => onRegion(name)}
+            onClick={() => {
+              if (!readOnly) onRegion(name);
+            }}
             onKeyDown={(event) => handleKeyboardActivation(
               event,
-              () => onRegion(name),
+              () => {
+                if (!readOnly) onRegion(name);
+              },
             )}
           />
         );
@@ -2060,6 +2069,7 @@ function GauntletDetailMap({
             const isWrongSelection = selectedRegionName === name;
             const className = [
               "city-route-label",
+              readOnly ? "is-answer-review-label" : "",
               isCorrectAnswer ? "is-correct-answer-label" : "",
               isWrongSelection ? "is-wrong-selection-label" : "",
             ].filter(Boolean).join(" ");
@@ -4353,6 +4363,7 @@ function GauntletGame({
                       correctRegionName={answerReview?.highlightRegionName}
                       selectedRegionName={answerReview?.selectedRegionName}
                       showLabels={Boolean(answerReview)}
+                      readOnly={Boolean(answerReview)}
                     />
                   </div>
                 ) : gauntletDetailError ? (

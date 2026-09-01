@@ -3694,11 +3694,16 @@ footer {
 .gauntlet-detail-map .city-route-label {
   fill: #3f4d47;
   font-family: "Microsoft YaHei", sans-serif;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 900;
   paint-order: stroke;
   pointer-events: none;
   stroke: rgba(255, 253, 247, 0.92);
+  stroke-width: 2.6px;
+}
+
+.gauntlet-detail-map .city-route-label.is-answer-review-label {
+  font-size: 12px;
   stroke-width: 3px;
 }
 
