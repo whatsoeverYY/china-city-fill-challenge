@@ -3572,6 +3572,13 @@ footer {
   filter: drop-shadow(0 0 5px rgba(241, 199, 91, 0.68));
 }
 
+.gauntlet-detail-map path.is-wrong-selection {
+  fill: #e7a09a;
+  stroke: #8f302a;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 5px rgba(143, 48, 42, 0.58));
+}
+
 .plate-city-map-question {
   padding-top: 16px;
   align-content: start;
@@ -3687,12 +3694,31 @@ footer {
 .gauntlet-detail-map .city-route-label {
   fill: #3f4d47;
   font-family: "Microsoft YaHei", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   paint-order: stroke;
   pointer-events: none;
   stroke: rgba(255, 253, 247, 0.92);
-  stroke-width: 2.6px;
+  stroke-width: 3px;
+}
+
+.gauntlet-detail-map .city-route-label.is-correct-answer-label {
+  fill: #71430f;
+  font-size: 15px;
+  stroke: rgba(255, 247, 211, 0.98);
+  stroke-width: 4px;
+}
+
+.gauntlet-detail-map .city-route-label.is-wrong-selection-label {
+  fill: #8f302a;
+  font-size: 15px;
+  stroke: rgba(255, 240, 237, 0.98);
+  stroke-width: 4px;
+}
+
+.gauntlet-detail-map .city-answer-marker {
+  font-size: 10px;
+  letter-spacing: 0.04em;
 }
 
 .route-target-banner strong {

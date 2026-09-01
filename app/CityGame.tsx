@@ -1397,6 +1397,7 @@ type AnswerReview = {
   nextAction: "next" | "finish" | "lose";
   highlightProvinceCodes?: string[];
   highlightRegionName?: string;
+  selectedRegionName?: string;
   checkpoint?: string;
 };
 
@@ -1993,6 +1994,7 @@ function GauntletDetailMap({
   map,
   onRegion,
   correctRegionName,
+  selectedRegionName,
   routeRegionNames = [],
   originRegionName,
   targetRegionName,
@@ -2001,6 +2003,7 @@ function GauntletDetailMap({
   map: MapData;
   onRegion: (name: string) => void;
   correctRegionName?: string;
+  selectedRegionName?: string;
   routeRegionNames?: string[];
   originRegionName?: string;
   targetRegionName?: string;
@@ -2013,12 +2016,15 @@ function GauntletDetailMap({
       className="gauntlet-detail-map"
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
-      aria-label="无名称省内市级行政区地图"
+      aria-label={showLabels
+        ? "显示城市名称和答题结果的省内市级行政区地图"
+        : "无名称省内市级行政区地图"}
     >
       {map.features.map((feature) => {
         const name = feature.properties.name;
         const className = [
           correctRegionName === name ? "is-correct-answer" : "",
+          selectedRegionName === name ? "is-wrong-selection" : "",
           routeSet.has(name) ? "is-city-route" : "",
           originRegionName === name ? "is-city-origin" : "",
           targetRegionName === name ? "is-city-target" : "",
@@ -2030,8 +2036,14 @@ function GauntletDetailMap({
             className={className || undefined}
             fillRule="evenodd"
             role="button"
-            tabIndex={0}
-            aria-label={showLabels ? name : "待选择市级区块"}
+            tabIndex={showLabels ? -1 : 0}
+            aria-label={correctRegionName === name
+              ? `${name}，正确答案`
+              : selectedRegionName === name
+                ? `${name}，你的选择`
+                : showLabels
+                  ? name
+                  : "待选择市级区块"}
             onClick={() => onRegion(name)}
             onKeyDown={(event) => handleKeyboardActivation(
               event,
@@ -2043,17 +2055,32 @@ function GauntletDetailMap({
       {showLabels
         ? map.features.map((feature) => {
             const [x, y] = featureLabelPosition(feature, project);
+            const name = feature.properties.name;
+            const isCorrectAnswer = correctRegionName === name;
+            const isWrongSelection = selectedRegionName === name;
+            const className = [
+              "city-route-label",
+              isCorrectAnswer ? "is-correct-answer-label" : "",
+              isWrongSelection ? "is-wrong-selection-label" : "",
+            ].filter(Boolean).join(" ");
             return (
               <text
-                key={`city-route-label-${feature.properties.name}`}
+                key={`city-route-label-${name}`}
                 x={x}
                 y={y}
-                className="city-route-label"
+                className={className}
                 textAnchor="middle"
                 dominantBaseline="central"
                 aria-hidden="true"
               >
-                {stripAdministrativeSuffix(feature.properties.name)}
+                <tspan x={x} dy={isCorrectAnswer || isWrongSelection ? "-0.45em" : 0}>
+                  {stripAdministrativeSuffix(name)}
+                </tspan>
+                {isCorrectAnswer || isWrongSelection ? (
+                  <tspan x={x} dy="1.35em" className="city-answer-marker">
+                    {isCorrectAnswer ? "✓ 正确答案" : "× 你的选择"}
+                  </tspan>
+                ) : null}
               </text>
             );
           })
@@ -3113,7 +3140,10 @@ function GauntletGame({
     winTarget: number,
     correctAnswer: string,
     explanation: string,
-    highlight?: Pick<AnswerReview, "highlightProvinceCodes" | "highlightRegionName">,
+    highlight?: Pick<
+      AnswerReview,
+      "highlightProvinceCodes" | "highlightRegionName" | "selectedRegionName"
+    >,
     mistake?: MistakeSeed,
   ) => {
     if (!correct && mistake) recordMistake(mistake);
@@ -3790,10 +3820,11 @@ function GauntletGame({
       return;
     }
     if ((level !== 13 && level !== 25) || !currentCity || answerReview) return;
+    const correct = answerMatches(regionName, [currentCity.city]);
     rememberCityMapQuestion(level, currentCity);
     advanceStreakChallenge(
       level,
-      answerMatches(regionName, [currentCity.city]),
+      correct,
       30,
       level === 25
         ? `${currentCity.plate} · ${currentCity.city}`
@@ -3801,7 +3832,10 @@ function GauntletGame({
       level === 25
         ? `${currentCity.plate}对应${currentCity.province}的${currentCity.city}`
         : `${currentCity.city}位于${currentCity.province}，对应地图上的“${currentCity.city}”区块`,
-      { highlightRegionName: currentCity.city },
+      {
+        highlightRegionName: currentCity.city,
+        selectedRegionName: level === 13 && !correct ? regionName : undefined,
+      },
       level === 25
         ? {
             id: `plate-city-map-${currentCity.plate}`,
@@ -4317,6 +4351,8 @@ function GauntletGame({
                       map={gauntletDetailMap}
                       onRegion={handleDetailRegion}
                       correctRegionName={answerReview?.highlightRegionName}
+                      selectedRegionName={answerReview?.selectedRegionName}
+                      showLabels={Boolean(answerReview)}
                     />
                   </div>
                 ) : gauntletDetailError ? (
