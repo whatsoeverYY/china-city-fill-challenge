@@ -41,8 +41,8 @@ const region = (
 
 /**
  * “综合总量”用于省份名片记忆：地级及以上城市数，加上另列的州、地区、盟、
- * 省直辖县级单位等。雄安新区、杨凌示范区按独立号牌学习单元纳入，但不改变
- * 《中国统计年鉴》的城市数量口径。
+ * 省直辖县级单位等。雄安新区、杨凌示范区、长白山保护开发区按独立号牌
+ * 学习单元纳入，但不改变《中国统计年鉴》的城市数量口径。
  */
 export const PROVINCE_ADMINISTRATIVE_PROFILE_DATA: ProvinceAdministrativeProfile[] = [
   profile(
@@ -66,7 +66,15 @@ export const PROVINCE_ADMINISTRATIVE_PROFILE_DATA: ProvinceAdministrativeProfile
     "220000",
     9,
     [{ label: "自治州", count: 1 }],
-    [region("延边朝鲜族自治州", "自治州", "吉H")],
+    [
+      region("延边朝鲜族自治州", "自治州", "吉H"),
+      region(
+        "长白山保护开发区",
+        "保护开发区",
+        "吉K",
+        "长白山保护开发区使用独立号牌前缀，不计入《中国统计年鉴》的城市数量口径。",
+      ),
+    ],
   ),
   profile(
     "230000",

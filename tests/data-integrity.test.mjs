@@ -9,6 +9,7 @@ import {
   PROVINCE_PLATE_PREFIXES,
 } from "../app/province-data.ts";
 import { PROVINCE_CITY_COUNT_DATA } from "../app/province-city-count-data.ts";
+import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "../app/province-administrative-profile-data.ts";
 import { UNIVERSITY_QUIZ_DATA } from "../app/university-data.ts";
 import { CONFUSABLE_CITY_PAIRS } from "../app/confusable-city-data.ts";
 
@@ -63,4 +64,20 @@ test("quiz datasets keep their expected coverage and references", () => {
     PROVINCE_CITY_COUNT_DATA.slice(0, 31).reduce((sum, item) => sum + item.cityCount, 0),
     297,
   );
+});
+
+test("Jilin special plate regions include Ji K without treating it as a city", () => {
+  const jilinProfile = PROVINCE_ADMINISTRATIVE_PROFILE_DATA.find((item) => item.code === "220000");
+
+  assert.ok(jilinProfile, "吉林省缺少行政资料");
+  assert.deepEqual(
+    jilinProfile.plateRegions.find((item) => item.plate === "吉K"),
+    {
+      name: "长白山保护开发区",
+      type: "保护开发区",
+      plate: "吉K",
+      note: "长白山保护开发区使用独立号牌前缀，不计入《中国统计年鉴》的城市数量口径。",
+    },
+  );
+  assert.equal(CITY_QUIZ_DATA.some((item) => item.plate === "吉K"), false);
 });
