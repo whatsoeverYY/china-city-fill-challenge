@@ -60,6 +60,7 @@ import {
   GAUNTLET_LEVEL_13_HISTORY_KEY,
   GAUNTLET_LEVEL_25_HISTORY_KEY,
   GAUNTLET_MISTAKES_KEY,
+  GAUNTLET_PROVINCE_SCOPE_KEY,
   GAUNTLET_PROGRESS_KEY,
   HARD_MODE_KEY,
   LEGACY_GAUNTLET_PROGRESS_KEYS,
@@ -1203,8 +1204,7 @@ const MAP_REQUIRED_LEVELS = new Set<GauntletLevel>([
   1, 8, 10, 11, 13, 14, 15, 17, 19, 25, 26,
 ]);
 
-const NATIONAL_PICKER_LEVELS = new Set<GauntletLevel>([1, 5, 7, 11, 17, 19, 24]);
-const NO_PICKER_LEVELS = new Set<GauntletLevel>([10, 14, 15, 21, 22, 26]);
+const FIXED_SCOPE_LEVELS = new Set<GauntletLevel>([10, 14, 15, 21, 22, 26]);
 
 const GAUNTLET_OPENING_FEEDBACK: Record<GauntletLevel, string> = {
   1: "观察轮廓，写出省级行政区名称",
@@ -1411,62 +1411,35 @@ function createEmptyBossStats(): Record<BossSkill, BossSkillStat> {
   ) as Record<BossSkill, BossSkillStat>;
 }
 
-type ProvinceQuestionSummary = {
-  name: string;
-  shortName: string;
-  questionCount: number;
-};
-
-function summarizeQuestionsByProvince<T extends {
-  province: string;
-  provinceShort: string;
-}>(items: T[]) {
-  const summaries = new Map<string, ProvinceQuestionSummary>();
-  items.forEach((item) => {
-    const current = summaries.get(item.provinceShort);
-    if (current) {
-      current.questionCount += 1;
-      return;
-    }
-    summaries.set(item.provinceShort, {
-      name: item.province,
-      shortName: item.provinceShort,
-      questionCount: 1,
-    });
-  });
-  return Array.from(summaries.values());
-}
-
-const GAUNTLET_QUIZ_PROVINCES = summarizeQuestionsByProvince(CITY_QUIZ_DATA);
-
-const GAUNTLET_UNIVERSITY_PROVINCES = summarizeQuestionsByProvince(
-  UNIVERSITY_QUIZ_DATA,
-);
-
-const ALL_GAUNTLET_PROVINCE_NAMES = GAUNTLET_QUIZ_PROVINCES.map(
-  (item) => item.shortName,
-);
-
-const ALL_GAUNTLET_UNIVERSITY_PROVINCE_NAMES = GAUNTLET_UNIVERSITY_PROVINCES.map(
-  (item) => item.shortName,
+const ALL_GAUNTLET_PROVINCE_NAMES = Array.from(
+  new Set(CITY_QUIZ_DATA.map((item) => item.provinceShort)),
 );
 
 const ALL_GAUNTLET_SHAPE_PROVINCE_CODES = PROVINCES.map((item) => item.code);
 
-const CITY_ROUTE_PROVINCES = PROVINCES.filter(
+const ALL_CITY_ROUTE_PROVINCE_CODES = PROVINCES.filter(
   (item) =>
     !["110000", "120000", "310000", "500000", "710000", "810000", "820000"]
       .includes(item.code),
-).map((item) => ({
-  name: item.name,
-  shortName: item.shortName,
-  code: item.code,
-  questionCount: CITY_QUIZ_DATA.filter(
-    (city) => city.provinceShort === item.shortName,
-  ).length,
-}));
+).map((item) => item.code);
 
-const ALL_CITY_ROUTE_PROVINCE_CODES = CITY_ROUTE_PROVINCES.map((item) => item.code);
+function parseGauntletProvinceScope(raw: string | null) {
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        const validCodes = parsed.filter(
+          (item): item is string =>
+            typeof item === "string" && ALL_PROVINCE_CODES.includes(item),
+        );
+        if (validCodes.length > 0) return new Set(validCodes);
+      }
+    } catch {
+      // Invalid or outdated preferences safely fall back to the full country.
+    }
+  }
+  return new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES);
+}
 
 function cityQuizKey(item: CityQuizItem) {
   return `${item.provinceShort}:${item.city}`;
@@ -2380,7 +2353,7 @@ function GauntletGame({
   nationalError: boolean;
   onExit: () => void;
 }) {
-  const { progressStorage } = usePlayerData();
+  const { identity, progressStorage } = usePlayerData();
   const [level, setLevel] = useState<GauntletLevel | null>(null);
   const [passedLevel, setPassedLevel] = useState<GauntletLevel | null>(null);
   const [completedLevels, setCompletedLevels] = useState<Set<GauntletLevel>>(
@@ -2425,35 +2398,71 @@ function GauntletGame({
   const [feedbackType, setFeedbackType] = useState<"idle" | "right" | "wrong">(
     "idle",
   );
-  const [selectedQuizProvinces, setSelectedQuizProvinces] = useState<Set<string>>(
-    () => new Set(ALL_GAUNTLET_PROVINCE_NAMES),
-  );
-  const [draftQuizProvinces, setDraftQuizProvinces] = useState<Set<string>>(
-    () => new Set(ALL_GAUNTLET_PROVINCE_NAMES),
-  );
-  const [selectedUniversityProvinces, setSelectedUniversityProvinces] = useState<Set<string>>(
-    () => new Set(ALL_GAUNTLET_UNIVERSITY_PROVINCE_NAMES),
-  );
-  const [draftUniversityProvinces, setDraftUniversityProvinces] = useState<Set<string>>(
-    () => new Set(ALL_GAUNTLET_UNIVERSITY_PROVINCE_NAMES),
-  );
-  const [selectedCityRouteProvinceCodes, setSelectedCityRouteProvinceCodes] = useState<Set<string>>(
-    () => new Set(ALL_CITY_ROUTE_PROVINCE_CODES),
-  );
-  const [draftCityRouteProvinceCodes, setDraftCityRouteProvinceCodes] = useState<Set<string>>(
-    () => new Set(ALL_CITY_ROUTE_PROVINCE_CODES),
-  );
   const [selectedShapeProvinceCodes, setSelectedShapeProvinceCodes] = useState<
     Set<string>
   >(() => new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
   const [draftShapeProvinceCodes, setDraftShapeProvinceCodes] = useState<
     Set<string>
   >(() => new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
+  const [provinceScopeReady, setProvinceScopeReady] = useState(false);
+  const [provinceScopeMessage, setProvinceScopeMessage] = useState("");
   const [provincePickerOpen, setProvincePickerOpen] = useState(false);
   const provinceInputRef = useRef<HTMLInputElement>(null);
   const level13HistoryRef = useRef<string[]>([]);
   const level25HistoryRef = useRef<string[]>([]);
   const timedMode = timeLimit > 0;
+  const selectedProvinceShortNames = useMemo(
+    () => new Set(
+      PROVINCES.filter((item) => selectedShapeProvinceCodes.has(item.code))
+        .map((item) => item.shortName),
+    ),
+    [selectedShapeProvinceCodes],
+  );
+  const selectedQuizProvinces = useMemo(
+    () => new Set(
+      ALL_GAUNTLET_PROVINCE_NAMES.filter((name) =>
+        selectedProvinceShortNames.has(name),
+      ),
+    ),
+    [selectedProvinceShortNames],
+  );
+  const selectedUniversityProvinces = useMemo(
+    () => new Set(
+      UNIVERSITY_QUIZ_DATA
+        .filter((item) => selectedProvinceShortNames.has(item.provinceShort))
+        .map((item) => item.provinceShort),
+    ),
+    [selectedProvinceShortNames],
+  );
+  const selectedCityRouteProvinceCodes = useMemo(
+    () => new Set(
+      ALL_CITY_ROUTE_PROVINCE_CODES.filter((code) =>
+        selectedShapeProvinceCodes.has(code),
+      ),
+    ),
+    [selectedShapeProvinceCodes],
+  );
+  const provincePickerOptions = useMemo(
+    () => PROVINCES.map((item) => ({
+      key: item.code,
+      shortName: item.shortName,
+      kind: item.kind,
+      cityCount: CITY_QUIZ_DATA.filter(
+        (city) => city.provinceShort === item.shortName,
+      ).length,
+    })),
+    [],
+  );
+  const selectedProvinceNames = useMemo(
+    () => PROVINCES.filter((item) => selectedShapeProvinceCodes.has(item.code))
+      .map((item) => item.shortName),
+    [selectedShapeProvinceCodes],
+  );
+  const provinceScopeSummary = selectedShapeProvinceCodes.size === PROVINCES.length
+    ? "全国 34 个省级行政区"
+    : selectedProvinceNames.length <= 6
+      ? selectedProvinceNames.join("、")
+      : `${selectedProvinceNames.slice(0, 5).join("、")}等 ${selectedProvinceNames.length} 个`;
 
   useEffect(() => {
     let cancelled = false;
@@ -2496,6 +2505,12 @@ function GauntletGame({
       } catch {
         setMistakes([]);
       }
+      const savedProvinceScope = parseGauntletProvinceScope(
+        progressStorage.getItem(GAUNTLET_PROVINCE_SCOPE_KEY),
+      );
+      setSelectedShapeProvinceCodes(savedProvinceScope);
+      setDraftShapeProvinceCodes(new Set(savedProvinceScope));
+      setProvinceScopeReady(true);
       level13HistoryRef.current = readRecentQuestionHistory(
         progressStorage,
         GAUNTLET_LEVEL_13_HISTORY_KEY,
@@ -2687,57 +2702,54 @@ function GauntletGame({
       : level === 26
         ? questionIndex + (answerReview ? 1 : 0)
       : streak;
-  const usesNationalPicker = level ? NATIONAL_PICKER_LEVELS.has(level) : false;
-  const pickerAvailable = level ? !NO_PICKER_LEVELS.has(level) : false;
-  const provincePickerOptions = usesNationalPicker
-    ? PROVINCES.map((item) => ({
-        key: item.code,
-        shortName: item.shortName,
-        questionCount:
-          level === 5 ? PROVINCE_NEIGHBORS[item.code]?.length ?? 0 : 1,
-      }))
-    : (level === 20
-        ? GAUNTLET_UNIVERSITY_PROVINCES
-        : level === 23
-          ? CITY_ROUTE_PROVINCES.map((item) => ({
-              name: item.name,
-              shortName: item.shortName,
-              questionCount: item.questionCount,
-            }))
-          : GAUNTLET_QUIZ_PROVINCES
-      ).map((item) => ({
-        key: level === 23
-          ? PROVINCE_BY_SHORT_NAME.get(item.shortName)?.code
-            ?? item.shortName
-          : item.shortName,
-        shortName: item.shortName,
-        questionCount: item.questionCount,
-      }));
-  const selectedPickerProvinces = usesNationalPicker
-    ? selectedShapeProvinceCodes
-    : level === 20
-      ? selectedUniversityProvinces
-      : level === 23
-        ? selectedCityRouteProvinceCodes
-      : selectedQuizProvinces;
-  const draftPickerProvinces = usesNationalPicker
-    ? draftShapeProvinceCodes
-    : level === 20
-      ? draftUniversityProvinces
-      : level === 23
-        ? draftCityRouteProvinceCodes
-      : draftQuizProvinces;
-  const draftQuizItems = CITY_QUIZ_DATA.filter((item) =>
-    draftQuizProvinces.has(item.provinceShort),
+  const selectedQuizItems = useMemo(
+    () => CITY_QUIZ_DATA.filter((item) =>
+      selectedProvinceShortNames.has(item.provinceShort),
+    ),
+    [selectedProvinceShortNames],
   );
-  const draftSelectionValid = draftPickerProvinces.size > 0 &&
-    (level !== 5 ||
-      Array.from(draftPickerProvinces).some(
+  const selectedUniversityItems = useMemo(
+    () => UNIVERSITY_QUIZ_DATA.filter((item) =>
+      selectedProvinceShortNames.has(item.provinceShort),
+    ),
+    [selectedProvinceShortNames],
+  );
+  const provinceScopeIssue = (challengeLevel: GauntletLevel) => {
+    if (!provinceScopeReady) return "正在读取已保存的省份范围";
+    if (FIXED_SCOPE_LEVELS.has(challengeLevel)) return null;
+    if (selectedShapeProvinceCodes.size === 0) return "请先选择至少一个省份";
+    if (
+      challengeLevel === 5 &&
+      !Array.from(selectedShapeProvinceCodes).some(
         (code) => (PROVINCE_NEIGHBORS[code]?.length ?? 0) > 0,
-      )) &&
-    ((level !== 12 && level !== 16) ||
-      cityGroups(draftQuizItems).some(([, items]) => items.length >= 3)) &&
-    (level !== 18 || draftQuizItems.length >= 4);
+      )
+    ) {
+      return "当前范围没有可用于陆地邻省题的省份";
+    }
+    if (challengeLevel === 20 && selectedUniversityItems.length === 0) {
+      return "当前范围没有 985、211 大学题目";
+    }
+    if (challengeLevel === 23 && selectedCityRouteProvinceCodes.size === 0) {
+      return "省内穿越暂不支持当前范围";
+    }
+    if (
+      (challengeLevel === 12 || challengeLevel === 16) &&
+      !cityGroups(selectedQuizItems).some(([, items]) => items.length >= 3)
+    ) {
+      return "当前范围缺少至少 3 座城市的省份";
+    }
+    if (challengeLevel === 18 && selectedQuizItems.length < 4) {
+      return "车牌找茬至少需要 4 座候选城市";
+    }
+    if (
+      ([2, 3, 4, 6, 8, 9, 13, 25] as GauntletLevel[]).includes(challengeLevel) &&
+      selectedQuizItems.length === 0
+    ) {
+      return "当前范围没有可用的城市题目";
+    }
+    return null;
+  };
+  const draftSelectionValid = draftShapeProvinceCodes.size > 0;
   const hasTimedOut = timedMode && Boolean(level) && !passedLevel && timeLeft === 0;
   const hasLostBoss = level === 26 && bossLives === 0 && !passedLevel;
   const reviewProvinceCodes = new Set(answerReview?.highlightProvinceCodes ?? []);
@@ -2789,12 +2801,20 @@ function GauntletGame({
   };
 
   const startLevel = (nextLevel: GauntletLevel) => {
+    const scopeIssue = provinceScopeIssue(nextLevel);
+    if (scopeIssue) {
+      setLevel(null);
+      setPassedLevel(null);
+      setProvinceScopeMessage(scopeIssue);
+      return;
+    }
     if (
       MAP_REQUIRED_LEVELS.has(nextLevel) &&
       (!nationalMap || nationalError)
     ) {
       return;
     }
+    setProvinceScopeMessage("");
     setLevel(nextLevel);
     setPassedLevel(null);
     resetRoundProgress(GAUNTLET_OPENING_FEEDBACK[nextLevel]);
@@ -2829,24 +2849,11 @@ function GauntletGame({
       setProvinceChallengeOrder([]);
       setTruthOrder([]);
     } else if (nextLevel === 5) {
-      const selectedOrigins = PROVINCES.filter(
+      const nextOrigins = PROVINCES.filter(
         (item) =>
           selectedShapeProvinceCodes.has(item.code) &&
           (PROVINCE_NEIGHBORS[item.code]?.length ?? 0) > 0,
       );
-      const nextOrigins = selectedOrigins.length
-        ? selectedOrigins
-        : PROVINCES.filter(
-            (item) => (PROVINCE_NEIGHBORS[item.code]?.length ?? 0) > 0,
-          );
-      if (!selectedOrigins.length) {
-        setSelectedShapeProvinceCodes(
-          new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES),
-        );
-        setDraftShapeProvinceCodes(
-          new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES),
-        );
-      }
       setProvinceChallengeOrder(
         randomShuffle(nextOrigins),
       );
@@ -2897,11 +2904,7 @@ function GauntletGame({
       setTruthOrder([]);
     } else if (nextLevel === 20) {
       setUniversityOrder(
-        randomShuffle(
-          UNIVERSITY_QUIZ_DATA.filter((item) =>
-            selectedUniversityProvinces.has(item.provinceShort),
-          ),
-        ),
+        randomShuffle(selectedUniversityItems),
       );
       setProvinceOrder([]);
       setProvinceChallengeOrder([]);
@@ -2922,33 +2925,19 @@ function GauntletGame({
       setCityOrder([]);
       setTruthOrder([]);
     } else if (nextLevel === 23) {
-      const selectedCodes = ALL_CITY_ROUTE_PROVINCE_CODES.filter((code) =>
-        selectedCityRouteProvinceCodes.has(code),
+      setCityRouteProvinceOrder(
+        randomShuffle(Array.from(selectedCityRouteProvinceCodes)),
       );
-      const nextCodes = selectedCodes.length
-        ? selectedCodes
-        : ALL_CITY_ROUTE_PROVINCE_CODES;
-      if (!selectedCodes.length) {
-        setSelectedCityRouteProvinceCodes(new Set(ALL_CITY_ROUTE_PROVINCE_CODES));
-        setDraftCityRouteProvinceCodes(new Set(ALL_CITY_ROUTE_PROVINCE_CODES));
-      }
-      setCityRouteProvinceOrder(randomShuffle(nextCodes));
       setProvinceOrder([]);
       setProvinceChallengeOrder([]);
       setCityOrder([]);
       setTruthOrder([]);
     } else if (nextLevel === 24) {
-      const selectedQuestions = PROVINCE_CITY_COUNT_DATA.filter((item) =>
-        selectedShapeProvinceCodes.has(item.code),
-      );
-      const nextQuestions = selectedQuestions.length
-        ? selectedQuestions
-        : PROVINCE_CITY_COUNT_DATA;
-      if (!selectedQuestions.length) {
-        setSelectedShapeProvinceCodes(new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
-        setDraftShapeProvinceCodes(new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES));
-      }
-      setProvinceCityCountOrder(randomShuffle(nextQuestions));
+      setProvinceCityCountOrder(randomShuffle(
+        PROVINCE_CITY_COUNT_DATA.filter((item) =>
+          selectedShapeProvinceCodes.has(item.code),
+        ),
+      ));
       setProvinceOrder([]);
       setProvinceChallengeOrder([]);
       setCityOrder([]);
@@ -2960,25 +2949,7 @@ function GauntletGame({
       setCityOrder([]);
       setTruthOrder([]);
     } else {
-      let nextQuestions = randomShuffle(
-        CITY_QUIZ_DATA.filter((item) =>
-          selectedQuizProvinces.has(item.provinceShort),
-        ),
-      );
-      if (
-        (nextLevel === 12 || nextLevel === 16) &&
-        !cityGroups(nextQuestions).some(([, items]) => items.length >= 3)
-      ) {
-        nextQuestions = randomShuffle(CITY_QUIZ_DATA);
-        setSelectedQuizProvinces(new Set(ALL_GAUNTLET_PROVINCE_NAMES));
-        setDraftQuizProvinces(new Set(ALL_GAUNTLET_PROVINCE_NAMES));
-      }
-      if (nextLevel === 18 && nextQuestions.length < 4) {
-        nextQuestions = randomShuffle(CITY_QUIZ_DATA);
-        setSelectedQuizProvinces(new Set(ALL_GAUNTLET_PROVINCE_NAMES));
-        setDraftQuizProvinces(new Set(ALL_GAUNTLET_PROVINCE_NAMES));
-      }
-      setCityChallengeQuestions(nextLevel, nextQuestions);
+      setCityChallengeQuestions(nextLevel, selectedQuizItems);
       setProvinceOrder([]);
       setProvinceChallengeOrder([]);
     }
@@ -2986,112 +2957,49 @@ function GauntletGame({
     focusProvinceInput();
   };
 
-  const setDraftPickerSelection = (selection: Set<string>) => {
-    if (usesNationalPicker) {
-      setDraftShapeProvinceCodes(selection);
-    } else if (level === 20) {
-      setDraftUniversityProvinces(selection);
-    } else if (level === 23) {
-      setDraftCityRouteProvinceCodes(selection);
-    } else {
-      setDraftQuizProvinces(selection);
-    }
-  };
-
   const openProvincePicker = () => {
-    setDraftPickerSelection(new Set(selectedPickerProvinces));
+    setDraftShapeProvinceCodes(new Set(selectedShapeProvinceCodes));
     setProvincePickerOpen(true);
   };
 
   const toggleDraftProvince = (key: string) => {
-    const next = new Set(draftPickerProvinces);
+    const next = new Set(draftShapeProvinceCodes);
     if (next.has(key)) {
       next.delete(key);
     } else {
       next.add(key);
     }
-    setDraftPickerSelection(next);
+    setDraftShapeProvinceCodes(next);
   };
 
   const applyProvinceSelection = () => {
-    if (!level || !draftSelectionValid) return;
-
-    let rangeMessage = "";
-    if (usesNationalPicker) {
-      if (!nationalMap && level !== 24) return;
-      const nextSelection = new Set(draftShapeProvinceCodes);
-      setSelectedShapeProvinceCodes(nextSelection);
-      if (level === 1 || level === 11 || level === 17) {
-        if (!nationalMap) return;
-        const nextFeatures = nationalMap.features.filter((feature) => {
-          const featureProvince = provinceForFeature(feature);
-          return Boolean(
-            featureProvince && nextSelection.has(featureProvince.code),
-          );
-        });
-        setProvinceOrder(randomShuffle(nextFeatures));
-        rangeMessage = level === 11
-          ? `拼图范围已更新：本轮放置 ${nextFeatures.length} 个省级行政区`
-          : level === 17
-            ? `题目范围已更新：从 ${nextFeatures.length} 个旋转轮廓中出题`
-            : `题目范围已更新：本轮辨认 ${nextFeatures.length} 个省级行政区`;
-      } else if (level === 5) {
-        const nextProvinces = PROVINCES.filter(
-          (item) =>
-            nextSelection.has(item.code) &&
-            (PROVINCE_NEIGHBORS[item.code]?.length ?? 0) > 0,
-        );
-        setProvinceChallengeOrder(randomShuffle(nextProvinces));
-        rangeMessage = `题目范围已更新：从 ${nextProvinces.length} 个有陆地邻省的省份中出题`;
-      } else if (level === 24) {
-        const nextQuestions = PROVINCE_CITY_COUNT_DATA.filter((item) =>
-          nextSelection.has(item.code),
-        );
-        setProvinceCityCountOrder(randomShuffle(nextQuestions));
-        rangeMessage = `题目范围已更新：从 ${nextQuestions.length} 个省级行政区中出题`;
-      } else {
-        const nextProvinces = PROVINCES.filter((item) =>
-          nextSelection.has(item.code),
-        );
-        setProvinceChallengeOrder(randomShuffle(nextProvinces));
-        rangeMessage = `题目范围已更新：本轮包含 ${nextProvinces.length} 个省级行政区`;
-      }
-    } else if (level === 20) {
-      const nextSelection = new Set(draftUniversityProvinces);
-      const nextQuestions = UNIVERSITY_QUIZ_DATA.filter((item) =>
-        nextSelection.has(item.provinceShort),
-      );
-      setSelectedUniversityProvinces(nextSelection);
-      setUniversityOrder(randomShuffle(nextQuestions));
-      rangeMessage = `题目范围已更新：${nextSelection.size} 个省级行政区，共 ${nextQuestions.length} 所大学`;
-    } else if (level === 23) {
-      const nextSelection = new Set(draftCityRouteProvinceCodes);
-      setSelectedCityRouteProvinceCodes(nextSelection);
-      setCityRouteProvinceOrder(randomShuffle(Array.from(nextSelection)));
-      setCityRouteAttempt(null);
-      rangeMessage = `路线范围已更新：从 ${nextSelection.size} 个省级行政区中生成省内路线`;
-    } else {
-      const nextSelection = new Set(draftQuizProvinces);
-      const nextQuestions = CITY_QUIZ_DATA.filter((item) =>
-        nextSelection.has(item.provinceShort),
-      );
-      setSelectedQuizProvinces(nextSelection);
-      setCityChallengeQuestions(level, nextQuestions);
-      rangeMessage = `题目范围已更新：${nextSelection.size} 个省级行政区，共 ${nextQuestions.length} 座城市`;
-    }
-    resetRoundProgress(rangeMessage);
+    if (!draftSelectionValid) return;
+    const orderedCodes = PROVINCES
+      .filter((item) => draftShapeProvinceCodes.has(item.code))
+      .map((item) => item.code);
+    const nextSelection = new Set(orderedCodes);
+    setSelectedShapeProvinceCodes(nextSelection);
+    setDraftShapeProvinceCodes(new Set(nextSelection));
+    progressStorage.setItem(
+      GAUNTLET_PROVINCE_SCOPE_KEY,
+      JSON.stringify(orderedCodes),
+    );
+    setProvinceScopeMessage(
+      identity
+        ? `已保存 ${orderedCodes.length} 个省级行政区，后续关卡将自动沿用并同步云存档`
+        : `本次试玩已选择 ${orderedCodes.length} 个省级行政区；登录后可长期保存`,
+    );
     setProvincePickerOpen(false);
-    focusProvinceInput();
   };
 
   const selectAllPickerProvinces = () => {
-    setDraftPickerSelection(
+    setDraftShapeProvinceCodes(
       new Set(provincePickerOptions.map((item) => item.key)),
     );
   };
 
   const clearPickerProvinces = () => {
-    setDraftPickerSelection(new Set());
+    setDraftShapeProvinceCodes(new Set());
   };
 
   const finishLevel = (finishedLevel: GauntletLevel) => {
@@ -4138,33 +4046,50 @@ function GauntletGame({
             <p className="eyebrow">过关斩将 · 二十六重试炼</p>
             <h1>从轮廓到终极混战，<span>把中国地理练成直觉</span></h1>
             <p className="lede">二十六个关卡均可直接选择。错题复仇会读取本机历史错题，其余连续答题关卡答错后连胜归零。</p>
-            <button
-              className={`timed-mode-toggle ${timedMode ? "is-active" : ""}`}
-              type="button"
-              role="switch"
-              aria-checked={timedMode}
-              onClick={() =>
-                setTimeLimit((value) => value === 0 ? 90 : value === 90 ? 60 : 0)
-              }
-            >
-              <span aria-hidden="true">{timeLimit === 0 ? "∞" : timeLimit === 90 ? "计" : "速"}</span>
-              <b>{timeLimit === 0 ? "不限时模式" : timeLimit === 90 ? "限时模式 · 90 秒" : "极速模式 · 60 秒"}</b>
-              <small>{timeLimit === 0 ? "点击切换到 90 秒限时" : timeLimit === 90 ? "点击切换到 60 秒极速" : "点击切回不限时，选省时会暂停"}</small>
-            </button>
+            <div className="gauntlet-lobby-settings" aria-label="挑战设置">
+              <button
+                className={`timed-mode-toggle ${timedMode ? "is-active" : ""}`}
+                type="button"
+                role="switch"
+                aria-checked={timedMode}
+                onClick={() =>
+                  setTimeLimit((value) => value === 0 ? 90 : value === 90 ? 60 : 0)
+                }
+              >
+                <span aria-hidden="true">{timeLimit === 0 ? "∞" : timeLimit === 90 ? "计" : "速"}</span>
+                <b>{timeLimit === 0 ? "不限时模式" : timeLimit === 90 ? "限时模式 · 90 秒" : "极速模式 · 60 秒"}</b>
+                <small>{timeLimit === 0 ? "点击切换到 90 秒限时" : timeLimit === 90 ? "点击切换到 60 秒极速" : "点击切回不限时模式"}</small>
+              </button>
+              <button
+                className="province-picker-button gauntlet-scope-button"
+                type="button"
+                onClick={openProvincePicker}
+                disabled={!provinceScopeReady}
+              >
+                <span aria-hidden="true">域</span>
+                <b>统一省份范围 · {selectedShapeProvinceCodes.size} / {PROVINCES.length}</b>
+                <i>{provinceScopeReady ? provinceScopeSummary : "正在读取已保存范围…"}</i>
+                <em>修改</em>
+              </button>
+            </div>
+            <p className={`gauntlet-scope-message ${provinceScopeMessage ? "is-visible" : ""}`} role="status">
+              {provinceScopeMessage || "选择一次后，支持自选范围的关卡会自动沿用；全国固定关卡不受影响。"}
+            </p>
           </section>
           <section className="gauntlet-level-grid" aria-label="选择关卡">
             {GAUNTLET_LEVELS.map((item) => {
               const completed = completedLevels.has(item.level);
+              const scopeIssue = provinceScopeIssue(item.level);
+              const mapUnavailable = MAP_REQUIRED_LEVELS.has(item.level) &&
+                (!nationalMap || nationalError);
               return (
                 <button
                   key={item.level}
                   className="gauntlet-level-card"
                   type="button"
                   onClick={() => startLevel(item.level)}
-                  disabled={
-                    MAP_REQUIRED_LEVELS.has(item.level) &&
-                    (!nationalMap || nationalError)
-                  }
+                  disabled={mapUnavailable || Boolean(scopeIssue)}
+                  title={scopeIssue ?? undefined}
                 >
                   <span className="level-number">第 {item.level} 关</span>
                   <i>{item.badge}</i>
@@ -4178,11 +4103,13 @@ function GauntletGame({
                       : item.target}
                   </b>
                   <span className={`level-state ${completed ? "is-complete" : ""}`}>
-                    {completed
-                      ? "✓ 已过关"
-                      : MAP_REQUIRED_LEVELS.has(item.level) && !nationalMap
+                    {mapUnavailable
                         ? "地图载入中…"
-                        : "开始挑战 →"}
+                      : scopeIssue
+                        ? scopeIssue
+                        : completed
+                          ? "✓ 已过关"
+                          : "开始挑战 →"}
                   </span>
                 </button>
               );
@@ -4239,18 +4166,6 @@ function GauntletGame({
               <h1>{roundHeading}</h1>
             </div>
             <div className="gauntlet-round-actions">
-              {pickerAvailable ? (
-                <button
-                  className="province-picker-button"
-                  type="button"
-                  onClick={openProvincePicker}
-                  disabled={Boolean(answerReview)}
-                >
-                  <span aria-hidden="true">选</span>
-                  <b>选择省份</b>
-                  <i>{selectedPickerProvinces.size} / {provincePickerOptions.length}</i>
-                </button>
-              ) : null}
               {level === 26 ? (
                 <div className="boss-lives" aria-label={`剩余 ${bossLives} 条生命`}>
                   <span>生命</span>
@@ -5059,7 +4974,7 @@ function GauntletGame({
         </>
       )}
 
-      {provincePickerOpen && level ? (
+      {provincePickerOpen ? (
         <div className="province-picker-overlay" role="presentation">
           <section
             className="province-picker-dialog"
@@ -5075,32 +4990,10 @@ function GauntletGame({
             >
               ×
             </button>
-            <p className="eyebrow">限定出题范围</p>
-            <h2 id="province-picker-title">选择省份（可多选）</h2>
+            <p className="eyebrow">过关斩将 · 全局设置</p>
+            <h2 id="province-picker-title">统一选择省份范围（可多选）</h2>
             <p className="province-picker-hint">
-              {level === 1
-                ? "应用后，后续轮廓只会来自所选省份，本轮进度将重新计算。"
-                : level === 11
-                  ? "应用后，本轮只需把所选省份拼回全国地图。"
-                  : level === 17
-                    ? "应用后，旋转轮廓只会从所选省份中抽取。"
-                    : level === 19
-                      ? "应用后，行政中心落点题只会从所选省份中抽取。"
-                : level === 5
-                  ? "应用后，中心省份只会从所选范围中抽取；答案仍需选择它的全部陆地邻省。"
-                  : level === 7
-                    ? "应用后，省会与省份题只会来自所选范围，当前连胜将重新计数。"
-                  : level === 13
-                      ? "市域落点使用省内市级地图，暂不包含四个直辖市。"
-                    : level === 25
-                      ? "应用后，地图墙会同时展示所选省份；每个省独立放大，不相邻也不会影响清晰度。"
-                    : level === 20
-                      ? "应用后，只会出现所选省份内的 985、211 大学。"
-                    : level === 23
-                      ? "应用后，省内穿越路线只会从所选省份中生成；直辖市和港澳台暂不参与。"
-                    : level === 24
-                      ? "应用后，只会询问所选省级行政区的地级及以上城市数量。"
-                    : "应用后，后续题目只会来自所选省份，当前连胜将重新计数。"}
+              保存后，辨轮廓、城市、车牌、省会、大学与地图落点等关卡都会自动使用这套范围，下次进入无需重选。邻省连锁、疆域集合、最短省际路线、错题复仇、易混城市和终极混战仍使用各自的全国固定题库。
             </p>
             <div className="province-picker-tools">
               <button
@@ -5112,11 +5005,11 @@ function GauntletGame({
               <button type="button" onClick={clearPickerProvinces}>
                 清空
               </button>
-              <span>已选 {draftPickerProvinces.size} / {provincePickerOptions.length}</span>
+              <span>已选 {draftShapeProvinceCodes.size} / {provincePickerOptions.length}</span>
             </div>
             <div className="province-picker-grid">
               {provincePickerOptions.map((item) => {
-                const selected = draftPickerProvinces.has(item.key);
+                const selected = draftShapeProvinceCodes.has(item.key);
                 return (
                   <button
                     key={item.key}
@@ -5127,29 +5020,29 @@ function GauntletGame({
                   >
                     <span>{selected ? "✓" : ""}</span>
                     <strong>{item.shortName}</strong>
-                    <small>{item.questionCount} 题</small>
+                    <small>
+                      {item.cityCount > 0
+                        ? `${item.cityCount} 个城市题`
+                        : `${item.kind} · 省级题`}
+                    </small>
                   </button>
                 );
               })}
             </div>
             <div className="province-picker-footer">
               <p>
-                {draftPickerProvinces.size === 0
+                {draftShapeProvinceCodes.size === 0
                   ? "请至少选择一个省份"
-                  : level === 5 && !draftSelectionValid
-                    ? "海南与台湾没有陆地邻省，请再选择其他省份"
-                    : (level === 12 || level === 16) && !draftSelectionValid
-                      ? "请至少选择一个题库中包含 3 座城市的省份"
-                    : level === 18 && !draftSelectionValid
-                      ? "车牌找茬至少需要 4 座候选城市"
-                    : "应用后将从新范围重新出题"}
+                  : identity
+                    ? "保存后会写入当前玩家存档并同步到云端"
+                    : "试玩状态仅本次有效，登录后可长期保存"}
               </p>
               <button
                 type="button"
                 disabled={!draftSelectionValid}
                 onClick={applyProvinceSelection}
               >
-                应用选择
+                保存范围
               </button>
             </div>
           </section>

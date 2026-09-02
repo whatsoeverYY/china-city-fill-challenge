@@ -2911,11 +2911,19 @@ footer {
   max-width: 850px;
 }
 
+.gauntlet-lobby-settings {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
 .timed-mode-toggle {
   display: grid;
   grid-template-columns: auto 1fr;
   width: min(360px, 100%);
-  margin-top: 28px;
+  margin-top: 0;
   padding: 13px 16px;
   align-items: center;
   column-gap: 12px;
@@ -3200,6 +3208,42 @@ footer {
   font-size: 9px;
   font-style: normal;
   font-weight: 700;
+}
+
+.gauntlet-scope-button {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  width: min(480px, 100%);
+}
+
+.gauntlet-scope-button b,
+.gauntlet-scope-button i {
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gauntlet-scope-button em {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--green-dark);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.gauntlet-scope-message {
+  min-height: 1.7em;
+  margin: 10px 2px 0;
+  color: #777b76;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.gauntlet-scope-message.is-visible {
+  color: var(--green-dark);
+  font-weight: 800;
 }
 
 .gauntlet-progress-card {

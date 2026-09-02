@@ -15,6 +15,8 @@ export const LEGACY_GAUNTLET_PROGRESS_KEYS = [
   "china-city-fill-gauntlet-progress-v1",
 ] as const;
 export const GAUNTLET_MISTAKES_KEY = "china-city-fill-gauntlet-mistakes-v1";
+export const GAUNTLET_PROVINCE_SCOPE_KEY =
+  "china-city-fill-gauntlet-province-scope-v1";
 export const GAUNTLET_LEVEL_13_HISTORY_KEY =
   "china-city-fill-level-13-history-v1";
 export const GAUNTLET_LEVEL_25_HISTORY_KEY =
@@ -27,6 +29,7 @@ export const PROGRESS_STORAGE_KEYS = [
   NEIGHBOR_PROGRESS_KEY,
   GAUNTLET_PROGRESS_KEY,
   GAUNTLET_MISTAKES_KEY,
+  GAUNTLET_PROVINCE_SCOPE_KEY,
   GAUNTLET_LEVEL_13_HISTORY_KEY,
   GAUNTLET_LEVEL_25_HISTORY_KEY,
 ] as const;
@@ -545,6 +548,7 @@ export function mergeProgressSnapshots(
     HARD_MODE_KEY,
     NEIGHBOR_MODE_KEY,
     GAUNTLET_MISTAKES_KEY,
+    GAUNTLET_PROVINCE_SCOPE_KEY,
   ] as const) {
     const localTime = timestamp(local.meta.keys[key]);
     const remoteTime = timestamp(remote.meta.keys[key]);

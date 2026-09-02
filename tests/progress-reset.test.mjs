@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  GAUNTLET_PROVINCE_SCOPE_KEY,
   GAUNTLET_PROGRESS_KEY,
   STORAGE_KEY,
   assertSupportedProgressVersion,
@@ -94,6 +95,25 @@ test("unknown values written after an acknowledged reset survive a merge", () =>
 
   assert.equal(merged.values["future-compatible-key"], "future value");
   assert.equal(merged.resetAt, RESET_AT);
+});
+
+test("the newest saved gauntlet province scope wins across devices", () => {
+  const local = staleSnapshot();
+  local.values[GAUNTLET_PROVINCE_SCOPE_KEY] = JSON.stringify(["320000"]);
+  local.meta.keys[GAUNTLET_PROVINCE_SCOPE_KEY] = BEFORE_RESET;
+  const remote = staleSnapshot();
+  remote.values[GAUNTLET_PROVINCE_SCOPE_KEY] = JSON.stringify([
+    "440000",
+    "450000",
+  ]);
+  remote.meta.keys[GAUNTLET_PROVINCE_SCOPE_KEY] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(local, remote);
+
+  assert.deepEqual(
+    JSON.parse(merged.values[GAUNTLET_PROVINCE_SCOPE_KEY] ?? "[]"),
+    ["440000", "450000"],
+  );
 });
 
 test("a newer cloud schema is never accepted by an older client", () => {
