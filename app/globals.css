@@ -3664,20 +3664,37 @@ footer {
   box-shadow: 0 9px 24px rgba(68, 55, 35, 0.07);
 }
 
-.gauntlet-province-map-panel h3 {
+.gauntlet-province-focus-button {
   position: absolute;
   z-index: 2;
   top: 10px;
-  left: 11px;
-  margin: 0;
+  right: 10px;
+  display: inline-flex;
   padding: 5px 8px;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
   color: var(--green-dark);
   border: 1px solid rgba(45, 125, 95, 0.18);
   border-radius: 999px;
   background: rgba(255, 253, 247, 0.92);
+  box-shadow: 0 3px 10px rgba(45, 88, 67, 0.1);
+  cursor: pointer;
   font-size: 10px;
   line-height: 1;
-  pointer-events: none;
+  font-weight: 900;
+}
+
+.gauntlet-province-focus-button:hover,
+.gauntlet-province-focus-button:focus-visible {
+  color: white;
+  border-color: var(--green);
+  outline: none;
+  background: var(--green);
+}
+
+.gauntlet-province-focus-button span {
+  font-size: 12px;
 }
 
 .gauntlet-province-map-panel svg {
@@ -3711,10 +3728,57 @@ footer {
   filter: drop-shadow(0 0 5px rgba(241, 199, 91, 0.68));
 }
 
+.gauntlet-province-map-wall.is-read-only path:not(.is-correct-answer),
+.gauntlet-province-map-wall.is-read-only path:not(.is-correct-answer):hover {
+  fill: #eee4cf;
+  stroke: var(--green);
+  stroke-width: 2.2px;
+  cursor: default;
+}
+
 .gauntlet-province-map-wall.is-single .gauntlet-province-map-panel,
 .gauntlet-province-map-wall.is-single .gauntlet-province-map-panel svg {
   min-height: 430px;
   height: 430px;
+}
+
+.gauntlet-focused-province-map {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+}
+
+.gauntlet-focused-province-toolbar {
+  display: flex;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gauntlet-focused-province-toolbar span {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.gauntlet-focused-province-toolbar button {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 999px;
+  background: #f0f6ec;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.gauntlet-focused-province-toolbar button:hover,
+.gauntlet-focused-province-toolbar button:focus-visible {
+  border-color: var(--green);
+  outline: none;
+  background: #e3efde;
 }
 
 .gauntlet-detail-map path.is-city-route {

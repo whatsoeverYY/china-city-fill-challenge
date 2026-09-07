@@ -2076,12 +2076,16 @@ function GauntletProvinceMapWall({
   map,
   provinces,
   onRegion,
+  onProvinceFocus,
   correctRegionName,
+  readOnly = false,
 }: {
   map: MapData;
   provinces: Province[];
   onRegion: (name: string) => void;
+  onProvinceFocus?: (provinceCode: string) => void;
   correctRegionName?: string;
+  readOnly?: boolean;
 }) {
   const panels = useMemo(
     () =>
@@ -2112,17 +2116,27 @@ function GauntletProvinceMapWall({
 
   return (
     <div
-      className={`gauntlet-province-map-wall ${panels.length === 1 ? "is-single" : ""} ${panels.length > 8 ? "is-many" : ""}`}
+      className={`gauntlet-province-map-wall ${panels.length === 1 ? "is-single" : ""} ${panels.length > 8 ? "is-many" : ""} ${readOnly ? "is-read-only" : ""}`}
       role="group"
       aria-label={`所选 ${panels.length} 个省份的市级地图墙`}
     >
       {panels.map(({ province, features, project }) => (
         <section className="gauntlet-province-map-panel" key={province.code}>
-          <h3>{province.shortName}</h3>
+          {onProvinceFocus && panels.length > 1 && !readOnly ? (
+            <button
+              className="gauntlet-province-focus-button"
+              type="button"
+              aria-label="选择此省并放大地图"
+              onClick={() => onProvinceFocus(province.code)}
+            >
+              <span aria-hidden="true">＋</span>
+              放大
+            </button>
+          ) : null}
           <svg
             viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
             role="img"
-            aria-label={`${province.name}无名称市级行政区地图`}
+            aria-label="无名称省内市级行政区地图"
           >
             {features.map((feature) => {
               const name = feature.properties.name;
@@ -2134,12 +2148,17 @@ function GauntletProvinceMapWall({
                   data-region-name={name}
                   fillRule="evenodd"
                   role="button"
-                  tabIndex={0}
-                  aria-label={`${province.shortName}待选择市级区块`}
-                  onClick={() => onRegion(name)}
+                  tabIndex={readOnly ? -1 : 0}
+                  aria-disabled={readOnly || undefined}
+                  aria-label="待选择市级区块"
+                  onClick={() => {
+                    if (!readOnly) onRegion(name);
+                  }}
                   onKeyDown={(event) => handleKeyboardActivation(
                     event,
-                    () => onRegion(name),
+                    () => {
+                      if (!readOnly) onRegion(name);
+                    },
                   )}
                 />
               );
@@ -2391,6 +2410,9 @@ function GauntletGame({
   const [plateAnswer, setPlateAnswer] = useState("");
   const [cityAnswer, setCityAnswer] = useState("");
   const [mapSelections, setMapSelections] = useState<Set<string>>(new Set());
+  const [level25FocusedProvinceCode, setLevel25FocusedProvinceCode] = useState<
+    string | null
+  >(null);
   const [routeCodes, setRouteCodes] = useState<string[]>([]);
   const [timeLimit, setTimeLimit] = useState<0 | 60 | 90>(0);
   const [timeLeft, setTimeLeft] = useState(GAUNTLET_TIME_LIMIT);
@@ -2607,6 +2629,11 @@ function GauntletGame({
       ),
     [selectedQuizProvinces],
   );
+  const level25FocusedProvince = level25FocusedProvinceCode
+    ? selectedCityMapProvinces.find(
+        (province) => province.code === level25FocusedProvinceCode,
+      ) ?? null
+    : null;
   const detailProvinceCode =
     level === 13 && currentCity
       ? PROVINCE_BY_SHORT_NAME.get(currentCity.provinceShort)?.code
@@ -2767,6 +2794,7 @@ function GauntletGame({
     setPlateAnswer("");
     setCityAnswer("");
     setMapSelections(new Set());
+    setLevel25FocusedProvinceCode(null);
     setRouteCodes([]);
     setCityRouteAttempt(null);
     setFeedbackType("idle");
@@ -3738,6 +3766,7 @@ function GauntletGame({
       return;
     }
     if ((level !== 13 && level !== 25) || !currentCity || answerReview) return;
+    if (level === 25) setLevel25FocusedProvinceCode(null);
     const correct = answerMatches(regionName, [currentCity.city]);
     rememberCityMapQuestion(level, currentCity);
     advanceStreakChallenge(
@@ -4434,15 +4463,42 @@ function GauntletGame({
                 gauntletDetailMap && gauntletDetailReady && currentCity ? (
                   <div className="gauntlet-map-question plate-city-map-question">
                     <div className="map-question-banner plate-city-map-banner">
-                      <small>在所选省份地图墙中找到这张车牌对应的城市</small>
+                      <small>
+                        {level25FocusedProvince
+                          ? "已放大一张省级地图，点击城市区块后才会判题"
+                          : "可以直接点击城市，也可以先选择一张省级地图放大"}
+                      </small>
                       <strong>{currentCity.plate}</strong>
                     </div>
-                    <GauntletProvinceMapWall
-                      map={gauntletDetailMap}
-                      provinces={selectedCityMapProvinces}
-                      onRegion={handleDetailRegion}
-                      correctRegionName={answerReview?.highlightRegionName}
-                    />
+                    {level25FocusedProvince ? (
+                      <div className="gauntlet-focused-province-map">
+                        <div className="gauntlet-focused-province-toolbar">
+                          <span>省份选择不会判错，城市落点后才计算答案</span>
+                          <button
+                            type="button"
+                            onClick={() => setLevel25FocusedProvinceCode(null)}
+                          >
+                            ← 返回重新选省
+                          </button>
+                        </div>
+                        <GauntletProvinceMapWall
+                          map={gauntletDetailMap}
+                          provinces={[level25FocusedProvince]}
+                          onRegion={handleDetailRegion}
+                          correctRegionName={answerReview?.highlightRegionName}
+                          readOnly={Boolean(answerReview)}
+                        />
+                      </div>
+                    ) : (
+                      <GauntletProvinceMapWall
+                        map={gauntletDetailMap}
+                        provinces={selectedCityMapProvinces}
+                        onRegion={handleDetailRegion}
+                        onProvinceFocus={setLevel25FocusedProvinceCode}
+                        correctRegionName={answerReview?.highlightRegionName}
+                        readOnly={Boolean(answerReview)}
+                      />
+                    )}
                   </div>
                 ) : gauntletDetailError ? (
                   <p className="map-error">所选省份地图载入失败，请重试本关</p>
@@ -4756,10 +4812,19 @@ function GauntletGame({
                 </>
               ) : level === 25 ? (
                 <>
-                  <h2>点击车牌对应的城市区块</h2>
+                  <h2>
+                    {level25FocusedProvince
+                      ? "在放大地图中选择城市"
+                      : "直接选城市，或先放大省份"}
+                  </h2>
                   <p className="map-answer-summary">
-                    每个省份单独放大展示，因此不相邻省份也能保持清晰；地图墙可上下滚动。
+                    点击城市区块会立即判题；点击每张地图右上角的“放大”只会进入该省，不会判错。
                   </p>
+                  {level25FocusedProvince ? (
+                    <p className="map-answer-summary">
+                      如果省份没选对，可以返回地图墙重新选择，期间不会影响连胜。
+                    </p>
+                  ) : null}
                   <p className="map-answer-summary">
                     当前范围共 {selectedCityMapProvinces.length} 个省份、{cityPoolSize} 座城市，优先避开最近 90 道题。
                   </p>
