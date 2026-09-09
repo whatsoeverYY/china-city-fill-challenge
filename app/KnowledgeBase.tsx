@@ -306,7 +306,7 @@ export default function KnowledgeBase({
                       <div><dt>特殊单位</dt><dd>{specialUnitCount || 0}</dd></div>
                       <div className="is-total"><dt>综合总量</dt><dd>{administrativeProfile.totalUnitCount}</dd></div>
                       <div><dt>陆地邻省</dt><dd>{provinceNeighbors[province.code]?.length ?? 0}</dd></div>
-                      <div><dt>独立号牌</dt><dd>{administrativeProfile.plateRegions.length || "—"}</dd></div>
+                      <div><dt>号牌分组</dt><dd>{administrativeProfile.plateRegions.length || "—"}</dd></div>
                     </dl>
                     <div className="knowledge-region-categories" aria-label={`${province.name}行政区域分类`}>
                       <span><b>{cityTotal}</b> 地级及以上城市</span>

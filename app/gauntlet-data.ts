@@ -140,7 +140,7 @@ const CITY_QUIZ_GROUPS: CityQuizGroup[] = [
   [
     "海南省", "海南",
     [
-      ["海口市", ["琼A", "琼C"], "琼C与原琼山及琼北片区有关；海口现行城市主前缀为琼A。"], ["三亚市", "琼B"], ["琼海市", "琼C"], ["五指山市", "琼D"],
+      ["海口市", "琼A"], ["三亚市", "琼B"], ["琼海市", "琼C", "琼C由琼海、文昌、万宁及定安、屯昌、澄迈、临高等琼北市县共用。"], ["文昌市", "琼C", "琼C由琼海、文昌、万宁及定安、屯昌、澄迈、临高等琼北市县共用。"], ["万宁市", "琼C", "琼C由琼海、文昌、万宁及定安、屯昌、澄迈、临高等琼北市县共用。"], ["三沙市", "琼CXS", "三沙使用琼C下的XS专门号段；2018年起，原琼CXS号段车辆业务下放至文昌市车辆管理所办理。"], ["东方市", "琼D", "琼D由五指山、东方及白沙、昌江、乐东、陵水、保亭、琼中等中南部市县共用。"], ["五指山市", "琼D", "琼D由五指山、东方及白沙、昌江、乐东、陵水、保亭、琼中等中南部市县共用。"], ["儋州市", "琼F", "2016年7月起，儋州启用琼F发牌机关代号。"],
     ],
   ],
 
@@ -236,12 +236,34 @@ function normalizePlateToken(value: string) {
   return value.trim().replace(/[·.-]/g, "").toUpperCase();
 }
 
+function plateLetterCode(value: string) {
+  return normalizePlateToken(value).replace(/^\p{Script=Han}/u, "");
+}
+
 export function plateCollectionsOverlap(
   left: readonly string[],
   right: readonly string[],
 ) {
   const normalizedLeft = new Set(left.map(normalizePlateToken));
   return right.some((plate) => normalizedLeft.has(normalizePlateToken(plate)));
+}
+
+/**
+ * Reverse plate questions must identify exactly one city. Shared plate prefixes,
+ * such as 琼C and 琼D, remain valid for forward city-to-plate questions but are
+ * excluded when several cities in the current pool have the same complete set.
+ */
+export function uniqueReversePlateItems(items: readonly CityQuizItem[]) {
+  const collectionKey = (item: CityQuizItem) =>
+    item.plates.map(normalizePlateToken).sort().join("|");
+  const counts = new Map<string, number>();
+
+  for (const item of items) {
+    const key = collectionKey(item);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return items.filter((item) => counts.get(collectionKey(item)) === 1);
 }
 
 function splitPlateAnswer(value: string) {
@@ -264,16 +286,14 @@ export function plateAnswerMatches(
   expectedPlates: string[],
   lettersOnly = false,
 ) {
-  const expected = expectedPlates.map((plate) =>
-    lettersOnly
-      ? normalizePlateToken(plate).slice(-1)
-      : normalizePlateToken(plate),
-  );
-  const actual = splitPlateAnswer(answer).map((plate) =>
-    lettersOnly && /^[\p{Script=Han}][A-Z]$/u.test(plate)
-      ? plate.slice(-1)
-      : plate,
-  );
+  const expected = expectedPlates.map((plate) => lettersOnly
+    ? plateLetterCode(plate)
+    : normalizePlateToken(plate));
+  const actual = expectedPlates.length === 1 && lettersOnly
+    ? [plateLetterCode(answer)]
+    : splitPlateAnswer(answer).map((plate) => lettersOnly
+      ? plateLetterCode(plate)
+      : plate);
   const expectedSet = new Set(expected);
   const actualSet = new Set(actual);
   return (

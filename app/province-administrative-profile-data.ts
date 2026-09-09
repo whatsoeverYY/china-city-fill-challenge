@@ -120,6 +120,12 @@ export const PROVINCE_ADMINISTRATIVE_PROFILE_DATA: ProvinceAdministrativeProfile
     ],
     [
       region(
+        "三沙市",
+        "地级市特殊号段",
+        "琼CXS",
+        "使用琼C下的XS专门号段；2018年起，原琼CXS号段车辆业务下放至文昌市车辆管理所办理。",
+      ),
+      region(
         "琼C号段市县",
         "省直辖号段",
         "琼C",
@@ -131,9 +137,14 @@ export const PROVINCE_ADMINISTRATIVE_PROFILE_DATA: ProvinceAdministrativeProfile
         "琼D",
         "五指山、东方、白沙、昌江、乐东、陵水、保亭、琼中",
       ),
-      region("洋浦经济开发区", "开发区保留号段", "琼E"),
+      region(
+        "洋浦经济开发区",
+        "开发区历史独立号段",
+        "琼E",
+        "洋浦不属于海南19个市县行政区划单位；琼E作为历史单列的开发区号段记忆。",
+      ),
     ],
-    "海南另有15个省直辖县级单位，车牌按琼C、琼D两大片区记忆。",
+    "海南共4个地级市和15个省直辖县级单位；琼C、琼D为多市县共享号段，三沙使用琼CXS特殊号段，儋州使用琼F。",
   ),
   profile(
     "510000",

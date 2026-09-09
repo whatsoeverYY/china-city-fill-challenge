@@ -15,6 +15,7 @@ import {
   CITY_QUIZ_DATA,
   plateAnswerMatches,
   plateCollectionsOverlap,
+  uniqueReversePlateItems,
   type CityQuizItem,
 } from "./gauntlet-data";
 import {
@@ -931,7 +932,7 @@ function NationalCityAtlas({
             <span aria-hidden="true">文</span>
             {labelsVisible ? "隐藏文字" : "显示文字"}
           </button>
-          <small>有独立号段的城市显示完整前缀；其余区县或地区显示省级车牌简称。</small>
+          <small>车牌题库已收录的城市显示完整前缀；其余区县或地区显示省级车牌简称。</small>
         </div>
 
         <div className="city-atlas-canvas">
@@ -2769,6 +2770,12 @@ function GauntletGame({
       return "车牌找茬至少需要 4 座候选城市";
     }
     if (
+      (challengeLevel === 4 || challengeLevel === 25) &&
+      uniqueReversePlateItems(selectedQuizItems).length === 0
+    ) {
+      return "当前范围没有可唯一定位城市的车牌题目";
+    }
+    if (
       ([2, 3, 4, 6, 8, 9, 13, 25] as GauntletLevel[]).includes(challengeLevel) &&
       selectedQuizItems.length === 0
     ) {
@@ -2805,14 +2812,17 @@ function GauntletGame({
     challengeLevel: GauntletLevel,
     questions: CityQuizItem[],
   ) => {
+    const eligibleQuestions = challengeLevel === 4 || challengeLevel === 25
+      ? uniqueReversePlateItems(questions)
+      : questions;
     const shuffledQuestions = challengeLevel === 13 || challengeLevel === 25
       ? createCityMapQuestionQueue(
-          questions,
+          eligibleQuestions,
           challengeLevel === 13
             ? level13HistoryRef.current
             : level25HistoryRef.current,
         )
-      : randomShuffle(questions);
+      : randomShuffle(eligibleQuestions);
     setCityOrder(shuffledQuestions);
     setTruthOrder(
       challengeLevel === 9 ? createTruthQuestions(shuffledQuestions) : [],
@@ -4612,7 +4622,9 @@ function GauntletGame({
                   <strong>{currentCity?.city ?? "载入中…"}</strong>
                   <small className="plate-blank">
                     {currentCity
-                      ? `${currentCity.plate.slice(0, 1)} ${currentCity.plates.map(() => "？").join(" / ")}`
+                      ? `${currentCity.plate.slice(0, 1)} ${currentCity.plates.map((plate) =>
+                          "？".repeat(Math.max(1, plate.replace(/^\p{Script=Han}/u, "").length)),
+                        ).join(" / ")}`
                       : "？"}
                   </small>
                   {currentCity && currentCity.plates.length > 1 ? (

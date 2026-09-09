@@ -49,6 +49,17 @@ test("every configured province has valid map data", async () => {
     xinjiang.features.slice(-3).map((feature) => feature.properties.name),
     ["新星市", "白杨市", "草湖市"],
   );
+
+  const hainan = maps.find(([code]) => code === "460000")[1];
+  assert.deepEqual(
+    hainan.features.map((feature) => feature.properties.name).sort(),
+    [
+      "万宁市", "三亚市", "三沙市", "东方市", "临高县", "乐东黎族自治县",
+      "五指山市", "保亭黎族苗族自治县", "儋州市", "定安县", "屯昌县",
+      "文昌市", "昌江黎族自治县", "海口市", "澄迈县", "琼中黎族苗族自治县",
+      "琼海市", "白沙黎族自治县", "陵水黎族自治县",
+    ].sort(),
+  );
 });
 
 test("quiz datasets keep their expected coverage and references", () => {
@@ -80,4 +91,21 @@ test("Jilin special plate regions include Ji K without treating it as a city", (
     },
   );
   assert.equal(CITY_QUIZ_DATA.some((item) => item.plate === "吉K"), false);
+});
+
+test("Hainan profile reconciles 19 city-county units and special plate regions", () => {
+  const hainanProfile = PROVINCE_ADMINISTRATIVE_PROFILE_DATA.find(
+    (item) => item.code === "460000",
+  );
+
+  assert.ok(hainanProfile, "海南省缺少行政资料");
+  assert.equal(hainanProfile.totalUnitCount, 19);
+  assert.equal(
+    hainanProfile.categories.reduce((sum, item) => sum + item.count, 4),
+    19,
+  );
+  assert.deepEqual(
+    hainanProfile.plateRegions.map((item) => item.plate),
+    ["琼CXS", "琼C", "琼D", "琼E"],
+  );
 });
