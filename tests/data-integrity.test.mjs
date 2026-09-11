@@ -12,6 +12,7 @@ import { PROVINCE_CITY_COUNT_DATA } from "../app/province-city-count-data.ts";
 import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "../app/province-administrative-profile-data.ts";
 import { UNIVERSITY_QUIZ_DATA } from "../app/university-data.ts";
 import { CONFUSABLE_CITY_PAIRS } from "../app/confusable-city-data.ts";
+import { fitRotatedPointsScale } from "../app/silhouette-utils.ts";
 
 const mapsRoot = new URL("../public/data/maps/", import.meta.url);
 
@@ -27,6 +28,35 @@ test("province configuration is complete, unique and symmetric", () => {
     for (const neighbor of PROVINCE_NEIGHBORS[province.code]) {
       assert.ok(PROVINCE_NEIGHBORS[neighbor]?.includes(province.code), `${province.code} 与 ${neighbor} 的邻接关系不对称`);
     }
+  }
+});
+
+test("rotated silhouettes are scaled to remain inside their safe drawing area", () => {
+  const rectangle = [
+    [46, 200], [874, 200], [874, 400], [46, 400],
+  ];
+  assert.equal(fitRotatedPointsScale(rectangle, 0, 460, 300, 828, 528), 1);
+
+  const quarterTurnScale = fitRotatedPointsScale(
+    rectangle,
+    90,
+    460,
+    300,
+    828,
+    528,
+  );
+  assert.ok(Math.abs(quarterTurnScale - 528 / 828) < 1e-12);
+
+  const rotation = 47;
+  const scale = fitRotatedPointsScale(rectangle, rotation, 460, 300, 828, 528);
+  const radians = (rotation * Math.PI) / 180;
+  for (const [x, y] of rectangle) {
+    const offsetX = x - 460;
+    const offsetY = y - 300;
+    const rotatedX = (offsetX * Math.cos(radians) - offsetY * Math.sin(radians)) * scale;
+    const rotatedY = (offsetX * Math.sin(radians) + offsetY * Math.cos(radians)) * scale;
+    assert.ok(Math.abs(rotatedX) <= 414 + Number.EPSILON * 828);
+    assert.ok(Math.abs(rotatedY) <= 264 + Number.EPSILON * 528);
   }
 });
 

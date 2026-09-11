@@ -45,6 +45,7 @@ import {
   type MapFeature,
   type Position,
 } from "./map-data";
+import { fitRotatedPointsScale } from "./silhouette-utils";
 import {
   ALL_PROVINCE_CODES,
   PROVINCE_BY_CODE,
@@ -75,6 +76,8 @@ const KnowledgeBase = lazy(() => import("./KnowledgeBase"));
 
 const MAP_WIDTH = 920;
 const MAP_HEIGHT = 600;
+const MAP_HORIZONTAL_PADDING = 46;
+const MAP_VERTICAL_PADDING = 36;
 const [
   LEGACY_GAUNTLET_PROGRESS_V4_KEY,
   LEGACY_GAUNTLET_PROGRESS_V3_KEY,
@@ -157,13 +160,11 @@ function makeProjection(features: MapFeature[]) {
     });
   });
 
-  const horizontalPadding = 46;
-  const verticalPadding = 36;
   const longitudeSpan = Math.max(maxLongitude - minLongitude, 0.01);
   const latitudeSpan = Math.max(maxLatitude - minLatitude, 0.01);
   const scale = Math.min(
-    (MAP_WIDTH - horizontalPadding * 2) / longitudeSpan,
-    (MAP_HEIGHT - verticalPadding * 2) / latitudeSpan,
+    (MAP_WIDTH - MAP_HORIZONTAL_PADDING * 2) / longitudeSpan,
+    (MAP_HEIGHT - MAP_VERTICAL_PADDING * 2) / latitudeSpan,
   );
   const renderedWidth = longitudeSpan * scale;
   const renderedHeight = latitudeSpan * scale;
@@ -1910,6 +1911,23 @@ function ProvinceShape({
   ariaLabel?: string;
 }) {
   const project = useMemo(() => makeProjection([feature]), [feature]);
+  const rotationScale = useMemo(() => {
+    const projectedPositions: Position[] = [];
+
+    visitPositions(feature.geometry.coordinates, (position) => {
+      projectedPositions.push(project(position));
+    });
+
+    return fitRotatedPointsScale(
+      projectedPositions,
+      rotation,
+      MAP_WIDTH / 2,
+      MAP_HEIGHT / 2,
+      MAP_WIDTH - MAP_HORIZONTAL_PADDING * 2,
+      MAP_HEIGHT - MAP_VERTICAL_PADDING * 2,
+    );
+  }, [feature, project, rotation]);
+
   return (
     <svg
       className={className}
@@ -1918,7 +1936,12 @@ function ProvinceShape({
       aria-label={ariaLabel}
       aria-hidden={ariaLabel ? undefined : true}
     >
-      <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: "center" }}>
+      <g
+        style={{
+          transform: `rotate(${rotation}deg) scale(${rotationScale})`,
+          transformOrigin: "center",
+        }}
+      >
         <path
           d={geometryToPath(feature.geometry, project)}
           fillRule="evenodd"
