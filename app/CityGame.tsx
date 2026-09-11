@@ -2811,8 +2811,26 @@ function GauntletGame({
   const hasLostBoss = level === 26 && bossLives === 0 && !passedLevel;
   const reviewProvinceCodes = new Set(answerReview?.highlightProvinceCodes ?? []);
 
+  const usesCompactViewport = () =>
+    window.matchMedia("(max-width: 760px), (pointer: coarse)").matches;
+
   const focusProvinceInput = () => {
-    window.requestAnimationFrame(() => provinceInputRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      if (usesCompactViewport()) return;
+      provinceInputRef.current?.focus({ preventScroll: true });
+    });
+  };
+
+  const showRoundFromTop = () => {
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement) activeElement.blur();
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      if (!usesCompactViewport()) {
+        provinceInputRef.current?.focus({ preventScroll: true });
+      }
+    });
   };
 
   const resetRoundProgress = (message: string) => {
@@ -3015,7 +3033,7 @@ function GauntletGame({
       setProvinceChallengeOrder([]);
     }
     setProvincePickerOpen(false);
-    focusProvinceInput();
+    showRoundFromTop();
   };
 
   const openProvincePicker = () => {
@@ -4088,7 +4106,7 @@ function GauntletGame({
         : "已完成本关目标";
 
   return (
-    <main className="game-shell gauntlet-shell">
+    <main className={`game-shell gauntlet-shell ${level ? "is-round-active" : ""}`}>
       <header className="site-header gauntlet-header">
         <button className="brand" type="button" onClick={onExit}>
           <span className="brand-seal gauntlet-brand-seal" aria-hidden="true">关</span>
@@ -4101,6 +4119,17 @@ function GauntletGame({
           返回地图玩法
         </button>
       </header>
+
+      {level ? (
+        <nav className="gauntlet-mobile-nav" aria-label="关卡导航">
+          <button type="button" onClick={returnToLevels}>← 选关</button>
+          <strong>
+            第 {level} 关
+            <small> · {target === 0 ? "暂无题目" : `${progress}/${target}`}</small>
+          </strong>
+          <button type="button" onClick={onExit}>地图首页</button>
+        </nav>
+      ) : null}
 
       {!level ? (
         <>
@@ -4227,7 +4256,7 @@ function GauntletGame({
               <p className="eyebrow">第 {level} 关 · {activeConfig?.title}</p>
               <h1>{roundHeading}</h1>
             </div>
-            <div className="gauntlet-round-actions">
+            <div className={`gauntlet-round-actions ${!timedMode && level !== 26 ? "is-progress-only" : ""}`}>
               {level === 26 ? (
                 <div className="boss-lives" aria-label={`剩余 ${bossLives} 条生命`}>
                   <span>生命</span>

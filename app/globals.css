@@ -2881,6 +2881,10 @@ footer {
   min-height: 100vh;
 }
 
+.gauntlet-mobile-nav {
+  display: none;
+}
+
 .gauntlet-brand-seal {
   background: #a77b21;
 }
@@ -6947,16 +6951,11 @@ footer {
 
   .gauntlet-round-heading {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 8px;
   }
 
   .gauntlet-round-actions {
     width: 100%;
-  }
-
-  .gauntlet-progress-card {
-    width: auto;
-    flex: 1;
   }
 
   .gauntlet-timer {
@@ -6976,7 +6975,158 @@ footer {
   }
 
   .gauntlet-answer-panel {
-    padding: 34px 24px 28px;
+    padding: 22px 20px;
+  }
+
+  .gauntlet-answer-panel > .eyebrow {
+    display: none;
+  }
+
+  .gauntlet-answer-panel h2 {
+    margin: 0 0 18px;
+    font-size: 22px;
+    line-height: 1.35;
+  }
+
+  .gauntlet-answer-panel label {
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+
+  .gauntlet-answer-panel input {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .gauntlet-answer-panel form button,
+  .gauntlet-primary-action {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  .gauntlet-feedback {
+    min-height: 38px;
+    margin-top: 14px;
+    padding: 9px 11px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .map-answer-summary {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .streak-note {
+    display: none;
+  }
+
+  .gauntlet-shell.is-round-active {
+    padding-top: 0;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-header {
+    display: none;
+  }
+
+  .gauntlet-mobile-nav {
+    position: sticky;
+    z-index: 40;
+    top: 0;
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr) 82px;
+    min-height: calc(48px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+    align-items: center;
+    border-bottom: 1px solid rgba(55, 62, 57, 0.16);
+    border-radius: 0 0 13px 13px;
+    background: rgba(251, 248, 240, 0.96);
+    box-shadow: 0 9px 24px rgba(57, 46, 31, 0.1);
+    backdrop-filter: blur(14px);
+  }
+
+  .gauntlet-mobile-nav button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    color: var(--red-dark);
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .gauntlet-mobile-nav button:first-child {
+    justify-self: start;
+  }
+
+  .gauntlet-mobile-nav button:last-child {
+    justify-self: end;
+  }
+
+  .gauntlet-mobile-nav > strong {
+    overflow: hidden;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gauntlet-mobile-nav > strong small {
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-round-heading {
+    padding: 13px 2px 11px;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-round-heading > div:first-child > button {
+    display: none;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-round-heading .eyebrow {
+    margin: 0 0 3px;
+    font-size: 14px;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-round-heading h1 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-round-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-round-actions.is-progress-only,
+  .gauntlet-shell.is-round-active .gauntlet-progress-card {
+    display: none;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-timer,
+  .gauntlet-shell.is-round-active .boss-lives {
+    min-width: 0;
+    min-height: 48px;
+    padding: 6px 10px;
+    flex: 1 1 110px;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-timer > span,
+  .gauntlet-shell.is-round-active .boss-lives > span {
+    font-size: 12px;
+  }
+
+  .gauntlet-shell.is-round-active .gauntlet-timer strong {
+    font-size: 20px;
   }
 
   .brand strong {
@@ -7271,13 +7421,42 @@ footer {
     padding-top: 28px;
   }
 
-  .gauntlet-round-heading h1 {
-    font-size: 28px;
+  .gauntlet-question-stage {
+    min-height: 200px;
+    padding: 38px 16px 16px;
   }
 
-  .gauntlet-question-stage {
-    min-height: 360px;
-    padding: 42px 18px 18px;
+  .question-count {
+    top: 12px;
+    left: 14px;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .choice-question > span,
+  .city-question > span,
+  .truth-question > span,
+  .mistake-empty-state > span {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 14px;
+    font-size: 30px;
+  }
+
+  .choice-question p,
+  .city-question p,
+  .truth-question p,
+  .boss-shape-question > p {
+    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .choice-question small,
+  .city-question small {
+    margin-top: 10px;
+    font-size: 13px;
+    letter-spacing: 0;
   }
 
   .gauntlet-silhouette {
@@ -7327,7 +7506,7 @@ footer {
   }
 
   .province-puzzle-piece span {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .map-question-banner {
@@ -7338,27 +7517,34 @@ footer {
     font-size: 18px;
   }
 
+  .map-question-banner small {
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
   .gauntlet-option-grid {
     grid-template-columns: 1fr;
   }
 
   .gauntlet-option-grid.neighbor-text-options {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    max-height: min(320px, 42vh);
+    max-height: min(244px, 32vh);
     gap: 8px;
   }
 
   .gauntlet-option-grid button {
     min-height: 58px;
+    font-size: 15px;
   }
 
   .gauntlet-option-grid.neighbor-text-options button {
     min-height: 48px;
     padding: 6px 4px;
+    font-size: 15px;
   }
 
   .city-question strong {
-    font-size: clamp(30px, 10vw, 40px);
+    font-size: 36px;
   }
 
   .choice-question strong,
@@ -7368,13 +7554,14 @@ footer {
   .capital-question strong,
   .truth-question strong,
   .mistake-empty-state strong {
-    font-size: clamp(26px, 8.5vw, 36px);
+    font-size: 32px;
   }
 
   .city-question.is-plate-question strong {
     min-width: 190px;
     padding: 12px 18px 14px;
-    font-size: clamp(32px, 11vw, 42px);
+    font-size: 38px;
+    letter-spacing: 0;
   }
 
   .gauntlet-passed {
@@ -7386,11 +7573,6 @@ footer {
   .gauntlet-passed > div {
     width: 100%;
     flex-direction: column;
-  }
-
-  .gauntlet-round-actions {
-    display: grid;
-    grid-template-columns: 1fr;
   }
 
   .province-picker-button {
