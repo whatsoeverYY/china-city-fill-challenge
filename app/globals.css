@@ -4271,15 +4271,18 @@ footer {
 
 .neighbor-text-options {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  max-height: 390px;
+  max-height: min(390px, 48vh);
   padding: 3px;
+  align-content: start;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
 }
 
 .neighbor-text-options button {
   min-height: 49px;
   padding: 8px 6px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .neighbor-text-options button.is-selected {
@@ -4287,6 +4290,11 @@ footer {
   border-color: var(--green-dark);
   background: var(--green);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.neighbor-text-options + .map-answer-summary {
+  min-height: 0;
+  margin: 14px 0 4px;
 }
 
 .plate-fault-options {
@@ -7334,8 +7342,19 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  .gauntlet-option-grid.neighbor-text-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: min(320px, 42vh);
+    gap: 8px;
+  }
+
   .gauntlet-option-grid button {
     min-height: 58px;
+  }
+
+  .gauntlet-option-grid.neighbor-text-options button {
+    min-height: 48px;
+    padding: 6px 4px;
   }
 
   .city-question strong {
