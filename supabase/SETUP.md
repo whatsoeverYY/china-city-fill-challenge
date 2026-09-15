@@ -20,7 +20,7 @@
 
 `supabase/migrations/202608270004_clear_progress_schema_compatibility.sql`
 
-最后执行 23 关进度统计兼容迁移：
+最后执行稳定关卡 ID 与进度汇总迁移：
 
 `supabase/migrations/202609150001_update_gauntlet_level_summary.sql`
 
@@ -32,6 +32,7 @@
 - RLS：玩家只能读写自己的存档，管理员可以查看全部玩家和存档；
 - `clear_player_progress`：玩家可清除自己的全部游戏记录，管理员可清除任意玩家记录，同时删除历史备份并阻止旧设备恢复已删存档。
 - `admin_progress_summaries`：只暴露列表所需的轻量汇总，后台按页读取玩家，打开详情时才读取完整 JSON；
+- 稳定关卡 ID 汇总：数据库保存历史通关 ID 列表，关卡改名、换序或下线时无需改写用户存档；
 - 存档版本触发器：禁止旧客户端把更高版本云存档降级覆盖。
 
 ## 2. 配置邮箱登录

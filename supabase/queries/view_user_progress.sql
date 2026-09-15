@@ -1,5 +1,5 @@
 -- Supabase SQL Editor：查看玩家游戏进度（只读查询）。
--- 先执行 migrations/202608270003_admin_pagination_and_stats.sql。
+-- 先按 SETUP.md 顺序执行全部迁移。
 
 -- 1. 分页查看所有玩家的轻量进度摘要；不会读取完整 payload。
 select
@@ -10,6 +10,7 @@ select
   summary.placed_names,
   summary.completed_neighbor_challenges,
   summary.completed_levels,
+  summary.completed_level_ids,
   summary.mistakes,
   summary.progress_updated_at
 from public.player_profiles as profile
@@ -38,6 +39,7 @@ select
   progress.revision,
   summary.completed_provinces,
   summary.completed_levels,
+  summary.completed_level_ids,
   summary.mistakes,
   progress.updated_at
 from public.user_progress as progress

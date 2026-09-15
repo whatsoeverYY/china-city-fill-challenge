@@ -3,28 +3,22 @@ import {
 } from "./progress-config.ts";
 import { normalizeMistakeList } from "./mistake-data.ts";
 import { CITY_MAP_RECENT_QUESTION_LIMIT } from "./city-map-question-queue.ts";
+import { isStoredGauntletLevelId } from "./gauntlet-levels.ts";
 
 export const STORAGE_KEY = "china-city-fill-progress-v1";
 export const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
 export const NEIGHBOR_MODE_KEY = "china-city-fill-neighbor-mode-v1";
 export const NEIGHBOR_PROGRESS_KEY = "china-city-fill-neighbor-progress-v1";
-export const GAUNTLET_PROGRESS_KEY = "china-city-fill-gauntlet-progress-v6";
-export const LEGACY_GAUNTLET_PROGRESS_KEYS = [
-  "china-city-fill-gauntlet-progress-v5",
-  "china-city-fill-gauntlet-progress-v4",
-  "china-city-fill-gauntlet-progress-v3",
-  "china-city-fill-gauntlet-progress-v2",
-  "china-city-fill-gauntlet-progress-v1",
-] as const;
+// This key versions the serialized shape, not the number or order of levels.
+export const GAUNTLET_PROGRESS_KEY =
+  "china-city-fill-gauntlet-completed-level-ids-v1";
 export const GAUNTLET_MISTAKES_KEY = "china-city-fill-gauntlet-mistakes-v1";
 export const GAUNTLET_PROVINCE_SCOPE_KEY =
   "china-city-fill-gauntlet-province-scope-v1";
-// Keep the stored key strings stable so existing question history remains useful
-// after the visible and internal level numbers are compacted.
-export const GAUNTLET_LEVEL_11_HISTORY_KEY =
-  "china-city-fill-level-13-history-v1";
-export const GAUNTLET_LEVEL_21_HISTORY_KEY =
-  "china-city-fill-level-25-history-v1";
+export const GAUNTLET_REGION_MAP_HISTORY_KEY =
+  "china-city-fill-region-map-history-v1";
+export const GAUNTLET_PLATE_CITY_MAP_HISTORY_KEY =
+  "china-city-fill-plate-city-map-history-v1";
 
 export const PROGRESS_STORAGE_KEYS = [
   STORAGE_KEY,
@@ -34,8 +28,8 @@ export const PROGRESS_STORAGE_KEYS = [
   GAUNTLET_PROGRESS_KEY,
   GAUNTLET_MISTAKES_KEY,
   GAUNTLET_PROVINCE_SCOPE_KEY,
-  GAUNTLET_LEVEL_11_HISTORY_KEY,
-  GAUNTLET_LEVEL_21_HISTORY_KEY,
+  GAUNTLET_REGION_MAP_HISTORY_KEY,
+  GAUNTLET_PLATE_CITY_MAP_HISTORY_KEY,
 ] as const;
 
 export type ProgressStorageKey = (typeof PROGRESS_STORAGE_KEYS)[number];
@@ -66,47 +60,9 @@ const LEGACY_CLAIM_KEY = "china-city-fill-legacy-claimed-by-v1";
 export const PROGRESS_STORAGE_EVENT = "china-city-fill-progress-changed";
 const MAP_PROGRESS_KEYS = new Set<string>([STORAGE_KEY, NEIGHBOR_PROGRESS_KEY]);
 const HISTORY_KEYS = new Set<string>([
-  GAUNTLET_LEVEL_11_HISTORY_KEY,
-  GAUNTLET_LEVEL_21_HISTORY_KEY,
+  GAUNTLET_REGION_MAP_HISTORY_KEY,
+  GAUNTLET_PLATE_CITY_MAP_HISTORY_KEY,
 ]);
-
-const GAUNTLET_V5_TO_V6_LEVEL = new Map<number, number>([
-  [1, 1],
-  [2, 2],
-  [4, 3],
-  [5, 4],
-  [6, 5],
-  [8, 6],
-  [9, 7],
-  [10, 8],
-  [11, 9],
-  [12, 10],
-  [13, 11],
-  [14, 12],
-  [15, 13],
-  [16, 14],
-  [17, 15],
-  [18, 16],
-  [20, 17],
-  [22, 18],
-  [23, 19],
-  [24, 20],
-  [25, 21],
-  [21, 22],
-  [26, 23],
-]);
-
-export function migrateLegacyGauntletLevels(
-  levels: number[],
-  legacyIndex: number,
-) {
-  const legacyBossLevel = [null, 25, 24, 21, 20][legacyIndex] ?? null;
-  const migrated = levels
-    .map((level) => level === legacyBossLevel ? 26 : level)
-    .map((level) => GAUNTLET_V5_TO_V6_LEVEL.get(level))
-    .filter((level): level is number => typeof level === "number");
-  return Array.from(new Set(migrated));
-}
 
 function emptyMeta(): SyncMeta {
   return { keys: {}, scopes: {}, resets: {} };
@@ -160,18 +116,6 @@ function parseStringList(raw: string | undefined) {
     const parsed = JSON.parse(raw) as unknown;
     return Array.isArray(parsed)
       ? parsed.filter((item): item is string => typeof item === "string")
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function parseNumberList(raw: string | undefined) {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed)
-      ? parsed.filter((item): item is number => Number.isInteger(item))
       : [];
   } catch {
     return [];
@@ -250,21 +194,6 @@ function updateMetadataForWrite(
   }
 }
 
-function migrateGauntletProgress(userId: string, meta: SyncMeta) {
-  const currentKey = userKey(userId, GAUNTLET_PROGRESS_KEY);
-  if (localStorage.getItem(currentKey)) return;
-  if (timestamp(meta.resetAll)) return;
-
-  for (const [index, legacyKey] of LEGACY_GAUNTLET_PROGRESS_KEYS.entries()) {
-    const raw = localStorage.getItem(userKey(userId, legacyKey));
-    if (!raw) continue;
-    const migrated = migrateLegacyGauntletLevels(parseNumberList(raw), index);
-    localStorage.setItem(currentKey, JSON.stringify(migrated));
-    meta.keys[GAUNTLET_PROGRESS_KEY] = new Date().toISOString();
-    return;
-  }
-}
-
 export function createTrialProgressStorage(memory: Map<string, string>): ProgressStorage {
   return {
     getItem: (key) => memory.get(key) ?? null,
@@ -316,8 +245,7 @@ export function claimLegacyProgress(userId: string) {
   const now = new Date().toISOString();
   const meta = emptyMeta();
   let copied = false;
-  const legacyKeys = [...PROGRESS_STORAGE_KEYS, ...LEGACY_GAUNTLET_PROGRESS_KEYS];
-  for (const key of legacyKeys) {
+  for (const key of PROGRESS_STORAGE_KEYS) {
     const value = localStorage.getItem(key);
     if (value === null) continue;
     localStorage.setItem(userKey(userId, key), value);
@@ -331,7 +259,6 @@ export function claimLegacyProgress(userId: string) {
   }
   if (!copied) return false;
 
-  migrateGauntletProgress(userId, meta);
   localStorage.setItem(userKey(userId, SYNC_META_KEY), JSON.stringify(meta));
   localStorage.setItem(LEGACY_CLAIM_KEY, userId);
   return true;
@@ -340,7 +267,6 @@ export function claimLegacyProgress(userId: string) {
 export function readLocalProgressSnapshot(userId: string): ProgressSnapshot {
   const metaKey = userKey(userId, SYNC_META_KEY);
   const meta = parseMeta(localStorage.getItem(metaKey));
-  migrateGauntletProgress(userId, meta);
   const values: ProgressSnapshot["values"] = {};
   for (const key of PROGRESS_STORAGE_KEYS) {
     const value = localStorage.getItem(userKey(userId, key));
@@ -384,11 +310,6 @@ export function writeLocalProgressSnapshot(
   const meta = timestamp(resetAt)
     ? { ...snapshot.meta, resetAll: resetAt }
     : snapshot.meta;
-  if (timestamp(resetAt)) {
-    for (const key of LEGACY_GAUNTLET_PROGRESS_KEYS) {
-      localStorage.removeItem(userKey(userId, key));
-    }
-  }
   localStorage.setItem(userKey(userId, SYNC_META_KEY), JSON.stringify(meta));
 }
 
@@ -416,22 +337,6 @@ export function normalizeProgressSnapshot(value: unknown): ProgressSnapshot {
     values[key] = key === GAUNTLET_MISTAKES_KEY
       ? normalizeMistakeValue(rawValue)
       : rawValue;
-  }
-  if (typeof values[GAUNTLET_PROGRESS_KEY] !== "string") {
-    const legacyIndex = LEGACY_GAUNTLET_PROGRESS_KEYS.findIndex(
-      (key) => typeof values[key] === "string",
-    );
-    if (legacyIndex >= 0) {
-      const legacyKey = LEGACY_GAUNTLET_PROGRESS_KEYS[legacyIndex];
-      values[GAUNTLET_PROGRESS_KEY] = JSON.stringify(
-        migrateLegacyGauntletLevels(
-          parseNumberList(values[legacyKey]),
-          legacyIndex,
-        ),
-      );
-      meta.keys[GAUNTLET_PROGRESS_KEY] =
-        meta.keys[legacyKey] ?? candidate.savedAt ?? new Date(0).toISOString();
-    }
   }
   return {
     schemaVersion:
@@ -585,10 +490,14 @@ export function mergeProgressSnapshots(
   values[GAUNTLET_PROGRESS_KEY] = JSON.stringify(
     Array.from(
       new Set([
-        ...parseNumberList(local.values[GAUNTLET_PROGRESS_KEY]),
-        ...parseNumberList(remote.values[GAUNTLET_PROGRESS_KEY]),
+        ...parseStringList(local.values[GAUNTLET_PROGRESS_KEY]).filter(
+          isStoredGauntletLevelId,
+        ),
+        ...parseStringList(remote.values[GAUNTLET_PROGRESS_KEY]).filter(
+          isStoredGauntletLevelId,
+        ),
       ]),
-    ).sort((a, b) => a - b),
+    ).sort(),
   );
 
   for (const key of HISTORY_KEYS) {

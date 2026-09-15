@@ -35,24 +35,19 @@ test("Supabase setup includes the schema-compatibility migration", async () => {
   );
 });
 
-test("gauntlet summaries exclude removed levels and keep 23 active levels", async () => {
+test("gauntlet summaries persist stable IDs without knowing catalog order", async () => {
   const sql = await readFile(gauntletSummaryMigrationUrl, "utf8");
-  const compactSql = sql.replace(/\s+/g, " ");
 
-  assert.match(sql, /count\(distinct entry\.value\)/i);
-  assert.match(sql, /china-city-fill-gauntlet-progress-v6/);
-  assert.match(sql, /china-city-fill-gauntlet-progress-v5/);
-  assert.match(
-    compactSql,
-    /if uses_current_levels then[\s\S]*'1', '2', '3'[\s\S]*'21', '22', '23'/i,
-  );
-  assert.match(
-    compactSql,
-    /else[\s\S]*'1', '2', '4'[\s\S]*'24', '25', '26'/i,
-  );
+  assert.match(sql, /china-city-fill-gauntlet-completed-level-ids-v1/);
+  assert.match(sql, /completed_level_ids jsonb not null/i);
+  assert.match(sql, /'completedLevelIds', completed_level_ids/i);
+  assert.match(sql, /select distinct entry\.value as level_id/i);
+  assert.match(sql, /jsonb_array_length\(completed_level_ids\)/i);
+  assert.doesNotMatch(sql, /gauntlet-progress-v[0-9]+/i);
+  assert.doesNotMatch(sql, /'province-shape'|'final-boss'/i);
 });
 
-test("Supabase setup includes the 23-level summary migration", async () => {
+test("Supabase setup includes the stable-ID summary migration", async () => {
   const setup = await readFile(setupUrl, "utf8");
   assert.match(
     setup,

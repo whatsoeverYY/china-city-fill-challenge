@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { appPath } from "./app-path";
 import { operationErrorMessage } from "./error-utils";
+import {
+  GAUNTLET_LEVEL_COUNT,
+  activeGauntletCompletionCount,
+} from "./gauntlet-levels";
 import { usePlayerData, type PlayerProfile } from "./PlayerDataProvider";
 import { getSupabaseClient } from "./supabase-client";
 
@@ -16,6 +20,7 @@ type AdminProgressSummary = {
   partial_provinces: number;
   placed_names: number;
   completed_neighbor_challenges: number;
+  completed_level_ids: unknown;
   completed_levels: number;
   mistakes: number;
 };
@@ -75,6 +80,15 @@ function normalizeStats(value: unknown): DashboardStats {
     activeSevenDays: numberValue("activeSevenDays"),
     passedLevels: numberValue("passedLevels"),
   };
+}
+
+function currentCompletedLevelCount(summary: AdminProgressSummary | null) {
+  const levelIds = Array.isArray(summary?.completed_level_ids)
+    ? summary.completed_level_ids.filter(
+        (levelId): levelId is string => typeof levelId === "string",
+      )
+    : [];
+  return activeGauntletCompletionCount(levelIds);
 }
 
 export default function AdminDashboard() {
@@ -137,7 +151,7 @@ export default function AdminDashboard() {
       const progressResult = playerIds.length
         ? await supabase
             .from("admin_progress_summaries")
-            .select("user_id,schema_version,revision,updated_at,reset_at,completed_provinces,partial_provinces,placed_names,completed_neighbor_challenges,completed_levels,mistakes")
+            .select("user_id,schema_version,revision,updated_at,reset_at,completed_provinces,partial_provinces,placed_names,completed_neighbor_challenges,completed_level_ids,completed_levels,mistakes")
             .in("user_id", playerIds)
         : { data: [], error: null };
       if (progressResult.error) throw progressResult.error;
@@ -283,7 +297,7 @@ export default function AdminDashboard() {
         <article><span>全部玩家</span><strong>{dashboardStats.total}</strong><small>含管理员账号</small></article>
         <article><span>已有云存档</span><strong>{dashboardStats.withSave}</strong><small>至少同步过一次</small></article>
         <article><span>近 7 日活跃</span><strong>{dashboardStats.activeSevenDays}</strong><small>按最近访问时间</small></article>
-        <article><span>累计通关</span><strong>{dashboardStats.passedLevels}</strong><small>所有玩家关卡合计</small></article>
+        <article><span>累计通关</span><strong>{dashboardStats.passedLevels}</strong><small>所有玩家历史通关记录</small></article>
       </section>
 
       <section className="admin-player-panel">
@@ -337,7 +351,7 @@ export default function AdminDashboard() {
                     <td data-label="玩家"><strong>{player.email}</strong><small>{player.id}</small></td>
                     <td data-label="角色"><span className={`admin-role admin-role--${player.role}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
                     <td data-label="全国地图"><strong>{summary?.completed_provinces ?? 0}<i>/34</i></strong><small>{summary?.placed_names ?? 0} 个名称已归位</small></td>
-                    <td data-label="闯关进度"><strong>{summary?.completed_levels ?? 0}<i>/23</i></strong><small>{summary?.mistakes ?? 0} 道待复习错题</small></td>
+                    <td data-label="闯关进度"><strong>{currentCompletedLevelCount(summary)}<i>/{GAUNTLET_LEVEL_COUNT}</i></strong><small>{summary?.mistakes ?? 0} 道待复习错题</small></td>
                     <td data-label="最近活跃"><strong>{formatDate(player.last_seen_at)}</strong><small>注册于 {formatDate(player.created_at)}</small></td>
                     <td data-label="云存档">
                       <button type="button" onClick={() => void openPlayerDetails(player)}>
@@ -376,7 +390,7 @@ export default function AdminDashboard() {
               <div><span>完成省份</span><strong>{selectedPlayer.progress?.completed_provinces ?? 0}/34</strong></div>
               <div><span>进行中省份</span><strong>{selectedPlayer.progress?.partial_provinces ?? 0}</strong></div>
               <div><span>邻省连城</span><strong>{selectedPlayer.progress?.completed_neighbor_challenges ?? 0}/34</strong></div>
-              <div><span>已过关卡</span><strong>{selectedPlayer.progress?.completed_levels ?? 0}/23</strong></div>
+              <div><span>已过关卡</span><strong>{currentCompletedLevelCount(selectedPlayer.progress)}/{GAUNTLET_LEVEL_COUNT}</strong></div>
             </div>
             <dl className="admin-account-details">
               <div><dt>用户 ID</dt><dd>{selectedPlayer.id}</dd></div>

@@ -18,23 +18,39 @@ import { UNIVERSITY_QUIZ_DATA } from "../app/university-data.ts";
 import { CONFUSABLE_CITY_PAIRS } from "../app/confusable-city-data.ts";
 import { fitRotatedPointsScale } from "../app/silhouette-utils.ts";
 import { normalizeMapRegionName } from "../app/map-data.ts";
+import {
+  GAUNTLET_LEVEL_COUNT,
+  GAUNTLET_LEVEL_ID,
+  GAUNTLET_LEVELS,
+  activeGauntletCompletionCount,
+  gauntletLevelNumber,
+  isStoredGauntletLevelId,
+} from "../app/gauntlet-levels.ts";
 
 const mapsRoot = new URL("../public/data/maps/", import.meta.url);
-const cityGameUrl = new URL("../app/CityGame.tsx", import.meta.url);
 
-test("gauntlet levels use one continuous 1-23 sequence", async () => {
-  const source = await readFile(cityGameUrl, "utf8");
-  const config = source.match(
-    /const GAUNTLET_LEVELS:[\s\S]*?const MAP_REQUIRED_LEVELS/,
-  )?.[0] ?? "";
-  const levels = Array.from(
-    config.matchAll(/\blevel:\s*(\d+),/g),
-    (match) => Number(match[1]),
+test("gauntlet levels use stable IDs while display numbers follow catalog order", () => {
+  const ids = GAUNTLET_LEVELS.map((level) => level.id);
+
+  assert.equal(GAUNTLET_LEVEL_COUNT, 23);
+  assert.equal(new Set(ids).size, GAUNTLET_LEVEL_COUNT);
+  assert.ok(ids.every((id) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id)));
+  assert.ok(ids.every(isStoredGauntletLevelId));
+  assert.equal(isStoredGauntletLevelId("1"), false);
+  assert.deepEqual(
+    GAUNTLET_LEVELS.map((level) => gauntletLevelNumber(level.id)),
+    Array.from({ length: GAUNTLET_LEVEL_COUNT }, (_, index) => index + 1),
   );
-
-  assert.deepEqual(levels, Array.from({ length: 23 }, (_, index) => index + 1));
-  assert.match(config, /level:\s*22,[\s\S]*?title:\s*"错题复仇赛"/);
-  assert.match(config, /level:\s*23,[\s\S]*?title:\s*"终极混战"/);
+  assert.equal(GAUNTLET_LEVELS.at(-2)?.id, GAUNTLET_LEVEL_ID.MISTAKE_REVENGE);
+  assert.equal(GAUNTLET_LEVELS.at(-1)?.id, GAUNTLET_LEVEL_ID.FINAL_BOSS);
+  assert.equal(
+    activeGauntletCompletionCount([
+      GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
+      GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
+      "retired-level",
+    ]),
+    1,
+  );
 });
 
 test("province configuration is complete, unique and symmetric", () => {
@@ -99,7 +115,7 @@ test("every configured province has valid map data", async () => {
         namedFeatures.map((feature) =>
           normalizeMapRegionName(feature.properties.name, code),
         ),
-        `${code} 的第11关名称索引与地图区块不一致`,
+        `${code} 的市域落点名称索引与地图区块不一致`,
       );
     }
   }

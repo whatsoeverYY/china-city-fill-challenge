@@ -14,6 +14,7 @@ import {
   RIVER_KNOWLEDGE,
   type KnowledgeCategoryId,
 } from "./knowledge-data";
+import { GAUNTLET_LEVEL_COUNT, gauntletLevelNumber } from "./gauntlet-levels";
 import { getProvinceAdministrativeProfile } from "./province-administrative-profile-data";
 import { PROVINCE_CITY_COUNT_DATA } from "./province-city-count-data";
 import { UNIVERSITY_QUIZ_DATA } from "./university-data";
@@ -740,7 +741,7 @@ export default function KnowledgeBase({
             </div>
             <div className="knowledge-coverage-card">
               <span>关卡知识覆盖</span>
-              <strong>23<small>/23</small></strong>
+              <strong>{GAUNTLET_LEVEL_COUNT}<small>/{GAUNTLET_LEVEL_COUNT}</small></strong>
               <div><i /></div>
               <p>错题复仇赛与终极混战，会复用前面专题中的知识。</p>
             </div>
@@ -774,7 +775,11 @@ export default function KnowledgeBase({
                     <span>{category.subtitle}</span>
                   </div>
                   <footer>
-                    <span>{category.levelRefs.map((level) => `第${level}关`).join(" · ")}</span>
+                    <span>{category.levelRefs
+                      .map(gauntletLevelNumber)
+                      .filter((levelNumber) => levelNumber > 0)
+                      .map((levelNumber) => `第${levelNumber}关`)
+                      .join(" · ")}</span>
                     <i>→</i>
                   </footer>
                 </button>
@@ -790,7 +795,12 @@ export default function KnowledgeBase({
               <p>{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>
               <h2>{activeCategory.title}</h2>
               <strong>{activeCategory.subtitle}</strong>
-              <div>{activeCategory.levelRefs.map((level) => <i key={level}>关联第 {level} 关</i>)}</div>
+              <div>{activeCategory.levelRefs.map((levelId) => {
+                const levelNumber = gauntletLevelNumber(levelId);
+                return levelNumber > 0
+                  ? <i key={levelId}>关联第 {levelNumber} 关</i>
+                  : null;
+              })}</div>
             </div>
             {SEARCHABLE_CATEGORIES.has(activeCategory.id) ? (
               <label className="knowledge-search">

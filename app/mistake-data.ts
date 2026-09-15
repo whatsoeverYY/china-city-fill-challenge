@@ -2,7 +2,15 @@ import { MAX_MISTAKE_QUESTIONS } from "./progress-config.ts";
 
 export type MistakeQuestion = {
   id: string;
-  category: "省份" | "城市" | "城市数量" | "车牌" | "省会" | "高校" | "判断";
+  category:
+    | "省份"
+    | "城市"
+    | "城市数量"
+    | "车牌"
+    | "省会"
+    | "高校"
+    | "邻省"
+    | "判断";
   prompt: string;
   answers: string[];
   correctAnswer: string;

@@ -1,4 +1,4 @@
--- 闯关模式调整为连续编号的 23 关后，同时兼容 v5 的旧关卡 ID。
+-- 闯关存档改用永久稳定 ID。数据库只汇总通关 ID，不感知关卡顺序或当前目录。
 
 create or replace function public.summarize_progress_payload(payload jsonb)
 returns jsonb
@@ -13,8 +13,10 @@ declare
   neighbor_progress jsonb := public.safe_parse_jsonb(
     payload -> 'values' ->> 'china-city-fill-neighbor-progress-v1', '{}'::jsonb
   );
-  levels jsonb;
-  uses_current_levels boolean;
+  levels jsonb := public.safe_parse_jsonb(
+    payload -> 'values' ->> 'china-city-fill-gauntlet-completed-level-ids-v1',
+    '[]'::jsonb
+  );
   mistakes jsonb := public.safe_parse_jsonb(
     payload -> 'values' ->> 'china-city-fill-gauntlet-mistakes-v1', '[]'::jsonb
   );
@@ -22,19 +24,21 @@ declare
   partial_provinces integer;
   placed_names integer;
   completed_neighbor_challenges integer;
+  completed_level_ids jsonb;
   completed_levels integer;
 begin
-  uses_current_levels := (payload -> 'values') ?
-    'china-city-fill-gauntlet-progress-v6';
-  levels := public.safe_parse_jsonb(
-    case
-      when uses_current_levels then
-        payload -> 'values' ->> 'china-city-fill-gauntlet-progress-v6'
-      else
-        payload -> 'values' ->> 'china-city-fill-gauntlet-progress-v5'
-    end,
-    '[]'::jsonb
-  );
+  if jsonb_typeof(map_progress) <> 'object' then
+    map_progress := '{}'::jsonb;
+  end if;
+  if jsonb_typeof(neighbor_progress) <> 'object' then
+    neighbor_progress := '{}'::jsonb;
+  end if;
+  if jsonb_typeof(levels) <> 'array' then
+    levels := '[]'::jsonb;
+  end if;
+  if jsonb_typeof(mistakes) <> 'array' then
+    mistakes := '[]'::jsonb;
+  end if;
 
   select count(*)::integer into completed_provinces
   from jsonb_each(map_progress) as entry
@@ -59,36 +63,123 @@ begin
   where jsonb_typeof(entry.value) = 'array'
     and entry.value ? '__complete__';
 
-  if uses_current_levels then
-    select count(distinct entry.value)::integer into completed_levels
+  select coalesce(
+    jsonb_agg(to_jsonb(valid_level.level_id) order by valid_level.level_id),
+    '[]'::jsonb
+  ) into completed_level_ids
+  from (
+    select distinct entry.value as level_id
     from jsonb_array_elements_text(levels) as entry(value)
-    where entry.value = any(array[
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
-      '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'
-    ]);
-  else
-    select count(distinct entry.value)::integer into completed_levels
-    from jsonb_array_elements_text(levels) as entry(value)
-    where entry.value = any(array[
-      '1', '2', '4', '5', '6', '8', '9', '10', '11', '12', '13', '14',
-      '15', '16', '17', '18', '20', '21', '22', '23', '24', '25', '26'
-    ]);
-  end if;
+    where entry.value ~ '^[a-z][a-z0-9]*(-[a-z0-9]+)*$'
+  ) as valid_level;
+
+  completed_levels := jsonb_array_length(completed_level_ids);
 
   return jsonb_build_object(
     'completedProvinces', completed_provinces,
     'partialProvinces', partial_provinces,
     'placedNames', placed_names,
     'completedNeighborChallenges', completed_neighbor_challenges,
+    'completedLevelIds', completed_level_ids,
     'completedLevels', completed_levels,
     'mistakes', jsonb_array_length(mistakes)
   );
 end;
 $$;
 
-update public.user_progress_summaries as summary
-set completed_levels = (
-  public.summarize_progress_payload(progress.payload) ->> 'completedLevels'
-)::integer
+alter table public.user_progress_summaries
+  add column if not exists completed_level_ids jsonb not null default '[]'::jsonb;
+
+create or replace function public.refresh_user_progress_summary()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  summary jsonb := public.summarize_progress_payload(new.payload);
+begin
+  insert into public.user_progress_summaries (
+    user_id, schema_version, revision, progress_updated_at, reset_at,
+    completed_provinces, partial_provinces, placed_names,
+    completed_neighbor_challenges, completed_levels, mistakes,
+    completed_level_ids
+  ) values (
+    new.user_id, new.schema_version, new.revision, new.updated_at, new.reset_at,
+    (summary ->> 'completedProvinces')::integer,
+    (summary ->> 'partialProvinces')::integer,
+    (summary ->> 'placedNames')::integer,
+    (summary ->> 'completedNeighborChallenges')::integer,
+    (summary ->> 'completedLevels')::integer,
+    (summary ->> 'mistakes')::integer,
+    summary -> 'completedLevelIds'
+  )
+  on conflict (user_id) do update set
+    schema_version = excluded.schema_version,
+    revision = excluded.revision,
+    progress_updated_at = excluded.progress_updated_at,
+    reset_at = excluded.reset_at,
+    completed_provinces = excluded.completed_provinces,
+    partial_provinces = excluded.partial_provinces,
+    placed_names = excluded.placed_names,
+    completed_neighbor_challenges = excluded.completed_neighbor_challenges,
+    completed_levels = excluded.completed_levels,
+    mistakes = excluded.mistakes,
+    completed_level_ids = excluded.completed_level_ids;
+  return new;
+end;
+$$;
+
+insert into public.user_progress_summaries (
+  user_id, schema_version, revision, progress_updated_at, reset_at,
+  completed_provinces, partial_provinces, placed_names,
+  completed_neighbor_challenges, completed_levels, mistakes,
+  completed_level_ids
+)
+select
+  progress.user_id,
+  progress.schema_version,
+  progress.revision,
+  progress.updated_at,
+  progress.reset_at,
+  (summary.value ->> 'completedProvinces')::integer,
+  (summary.value ->> 'partialProvinces')::integer,
+  (summary.value ->> 'placedNames')::integer,
+  (summary.value ->> 'completedNeighborChallenges')::integer,
+  (summary.value ->> 'completedLevels')::integer,
+  (summary.value ->> 'mistakes')::integer,
+  summary.value -> 'completedLevelIds'
 from public.user_progress as progress
-where progress.user_id = summary.user_id;
+cross join lateral (
+  select public.summarize_progress_payload(progress.payload) as value
+) as summary
+on conflict (user_id) do update set
+  schema_version = excluded.schema_version,
+  revision = excluded.revision,
+  progress_updated_at = excluded.progress_updated_at,
+  reset_at = excluded.reset_at,
+  completed_provinces = excluded.completed_provinces,
+  partial_provinces = excluded.partial_provinces,
+  placed_names = excluded.placed_names,
+  completed_neighbor_challenges = excluded.completed_neighbor_challenges,
+  completed_levels = excluded.completed_levels,
+  mistakes = excluded.mistakes,
+  completed_level_ids = excluded.completed_level_ids;
+
+create or replace view public.admin_progress_summaries
+with (security_invoker = true)
+as
+select
+  user_id,
+  schema_version,
+  revision,
+  progress_updated_at as updated_at,
+  reset_at,
+  completed_provinces,
+  partial_provinces,
+  placed_names,
+  completed_neighbor_challenges,
+  completed_levels,
+  mistakes,
+  completed_level_ids
+from public.user_progress_summaries;
