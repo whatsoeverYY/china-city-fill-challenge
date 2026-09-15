@@ -13,11 +13,16 @@ import {
 import {
   CITY_PLATE_PREFIX_COUNT,
   CITY_QUIZ_DATA,
+  PLATE_QUIZ_DATA,
   plateAnswerMatches,
   plateCollectionsOverlap,
   uniqueReversePlateItems,
   type CityQuizItem,
 } from "./gauntlet-data";
+import {
+  MAP_REGION_QUIZ_DATA,
+  type MapRegionQuizItem,
+} from "./map-region-quiz-data";
 import {
   UNIVERSITY_QUIZ_DATA,
   type UniversityQuizItem,
@@ -104,7 +109,7 @@ function compactName(value: string) {
 }
 
 const CITY_PLATE_BY_NAME = new Map(
-  CITY_QUIZ_DATA.map((item) => [compactName(item.city), item.plate]),
+  PLATE_QUIZ_DATA.map((item) => [compactName(item.city), item.plate]),
 );
 
 function stripAdministrativeSuffix(value: string) {
@@ -911,7 +916,7 @@ function NationalCityAtlas({
         <div className="city-atlas-summary" aria-label="图鉴数据范围">
           <span><strong>34</strong> 省级行政区</span>
           <span><strong>{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
-          <span><strong>{CITY_PLATE_PREFIX_COUNT}</strong> 个城市车牌前缀</span>
+          <span><strong>{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
         </div>
         <button className="city-atlas-exit" type="button" onClick={onExit}>
           <span aria-hidden="true">←</span> 返回挑战首页
@@ -933,7 +938,7 @@ function NationalCityAtlas({
             <span aria-hidden="true">文</span>
             {labelsVisible ? "隐藏文字" : "显示文字"}
           </button>
-          <small>车牌题库已收录的城市显示完整前缀；其余区县或地区显示省级车牌简称。</small>
+          <small>车牌题库已收录的城市、自治州、地区和盟显示完整前缀；其余区县显示省级车牌简称。</small>
         </div>
 
         <div className="city-atlas-canvas">
@@ -1036,14 +1041,14 @@ const GAUNTLET_LEVELS: Array<{
     level: 3,
     title: "省牌双答",
     badge: "车牌",
-    description: "根据城市名称，同时写出所属省份与全部车牌前缀；多号牌城市必须答全。",
+    description: "根据城市或地区名称，同时写出所属省份与全部车牌前缀；多号牌区域必须答全。",
     target: "连续答对 20 题",
   },
   {
     level: 4,
     title: "牌归省市",
     badge: "识牌",
-    description: "根据随机出现的车牌前缀，同时写出对应的省份与城市。",
+    description: "根据随机出现的车牌前缀，同时写出对应的省份与城市或地区。",
     target: "连续答对 20 题",
   },
   {
@@ -1057,7 +1062,7 @@ const GAUNTLET_LEVELS: Array<{
     level: 6,
     title: "车牌补全",
     badge: "补牌",
-    description: "根据城市和车牌简称，补出全部车牌字母；多号牌城市必须答全。",
+    description: "根据城市或地区和车牌简称，补出全部车牌字母；多号牌区域必须答全。",
     target: "连续答对 20 题",
   },
   {
@@ -1106,7 +1111,7 @@ const GAUNTLET_LEVELS: Array<{
     level: 13,
     title: "市域落点",
     badge: "市域",
-    description: "在无名称省内地图上，点击随机城市对应的市级区块。",
+    description: "在无名称省内地图上，点击随机城市、自治州、地区或区县对应的区块。",
     target: "连续答对 30 题",
   },
   {
@@ -1141,7 +1146,7 @@ const GAUNTLET_LEVELS: Array<{
     level: 18,
     title: "车牌找茬",
     badge: "找茬",
-    description: "四组城市与车牌组合中，找出对应错误的一组。",
+    description: "四组城市/地区与车牌组合中，找出对应错误的一组。",
     target: "连续答对 20 题",
   },
   {
@@ -1190,7 +1195,7 @@ const GAUNTLET_LEVELS: Array<{
     level: 25,
     title: "车牌落城",
     badge: "牌位",
-    description: "根据随机车牌，在所选省份地图墙中点击对应的城市区块。",
+    description: "根据随机车牌，在所选省份地图墙中点击对应的城市或地区区块。",
     target: "连续答对 30 题",
   },
   {
@@ -1207,12 +1212,13 @@ const MAP_REQUIRED_LEVELS = new Set<GauntletLevel>([
 ]);
 
 const FIXED_SCOPE_LEVELS = new Set<GauntletLevel>([10, 14, 15, 21, 22, 26]);
+const PLATE_QUESTION_LEVELS = new Set<GauntletLevel>([3, 4, 6, 9, 18, 25]);
 
 const GAUNTLET_OPENING_FEEDBACK: Record<GauntletLevel, string> = {
   1: "观察轮廓，写出省级行政区名称",
   2: "写出这座城市所属的省级行政区",
   3: "省份和全部车牌前缀都答对才计入连胜",
-  4: "省份和城市都答对才计入连胜",
+  4: "省份和对应城市/地区都答对才计入连胜",
   5: "从文字选项中选出全部陆地邻省，再确认答案",
   6: "补出车牌简称后缺失的全部字母",
   7: "省份与行政中心会交替双向出题",
@@ -1221,29 +1227,29 @@ const GAUNTLET_OPENING_FEEDBACK: Record<GauntletLevel, string> = {
   10: "从起点出发，只能走向未走过的陆地邻省",
   11: "拖动轮廓到全国地图的正确位置",
   12: "观察四座城市，找出唯一不属于同一省份的城市",
-  13: "在省内无名称地图上点击目标城市",
+  13: "在省内无名称地图上点击目标行政区块",
   14: "三组疆域题各完成一次即可过关",
   15: "从起点出发，用最少步数抵达终点",
   16: "综合判断城市、省份与行政中心的对应关系",
   17: "忽略旋转方向，辨认省份轮廓",
-  18: "找出城市与车牌对应错误的一组",
+  18: "找出城市/地区与车牌对应错误的一组",
   19: "根据行政中心在全国地图上点击对应省份",
   20: "看到 985、211 大学名称，写出它所在的城市",
   21: "逐个击破历史错题，答对后从错题库移除",
   22: "辨清读音、字形相近的城市及其所属省份",
   23: "沿市级接壤区块走出省内最短路线",
   24: "看到省级行政区，写出其中有多少座地级及以上城市",
-  25: "根据车牌，在所选省份地图墙中点击对应城市",
+  25: "根据车牌，在所选省份地图墙中点击对应城市或地区",
   26: "三条生命、三十道均衡混合题，每十题通过一个检查点",
 };
 
 const GAUNTLET_ROUND_HEADINGS: Record<GauntletLevel, string> = {
   1: "看轮廓，识省份",
   2: "看城市，答归属",
-  3: "城市、省份、车牌三连答",
-  4: "看车牌，答省市",
+  3: "区域、省份、车牌三连答",
+  4: "看车牌，答省与地区",
   5: "圈出全部陆地邻省",
-  6: "看城市，补车牌字母",
+  6: "看城市或地区，补车牌字母",
   7: "省份与省会双向攻防",
   8: "看城市，在地图上落点",
   9: "辨真伪，拼反应",
@@ -1262,7 +1268,7 @@ const GAUNTLET_ROUND_HEADINGS: Record<GauntletLevel, string> = {
   22: "相似城名，也要分得一清二楚",
   23: "沿市界寻找省内最短通路",
   24: "一个省级行政区，究竟有多少座城市",
-  25: "看车牌，在多省地图墙中精准落城",
+  25: "看车牌，在多省地图墙中精准落点",
   26: "三条生命闯过三段终极混战",
 };
 
@@ -1443,17 +1449,19 @@ function parseGauntletProvinceScope(raw: string | null) {
   return new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES);
 }
 
-function cityQuizKey(item: CityQuizItem) {
+type NamedRegionQuizItem = Pick<CityQuizItem, "city" | "provinceShort">;
+
+function cityQuizKey(item: NamedRegionQuizItem) {
   return `${item.provinceShort}:${item.city}`;
 }
 
-function spreadCityQuestions(
-  questions: CityQuizItem[],
+function spreadCityQuestions<T extends NamedRegionQuizItem>(
+  questions: T[],
   previousProvince: string | null = null,
   shuffle = true,
 ) {
   const remaining = shuffle ? randomShuffle(questions) : [...questions];
-  const result: CityQuizItem[] = [];
+  const result: T[] = [];
   let lastProvince = previousProvince;
 
   while (remaining.length) {
@@ -1469,8 +1477,8 @@ function spreadCityQuestions(
   return result;
 }
 
-function createCityMapQuestionQueue(
-  questions: CityQuizItem[],
+function createCityMapQuestionQueue<T extends NamedRegionQuizItem>(
+  questions: T[],
   recentQuestionKeys: string[],
 ) {
   const uniqueQuestions = Array.from(
@@ -1491,7 +1499,7 @@ function createCityMapQuestionQueue(
   );
   const recentQuestions = normalizedRecentKeys
     .map((key) => questionByKey.get(key))
-    .filter((item): item is CityQuizItem => Boolean(item));
+    .filter((item): item is T => Boolean(item));
   const queue = [
     ...unseenQuestions,
     ...spreadCityQuestions(
@@ -1781,11 +1789,11 @@ function createDualIntruderQuestions(pool: CityQuizItem[]) {
 }
 
 function createPlateFaultQuestions(pool: CityQuizItem[]) {
-  const source = pool.length >= 4 ? pool : CITY_QUIZ_DATA;
+  const source = pool.length >= 4 ? pool : PLATE_QUIZ_DATA;
   return Array.from({ length: 80 }, (_, index): PlateFaultQuestion => {
     const items = randomShuffle(source).slice(0, 4);
     const wrongIndex = index % items.length;
-    const wrongPlate = randomShuffle(CITY_QUIZ_DATA).find(
+    const wrongPlate = randomShuffle(PLATE_QUIZ_DATA).find(
       (item) => !plateCollectionsOverlap(item.plates, items[wrongIndex].plates),
     )!.plate;
     const options = items.map((item, optionIndex) => ({
@@ -2016,10 +2024,10 @@ function GauntletDetailMap({
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
       aria-label={readOnly
-        ? "显示城市名称和答题结果的省内市级行政区地图"
+        ? "显示区块名称和答题结果的省内行政区地图"
         : showLabels
-          ? "显示城市名称的省内市级行政区地图"
-          : "无名称省内市级行政区地图"}
+          ? "显示区块名称的省内行政区地图"
+          : "无名称省内行政区地图"}
     >
       {map.features.map((feature) => {
         const name = feature.properties.name;
@@ -2045,7 +2053,7 @@ function GauntletDetailMap({
                 ? `${name}，你的选择`
                 : showLabels
                   ? name
-                  : "待选择市级区块"}
+                  : "待选择行政区块"}
             onClick={() => {
               if (!readOnly) onRegion(name);
             }}
@@ -2142,7 +2150,7 @@ function GauntletProvinceMapWall({
     <div
       className={`gauntlet-province-map-wall ${panels.length === 1 ? "is-single" : ""} ${panels.length > 8 ? "is-many" : ""} ${readOnly ? "is-read-only" : ""}`}
       role="group"
-      aria-label={`所选 ${panels.length} 个省份的市级地图墙`}
+      aria-label={`所选 ${panels.length} 个省份的行政区地图墙`}
     >
       {panels.map(({ province, features, project }) => (
         <section className="gauntlet-province-map-panel" key={province.code}>
@@ -2160,7 +2168,7 @@ function GauntletProvinceMapWall({
           <svg
             viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
             role="img"
-            aria-label="无名称省内市级行政区地图"
+            aria-label="无名称省内行政区地图"
           >
             {features.map((feature) => {
               const name = feature.properties.name;
@@ -2174,7 +2182,7 @@ function GauntletProvinceMapWall({
                   role="button"
                   tabIndex={readOnly ? -1 : 0}
                   aria-disabled={readOnly || undefined}
-                  aria-label="待选择市级区块"
+                  aria-label="待选择行政区块"
                   onClick={() => {
                     if (!readOnly) onRegion(name);
                   }}
@@ -2202,7 +2210,7 @@ type TruthQuestion = {
 
 function createTruthQuestions(pool: CityQuizItem[]) {
   if (!pool.length) return [];
-  const fallbackPool = CITY_QUIZ_DATA;
+  const fallbackPool = PLATE_QUIZ_DATA;
   return Array.from({ length: Math.max(80, pool.length) }, (_, index) => {
     const item = pool[index % pool.length];
     const provinceQuestion = index % 2 === 0;
@@ -2405,6 +2413,7 @@ function GauntletGame({
   const [provinceOrder, setProvinceOrder] = useState<MapFeature[]>([]);
   const [provinceChallengeOrder, setProvinceChallengeOrder] = useState<Province[]>([]);
   const [cityOrder, setCityOrder] = useState<CityQuizItem[]>([]);
+  const [mapRegionOrder, setMapRegionOrder] = useState<MapRegionQuizItem[]>([]);
   const [universityOrder, setUniversityOrder] = useState<UniversityQuizItem[]>([]);
   const [mistakes, setMistakes] = useState<MistakeQuestion[]>([]);
   const [mistakeOrder, setMistakeOrder] = useState<MistakeQuestion[]>([]);
@@ -2495,6 +2504,12 @@ function GauntletGame({
       kind: item.kind,
       cityCount: CITY_QUIZ_DATA.filter(
         (city) => city.provinceShort === item.shortName,
+      ).length,
+      plateCount: PLATE_QUIZ_DATA.filter(
+        (region) => region.provinceShort === item.shortName,
+      ).length,
+      mapRegionCount: MAP_REGION_QUIZ_DATA.filter(
+        (region) => region.provinceCode === item.code,
       ).length,
     })),
     [],
@@ -2600,9 +2615,16 @@ function GauntletGame({
   const currentCity = cityOrder.length
     ? cityOrder[questionIndex % cityOrder.length]
     : null;
+  const currentMapRegion = mapRegionOrder.length
+    ? mapRegionOrder[questionIndex % mapRegionOrder.length]
+    : null;
   const cityPoolSize = useMemo(
     () => new Set(cityOrder.map(cityQuizKey)).size,
     [cityOrder],
+  );
+  const mapRegionPoolSize = useMemo(
+    () => new Set(mapRegionOrder.map(cityQuizKey)).size,
+    [mapRegionOrder],
   );
   const currentUniversity = universityOrder.length
     ? universityOrder[questionIndex % universityOrder.length]
@@ -2659,8 +2681,8 @@ function GauntletGame({
       ) ?? null
     : null;
   const detailProvinceCode =
-    level === 13 && currentCity
-      ? PROVINCE_BY_SHORT_NAME.get(currentCity.provinceShort)?.code
+    level === 13 && currentMapRegion
+      ? currentMapRegion.provinceCode
       : level === 23
         ? currentCityRouteProvinceCode
       : null;
@@ -2759,6 +2781,22 @@ function GauntletGame({
     ),
     [selectedProvinceShortNames],
   );
+  const selectedPlateQuizItems = useMemo(
+    () => PLATE_QUIZ_DATA.filter((item) =>
+      selectedProvinceShortNames.has(item.provinceShort),
+    ),
+    [selectedProvinceShortNames],
+  );
+  const selectedMapRegionItems = useMemo(
+    () => MAP_REGION_QUIZ_DATA.filter((item) =>
+      selectedShapeProvinceCodes.has(item.provinceCode),
+    ),
+    [selectedShapeProvinceCodes],
+  );
+  const selectedLevel25Items = useMemo(
+    () => selectedPlateQuizItems.filter((item) => item.mapRegion),
+    [selectedPlateQuizItems],
+  );
   const selectedUniversityItems = useMemo(
     () => UNIVERSITY_QUIZ_DATA.filter((item) =>
       selectedProvinceShortNames.has(item.provinceShort),
@@ -2789,20 +2827,34 @@ function GauntletGame({
     ) {
       return "当前范围缺少至少 3 座城市的省份";
     }
-    if (challengeLevel === 18 && selectedQuizItems.length < 4) {
-      return "车牌找茬至少需要 4 座候选城市";
+    if (challengeLevel === 18 && selectedPlateQuizItems.length < 4) {
+      return "车牌找茬至少需要 4 个候选城市或地区";
     }
     if (
       (challengeLevel === 4 || challengeLevel === 25) &&
-      uniqueReversePlateItems(selectedQuizItems).length === 0
+      uniqueReversePlateItems(
+        challengeLevel === 25 ? selectedLevel25Items : selectedPlateQuizItems,
+      ).length === 0
     ) {
-      return "当前范围没有可唯一定位城市的车牌题目";
+      return "当前范围没有可唯一定位城市或地区的车牌题目";
     }
     if (
-      ([2, 3, 4, 6, 8, 9, 13, 25] as GauntletLevel[]).includes(challengeLevel) &&
+      ([2, 8] as GauntletLevel[]).includes(challengeLevel) &&
       selectedQuizItems.length === 0
     ) {
       return "当前范围没有可用的城市题目";
+    }
+    if (
+      PLATE_QUESTION_LEVELS.has(challengeLevel) &&
+      selectedPlateQuizItems.length === 0
+    ) {
+      return "当前范围没有可用的车牌题目";
+    }
+    if (challengeLevel === 13 && selectedMapRegionItems.length === 0) {
+      return "当前范围没有可用的地图区块题目";
+    }
+    if (challengeLevel === 25 && selectedLevel25Items.length === 0) {
+      return "当前范围没有可用于地图定位的车牌题目";
     }
     return null;
   };
@@ -2856,12 +2908,10 @@ function GauntletGame({
     const eligibleQuestions = challengeLevel === 4 || challengeLevel === 25
       ? uniqueReversePlateItems(questions)
       : questions;
-    const shuffledQuestions = challengeLevel === 13 || challengeLevel === 25
+    const shuffledQuestions = challengeLevel === 25
       ? createCityMapQuestionQueue(
           eligibleQuestions,
-          challengeLevel === 13
-            ? level13HistoryRef.current
-            : level25HistoryRef.current,
+          level25HistoryRef.current,
         )
       : randomShuffle(eligibleQuestions);
     setCityOrder(shuffledQuestions);
@@ -2897,6 +2947,7 @@ function GauntletGame({
     setLevel(nextLevel);
     setPassedLevel(null);
     resetRoundProgress(GAUNTLET_OPENING_FEEDBACK[nextLevel]);
+    setMapRegionOrder([]);
     setUndercoverOrder([]);
     setDualIntruderOrder([]);
     setPlateFaultOrder([]);
@@ -2967,6 +3018,17 @@ function GauntletGame({
       setProvinceChallengeOrder([]);
       setCityOrder([]);
       setTruthOrder([]);
+    } else if (nextLevel === 13) {
+      setMapRegionOrder(
+        createCityMapQuestionQueue(
+          selectedMapRegionItems,
+          level13HistoryRef.current,
+        ),
+      );
+      setProvinceOrder([]);
+      setProvinceChallengeOrder([]);
+      setCityOrder([]);
+      setTruthOrder([]);
     } else if (nextLevel === 14) {
       setGroupOrder(randomShuffle(PROVINCE_GROUP_QUESTIONS));
       setProvinceOrder([]);
@@ -3028,7 +3090,15 @@ function GauntletGame({
       setCityOrder([]);
       setTruthOrder([]);
     } else {
-      setCityChallengeQuestions(nextLevel, selectedQuizItems);
+      const usesPlateQuestions = PLATE_QUESTION_LEVELS.has(nextLevel);
+      setCityChallengeQuestions(
+        nextLevel,
+        nextLevel === 25
+          ? selectedLevel25Items
+          : usesPlateQuestions
+            ? selectedPlateQuizItems
+            : selectedQuizItems,
+      );
       setProvinceOrder([]);
       setProvinceChallengeOrder([]);
     }
@@ -3111,7 +3181,7 @@ function GauntletGame({
 
   const rememberCityMapQuestion = (
     challengeLevel: 13 | 25,
-    item: CityQuizItem,
+    item: NamedRegionQuizItem,
   ) => {
     const key = cityQuizKey(item);
     const historyRef = challengeLevel === 13
@@ -3816,34 +3886,44 @@ function GauntletGame({
       });
       return;
     }
-    if ((level !== 13 && level !== 25) || !currentCity || answerReview) return;
-    if (level === 25) setLevel25FocusedProvinceCode(null);
+    if (level === 13) {
+      if (!currentMapRegion || answerReview) return;
+      const correct = answerMatches(regionName, [currentMapRegion.city]);
+      rememberCityMapQuestion(13, currentMapRegion);
+      advanceStreakChallenge(
+        13,
+        correct,
+        30,
+        currentMapRegion.city,
+        `${currentMapRegion.city}位于${currentMapRegion.province}，对应省内地图上的“${currentMapRegion.city}”区块`,
+        {
+          highlightRegionName: currentMapRegion.city,
+          selectedRegionName: !correct ? regionName : undefined,
+        },
+      );
+      return;
+    }
+    if (level !== 25 || !currentCity || answerReview) return;
+    setLevel25FocusedProvinceCode(null);
     const correct = answerMatches(regionName, [currentCity.city]);
-    rememberCityMapQuestion(level, currentCity);
+    rememberCityMapQuestion(25, currentCity);
     advanceStreakChallenge(
-      level,
+      25,
       correct,
       30,
-      level === 25
-        ? `${currentCity.plate} · ${currentCity.city}`
-        : currentCity.city,
-      level === 25
-        ? `${currentCity.plate}对应${currentCity.province}的${currentCity.city}`
-        : `${currentCity.city}位于${currentCity.province}，对应地图上的“${currentCity.city}”区块`,
+      `${currentCity.plate} · ${currentCity.city}`,
+      `${currentCity.plate}对应${currentCity.province}的${currentCity.city}`,
       {
         highlightRegionName: currentCity.city,
-        selectedRegionName: level === 13 && !correct ? regionName : undefined,
       },
-      level === 25
-        ? {
-            id: `plate-city-map-${currentCity.plate}`,
-            category: "车牌",
-            prompt: `${currentCity.plate}对应哪座城市？`,
-            answers: [currentCity.city],
-            correctAnswer: `${currentCity.plate} · ${currentCity.city}`,
-            explanation: `${currentCity.plate}对应${currentCity.province}的${currentCity.city}`,
-          }
-        : undefined,
+      {
+        id: `plate-city-map-${currentCity.plate}`,
+        category: "车牌",
+        prompt: `${currentCity.plate}对应哪个城市或地区？`,
+        answers: [currentCity.city],
+        correctAnswer: `${currentCity.plate} · ${currentCity.city}`,
+        explanation: `${currentCity.plate}对应${currentCity.province}的${currentCity.city}`,
+      },
     );
   };
 
@@ -4328,9 +4408,11 @@ function GauntletGame({
                             ? `终极混战 · 第 ${questionIndex + 1} / 30 题`
                           : level === 20
                             ? `${selectedUniversityProvinces.size} 省 · ${universityOrder.length} 校 · 第 ${questionIndex + 1} 题`
-                          : level === 13 || level === 25
-                            ? `${selectedQuizProvinces.size} 省 · ${cityPoolSize} 城 · 第 ${questionIndex + 1} 题`
-                            : `${selectedQuizProvinces.size} 省 · ${cityOrder.length} 城 · 第 ${questionIndex + 1} 题`}
+                          : level === 13
+                            ? `${selectedShapeProvinceCodes.size} 省 · ${mapRegionPoolSize} 区块 · 第 ${questionIndex + 1} 题`
+                          : level === 25
+                            ? `${selectedQuizProvinces.size} 省 · ${cityPoolSize} 城市/地区 · 第 ${questionIndex + 1} 题`
+                            : `${selectedQuizProvinces.size} 省 · ${cityOrder.length} ${PLATE_QUESTION_LEVELS.has(level) ? "城市/地区" : "城"} · 第 ${questionIndex + 1} 题`}
               </span>
               {level === 1 ? (
                 currentProvinceFeature ? <ProvinceSilhouette feature={currentProvinceFeature} /> : <LoadingMap />
@@ -4357,11 +4439,11 @@ function GauntletGame({
                   <small>需要自己判断另外三座城市的共同归属</small>
                 </div>
               ) : level === 13 ? (
-                gauntletDetailMap && gauntletDetailReady && currentCity ? (
+                gauntletDetailMap && gauntletDetailReady && currentMapRegion ? (
                   <div className="gauntlet-map-question">
                     <div className="map-question-banner">
-                      <small>在{currentCity.provinceShort}地图上找到</small>
-                      <strong>{currentCity.city}</strong>
+                      <small>在{currentMapRegion.provinceShort}地图上找到</small>
+                      <strong>{currentMapRegion.city}</strong>
                     </div>
                     <GauntletDetailMap
                       map={gauntletDetailMap}
@@ -4670,7 +4752,7 @@ function GauntletGame({
               ) : level === 6 ? (
                 <div className="city-question plate-fill-question">
                   <span aria-hidden="true">补</span>
-                  <p>补出这座城市的全部车牌字母</p>
+                  <p>补出这个城市或地区的全部车牌字母</p>
                   <strong>{currentCity?.city ?? "载入中…"}</strong>
                   <small className="plate-blank">
                     {currentCity
@@ -4680,22 +4762,22 @@ function GauntletGame({
                       : "？"}
                   </small>
                   {currentCity && currentCity.plates.length > 1 ? (
-                    <small>多号牌城市：用顿号或空格分隔，必须全部答出</small>
+                    <small>多号牌区域：用顿号或空格分隔，必须全部答出</small>
                   ) : null}
                 </div>
               ) : (
                 <div className={`city-question ${level === 4 ? "is-plate-question" : ""}`}>
                   <span aria-hidden="true">{level === 4 ? "牌" : "城"}</span>
-                  <p>{level === 4 ? "这组车牌属于哪里？" : "这座城市属于哪里？"}</p>
+                  <p>{level === 4 ? "这组车牌属于哪里？" : "这个城市或地区属于哪里？"}</p>
                   <strong>{(level === 4 ? currentCity?.plate : currentCity?.city) ?? "载入中…"}</strong>
                   {level === 3 ? (
                     <small>
                       {currentCity && currentCity.plates.length > 1
-                        ? `这是多号牌城市，需要写出全部 ${currentCity.plates.length} 个前缀`
+                        ? `这是多号牌区域，需要写出全部 ${currentCity.plates.length} 个前缀`
                         : "还需要写出它的车牌前缀"}
                     </small>
                   ) : null}
-                  {level === 4 ? <small>需要同时写出省份和城市</small> : null}
+                  {level === 4 ? <small>需要同时写出省份和城市/地区</small> : null}
                 </div>
               )}
             </div>
@@ -4731,9 +4813,9 @@ function GauntletGame({
               ) : level === 13 ? (
                 <>
                   <h2>在左侧省内地图落点</h2>
-                  <p className="map-answer-summary">地图只显示市级边界，不显示名称。点击区块后立即判题。</p>
+                  <p className="map-answer-summary">地图不显示名称；市、自治州、地区、盟、区县等区块都会出题，点击后立即判题。</p>
                   <p className="map-answer-summary">
-                    当前范围共 {cityPoolSize} 座城市。系统会优先避开最近 90 道已出现题目；范围不足时，会先用完全部城市再重新打散。
+                    当前范围共 {mapRegionPoolSize} 个地图区块。系统会优先避开最近 90 道已出现题目；范围不足时，会先用完全部区块再重新打散。
                   </p>
                 </>
               ) : level === 14 ? (
@@ -4890,7 +4972,7 @@ function GauntletGame({
                     </p>
                   ) : null}
                   <p className="map-answer-summary">
-                    当前范围共 {selectedCityMapProvinces.length} 个省份、{cityPoolSize} 座城市，优先避开最近 90 道题。
+                    当前范围共 {selectedCityMapProvinces.length} 个省份、{cityPoolSize} 个城市或地区，优先避开最近 90 道题。
                   </p>
                 </>
               ) : level === 26 ? (
@@ -5064,7 +5146,7 @@ function GauntletGame({
                     ) : null}
                     {level === 4 ? (
                       <>
-                        <label htmlFor="gauntlet-city-answer">城市名称</label>
+                        <label htmlFor="gauntlet-city-answer">城市或地区名称</label>
                         <input
                           id="gauntlet-city-answer"
                           value={cityAnswer}
@@ -5151,8 +5233,11 @@ function GauntletGame({
                     <strong>{item.shortName}</strong>
                     <small>
                       {item.cityCount > 0
-                        ? `${item.cityCount} 个城市题`
-                        : `${item.kind} · 省级题`}
+                        ? item.cityCount === item.plateCount &&
+                            item.cityCount === item.mapRegionCount
+                          ? `${item.cityCount} 个城市题`
+                          : `${item.cityCount} 城 · ${item.plateCount} 车牌 · ${item.mapRegionCount} 区块`
+                        : `${item.kind} · ${item.mapRegionCount} 区块`}
                     </small>
                   </button>
                 );

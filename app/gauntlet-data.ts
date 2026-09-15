@@ -1,3 +1,6 @@
+import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "./province-administrative-profile-data.ts";
+import { PROVINCE_BY_CODE } from "./province-data.ts";
+
 export type CityQuizItem = {
   city: string;
   province: string;
@@ -5,6 +8,8 @@ export type CityQuizItem = {
   plates: string[];
   plate: string;
   plateNote?: string;
+  entityType: string;
+  mapRegion: boolean;
 };
 
 type CityQuizGroup = [
@@ -219,16 +224,61 @@ export const CITY_QUIZ_DATA: CityQuizItem[] = CITY_QUIZ_GROUPS.flatMap(
         plates,
         plate: plates.join(" / "),
         plateNote,
+        entityType: "城市",
+        mapRegion: true,
       };
     }),
 );
 
-export const CITY_PLATE_PREFIX_COUNT = CITY_QUIZ_DATA.reduce(
+const NON_ENTITY_PLATE_REGION_TYPES = new Set(["省直辖号段"]);
+const NON_MAP_PLATE_REGION_TYPES = new Set([
+  "国家级新区",
+  "保护开发区",
+  "示范区",
+  "开发区历史独立号段",
+  "自治州辖县级市",
+]);
+const CITY_QUIZ_NAMES = new Set(CITY_QUIZ_DATA.map((item) => item.city));
+
+/**
+ * All named areas in the knowledge profiles that have their own plate prefix.
+ * Aggregate labels such as “琼C号段市县” stay in the profile, while real
+ * administrative areas and special zones join the plate quiz pool.
+ */
+export const SPECIAL_PLATE_QUIZ_DATA: CityQuizItem[] =
+  PROVINCE_ADMINISTRATIVE_PROFILE_DATA.flatMap((profile) => {
+    const province = PROVINCE_BY_CODE.get(profile.code);
+    if (!province) return [];
+    return profile.plateRegions
+      .filter(
+        (item) =>
+          !CITY_QUIZ_NAMES.has(item.name) &&
+          !NON_ENTITY_PLATE_REGION_TYPES.has(item.type),
+      )
+      .map((item) => ({
+        city: item.name,
+        province: province.name,
+        provinceShort: province.shortName,
+        plates: [item.plate],
+        plate: item.plate,
+        plateNote:
+          item.note ?? `${item.name}是${item.type}，使用 ${item.plate} 号牌前缀。`,
+        entityType: item.type,
+        mapRegion: !NON_MAP_PLATE_REGION_TYPES.has(item.type),
+      }));
+  });
+
+export const PLATE_QUIZ_DATA: CityQuizItem[] = [
+  ...CITY_QUIZ_DATA,
+  ...SPECIAL_PLATE_QUIZ_DATA,
+];
+
+export const CITY_PLATE_PREFIX_COUNT = PLATE_QUIZ_DATA.reduce(
   (total, item) => total + item.plates.length,
   0,
 );
 
-export const MULTI_PLATE_CITY_COUNT = CITY_QUIZ_DATA.filter(
+export const MULTI_PLATE_CITY_COUNT = PLATE_QUIZ_DATA.filter(
   (item) => item.plates.length > 1,
 ).length;
 

@@ -6,6 +6,7 @@ import {
   CITY_PLATE_PREFIX_COUNT,
   CITY_QUIZ_DATA,
   MULTI_PLATE_CITY_COUNT,
+  PLATE_QUIZ_DATA,
 } from "./gauntlet-data";
 import {
   KNOWLEDGE_CATEGORIES,
@@ -181,7 +182,7 @@ export default function KnowledgeBase({
     });
   };
 
-  const filteredCities = CITY_QUIZ_DATA.filter((item) =>
+  const filteredCities = PLATE_QUIZ_DATA.filter((item) =>
     matchesSearch(
       normalizedQuery,
       item.city,
@@ -389,7 +390,7 @@ export default function KnowledgeBase({
             <div>
               <strong>先看汉字锁定省，再把同城全部字母成套记住</strong>
               <p>
-                按含历史、区域沿用号段的广义口径，共收录 {MULTI_PLATE_CITY_COUNT} 座多号牌城市；高亮卡片会列出全部前缀和形成原因，关卡中必须全部答出。
+                按含历史、区域沿用号段的广义口径，共收录 {MULTI_PLATE_CITY_COUNT} 个多号牌城市或地区；高亮卡片会列出全部前缀和形成原因，关卡中必须全部答出。
               </p>
             </div>
             <button type="button" onClick={onOpenAtlas}>去全国图鉴看地图</button>
@@ -410,8 +411,8 @@ export default function KnowledgeBase({
                   <div>
                     <h3>{province.shortName}车牌组</h3>
                     <p>
-                      {items.length} 座城市 · {plateCount} 个前缀
-                      {multiPlateCount > 0 ? ` · ${multiPlateCount} 座多号牌城市` : ""}
+                      {items.length} 个城市/地区 · {plateCount} 个前缀
+                      {multiPlateCount > 0 ? ` · ${multiPlateCount} 个多号牌区域` : ""}
                       {` · 行政中心 ${plainPlaceName(provinceCapitals[province.code])}`}
                     </p>
                   </div>

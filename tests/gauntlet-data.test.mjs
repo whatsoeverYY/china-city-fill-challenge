@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   CITY_QUIZ_DATA,
+  PLATE_QUIZ_DATA,
   plateAnswerMatches,
   plateCollectionsOverlap,
   uniqueReversePlateItems,
@@ -11,6 +12,12 @@ import {
 function city(name) {
   const item = CITY_QUIZ_DATA.find((candidate) => candidate.city === name);
   assert.ok(item, `missing quiz city: ${name}`);
+  return item;
+}
+
+function plateRegion(name) {
+  const item = PLATE_QUIZ_DATA.find((candidate) => candidate.city === name);
+  assert.ok(item, `missing plate quiz region: ${name}`);
   return item;
 }
 
@@ -66,4 +73,23 @@ test("multi-letter special plate codes require every letter", () => {
   assert.equal(plateAnswerMatches("CXS", ["琼CXS"], true), true);
   assert.equal(plateAnswerMatches("琼CXS", ["琼CXS"], true), true);
   assert.equal(plateAnswerMatches("S", ["琼CXS"], true), false);
+});
+
+test("Qinghai plate questions cover its two cities and six autonomous prefectures", () => {
+  const qinghai = PLATE_QUIZ_DATA.filter((item) => item.province === "青海省");
+  assert.deepEqual(
+    Object.fromEntries(qinghai.map((item) => [item.city, item.plates])),
+    {
+      西宁市: ["青A"],
+      海东市: ["青B"],
+      海北藏族自治州: ["青C"],
+      黄南藏族自治州: ["青D"],
+      海南藏族自治州: ["青E"],
+      果洛藏族自治州: ["青F"],
+      玉树藏族自治州: ["青G"],
+      海西蒙古族藏族自治州: ["青H"],
+    },
+  );
+  assert.equal(qinghai.every((item) => item.mapRegion), true);
+  assert.equal(plateRegion("海南藏族自治州").plate, "青E");
 });

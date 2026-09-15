@@ -33,6 +33,10 @@ const TAIWAN_NAME_MAP: Record<string, string> = {
   新竹縣: "新竹县", 屏東縣: "屏东县",
 };
 
+export function normalizeMapRegionName(name: string, code: string) {
+  return code === "710000" ? TAIWAN_NAME_MAP[name] ?? name : name;
+}
+
 const mapPromiseCache = new Map<string, Promise<MapData>>();
 
 function isMapData(value: unknown): value is MapData {
@@ -57,9 +61,7 @@ function normalizeMap(data: MapData, code: string): MapData {
         ...feature,
         properties: {
           ...feature.properties,
-          name: code === "710000"
-            ? TAIWAN_NAME_MAP[feature.properties.name] ?? feature.properties.name
-            : feature.properties.name,
+          name: normalizeMapRegionName(feature.properties.name, code),
         },
       })),
   };

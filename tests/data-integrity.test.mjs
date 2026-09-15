@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { CITY_QUIZ_DATA } from "../app/gauntlet-data.ts";
+import { CITY_QUIZ_DATA, PLATE_QUIZ_DATA } from "../app/gauntlet-data.ts";
+import {
+  MAP_REGION_NAMES_BY_PROVINCE,
+  MAP_REGION_QUIZ_DATA,
+} from "../app/map-region-quiz-data.ts";
 import {
   PROVINCES,
   PROVINCE_CAPITALS,
@@ -13,6 +17,7 @@ import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "../app/province-administra
 import { UNIVERSITY_QUIZ_DATA } from "../app/university-data.ts";
 import { CONFUSABLE_CITY_PAIRS } from "../app/confusable-city-data.ts";
 import { fitRotatedPointsScale } from "../app/silhouette-utils.ts";
+import { normalizeMapRegionName } from "../app/map-data.ts";
 
 const mapsRoot = new URL("../public/data/maps/", import.meta.url);
 
@@ -72,6 +77,15 @@ test("every configured province has valid map data", async () => {
     const namedFeatures = map.features.filter((feature) => feature.properties?.name);
     assert.ok(namedFeatures.length > 0, `${code} 没有有效命名区块`);
     assert.ok(namedFeatures.every((feature) => feature.geometry?.coordinates));
+    if (code !== "100000") {
+      assert.deepEqual(
+        MAP_REGION_NAMES_BY_PROVINCE[code],
+        namedFeatures.map((feature) =>
+          normalizeMapRegionName(feature.properties.name, code),
+        ),
+        `${code} 的第13关名称索引与地图区块不一致`,
+      );
+    }
   }
 
   const xinjiang = maps.find(([code]) => code === "650000")[1];
@@ -96,6 +110,8 @@ test("quiz datasets keep their expected coverage and references", () => {
   const provinceNames = new Set(PROVINCES.map((province) => province.name));
   const provinceShortNames = new Set(PROVINCES.map((province) => province.shortName));
   assert.ok(CITY_QUIZ_DATA.length >= 290);
+  assert.ok(PLATE_QUIZ_DATA.length >= 340);
+  assert.equal(MAP_REGION_QUIZ_DATA.length, 500);
   assert.ok(CITY_QUIZ_DATA.every((item) => provinceNames.has(item.province) && provinceShortNames.has(item.provinceShort)));
   assert.equal(UNIVERSITY_QUIZ_DATA.length, 115);
   assert.equal(UNIVERSITY_QUIZ_DATA.filter((item) => item.tier === "985").length, 39);
@@ -105,6 +121,31 @@ test("quiz datasets keep their expected coverage and references", () => {
     PROVINCE_CITY_COUNT_DATA.slice(0, 31).reduce((sum, item) => sum + item.cityCount, 0),
     297,
   );
+});
+
+test("plate quiz covers every concrete special plate region and only marks clickable map regions", () => {
+  for (const profile of PROVINCE_ADMINISTRATIVE_PROFILE_DATA) {
+    for (const region of profile.plateRegions) {
+      if (region.type === "省直辖号段") continue;
+      const quizItem = PLATE_QUIZ_DATA.find(
+        (item) => item.province === PROVINCES.find((province) => province.code === profile.code)?.name &&
+          item.city === region.name,
+      );
+      assert.ok(quizItem, `${region.name}（${region.plate}）未进入车牌题库`);
+      assert.ok(quizItem.plates.includes(region.plate), `${region.name}缺少${region.plate}`);
+    }
+  }
+
+  for (const item of PLATE_QUIZ_DATA.filter((candidate) => candidate.mapRegion)) {
+    const province = PROVINCES.find(
+      (candidate) => candidate.shortName === item.provinceShort,
+    );
+    assert.ok(province, `${item.provinceShort}缺少省份配置`);
+    assert.ok(
+      MAP_REGION_NAMES_BY_PROVINCE[province.code]?.includes(item.city),
+      `${item.city}标记为地图题，但地图中不存在该区块`,
+    );
+  }
 });
 
 test("Jilin special plate regions include Ji K without treating it as a city", () => {
@@ -121,6 +162,19 @@ test("Jilin special plate regions include Ji K without treating it as a city", (
     },
   );
   assert.equal(CITY_QUIZ_DATA.some((item) => item.plate === "吉K"), false);
+  assert.deepEqual(
+    PLATE_QUIZ_DATA.find((item) => item.plate === "吉K"),
+    {
+      city: "长白山保护开发区",
+      province: "吉林省",
+      provinceShort: "吉林",
+      plates: ["吉K"],
+      plate: "吉K",
+      plateNote: "长白山保护开发区使用独立号牌前缀，不计入《中国统计年鉴》的城市数量口径。",
+      entityType: "保护开发区",
+      mapRegion: false,
+    },
+  );
 });
 
 test("Hainan profile reconciles 19 city-county units and special plate regions", () => {
