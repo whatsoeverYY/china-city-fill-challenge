@@ -33,9 +33,10 @@ export default function GauntletAnswerForm({
   const value = valueSource === "plate" ? plateAnswer : provinceAnswer;
   const setValue = valueSource === "plate" ? setPlateAnswer : setProvinceAnswer;
   return (
-    <form onSubmit={actions.submitAnswer}>
-      <label htmlFor={id}>{label}</label>
+    <form className="grid gap-2" onSubmit={actions.submitAnswer}>
+      <label className="text-[10px] font-black text-ink-soft" htmlFor={id}>{label}</label>
       <input
+        className="min-h-12 rounded-xl border border-black/20 bg-white px-3 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
         ref={provinceInputRef}
         id={id}
         value={value}
@@ -46,7 +47,7 @@ export default function GauntletAnswerForm({
         autoComplete="off"
         maxLength={maxLength}
       />
-      <button type="submit" disabled={!value.trim()}>提交答案</button>
+      <button className="min-h-12 cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={!value.trim()}>提交答案</button>
     </form>
   );
 }

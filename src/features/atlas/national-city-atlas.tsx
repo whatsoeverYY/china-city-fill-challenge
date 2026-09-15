@@ -302,46 +302,46 @@ export default function NationalCityAtlas({
   };
 
   return (
-    <main className="city-atlas-shell">
-      <header className="city-atlas-header">
-        <div className="city-atlas-title">
-          <span aria-hidden="true">图</span>
+    <main className="city-atlas-shell fixed inset-0 z-[1500] grid h-dvh w-screen grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-[#e9e3d6] text-ink">
+      <header className="city-atlas-header z-[3] grid min-h-[82px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-7 border-b border-black/15 bg-card/95 px-5 py-3 shadow-sm max-lg:gap-3 max-md:grid-cols-[1fr_auto]">
+        <div className="city-atlas-title flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded-[13px_13px_13px_4px] bg-[#356b8e] text-xl font-black text-white" aria-hidden="true">图</span>
           <div>
-            <p>可缩放全国城市参考地图</p>
-            <h1>全国车牌图鉴</h1>
+            <p className="m-0 text-[9px] font-extrabold tracking-[0.12em] text-[#718087]">可缩放全国城市参考地图</p>
+            <h1 className="m-0 text-[clamp(20px,2.2vw,30px)] font-black leading-tight">全国车牌图鉴</h1>
           </div>
         </div>
-        <div className="city-atlas-summary" aria-label="图鉴数据范围">
-          <span><strong>34</strong> 省级行政区</span>
-          <span><strong>{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
-          <span><strong>{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
+        <div className="city-atlas-summary flex justify-center gap-[clamp(12px,3vw,42px)] text-[10px] font-extrabold tracking-wide text-[#68736d] max-lg:gap-3 max-md:hidden" aria-label="图鉴数据范围">
+          <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">34</strong> 省级行政区</span>
+          <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
+          <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
         </div>
-        <button className="city-atlas-exit" type="button" onClick={onExit}>
+        <button className="city-atlas-exit min-h-10 cursor-pointer rounded-full border-0 bg-brand-red-dark px-4 py-2 text-[11px] font-black text-white hover:bg-brand-red max-sm:px-3" type="button" onClick={onExit}>
           <span aria-hidden="true">←</span> 返回挑战首页
         </button>
       </header>
 
-      <section className="city-atlas-workspace">
-        <div className="city-atlas-help">
-          <p><span className="legend-line legend-line--red" />红色省界</p>
-          <p><span className="legend-line legend-line--green" />绿色市界 / 区县界</p>
-          <p>滚轮或双指缩放 · 按住拖动</p>
+      <section className="city-atlas-workspace relative min-h-0 overflow-hidden">
+        <div className="city-atlas-help absolute left-5 top-4 z-[2] flex max-w-[min(690px,calc(100%_-_150px))] items-center gap-4 rounded-xl border border-black/10 bg-card/90 px-3 py-2 shadow-md backdrop-blur-md max-md:left-3 max-md:max-w-[calc(100%_-_96px)] max-md:gap-2">
+          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden"><span className="legend-line legend-line--red block h-0.5 w-5 bg-brand-red" />红色省界</p>
+          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden"><span className="legend-line legend-line--green block h-0.5 w-5 bg-brand-green" />绿色市界 / 区县界</p>
+          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden">滚轮或双指缩放 · 按住拖动</p>
           <button
-            className={`city-atlas-label-toggle ${labelsVisible ? "is-active" : ""}`}
+            className={`city-atlas-label-toggle inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/25 px-2.5 text-[9px] font-black text-brand-green-dark ${labelsVisible ? "is-active bg-[#dfece0]" : "bg-[#edf4e9]"}`}
             type="button"
             aria-label={labelsVisible ? "隐藏全部文字" : "显示全部文字"}
             aria-pressed={labelsVisible}
             onClick={toggleLabels}
           >
-            <span aria-hidden="true">文</span>
+            <span className="grid size-[17px] place-items-center rounded-full bg-brand-green text-[9px] text-white" aria-hidden="true">文</span>
             {labelsVisible ? "隐藏文字" : "显示文字"}
           </button>
-          <small>车牌题库已收录的城市、自治州、地区和盟显示完整前缀；其余区县显示省级车牌简称。</small>
+          <small className="border-l border-black/15 pl-3 text-[9px] font-extrabold leading-4 text-ink-soft max-lg:hidden">车牌题库已收录的城市、自治州、地区和盟显示完整前缀；其余区县显示省级车牌简称。</small>
         </div>
 
-        <div className="city-atlas-canvas">
+        <div className="city-atlas-canvas relative size-full overflow-hidden bg-[#e9e3d6]">
           {error ? (
-            <div className="map-error city-atlas-error" role="alert">
+            <div className="map-error city-atlas-error absolute inset-0 grid place-content-center text-center" role="alert">
               全国市级地图加载失败，请刷新页面后重试。
             </div>
           ) : !map || !nationalMap || !project ? (
@@ -349,7 +349,7 @@ export default function NationalCityAtlas({
           ) : (
             <svg
               ref={svgRef}
-              className={`city-atlas-map ${dragging ? "is-dragging" : ""}`}
+              className={`city-atlas-map block size-full touch-none select-none ${dragging ? "is-dragging cursor-grabbing" : "cursor-grab"}`}
               viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
               role="img"
               aria-label="标注城市名称与车牌前缀的中国地图"
@@ -372,17 +372,18 @@ export default function NationalCityAtlas({
 
           {!labelsVisible && hoverLabel ? (
             <div
-              className="city-atlas-hover-label"
+              className="city-atlas-hover-label pointer-events-none absolute z-[3] grid min-w-28 rounded-[10px_10px_10px_3px] border border-black/20 bg-card/95 px-2.5 py-2 shadow-lg"
               style={{ left: hoverLabel.left, top: hoverLabel.top }}
               role="status"
             >
-              <strong>{hoverLabel.name}</strong>
-              <span>{hoverLabel.plate}</span>
+              <strong className="text-[13px]">{hoverLabel.name}</strong>
+              <span className="mt-0.5 text-[10px] font-black text-brand-red-dark">{hoverLabel.plate}</span>
             </div>
           ) : null}
 
-          <div className="city-atlas-toolbar" aria-label="地图缩放工具栏">
+          <div className="city-atlas-toolbar absolute bottom-5 right-5 z-[2] grid w-24 gap-2 rounded-2xl border border-black/10 bg-card/95 p-2 shadow-lg backdrop-blur-md max-md:bottom-3 max-md:right-3 max-md:w-20" aria-label="地图缩放工具栏">
             <button
+              className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] disabled:cursor-not-allowed disabled:opacity-40"
               type="button"
               aria-label="放大地图"
               disabled={view.scale >= ATLAS_MAX_SCALE}
@@ -390,8 +391,9 @@ export default function NationalCityAtlas({
             >
               <span aria-hidden="true">＋</span> 放大
             </button>
-            <output aria-label="当前缩放比例">{Math.round(view.scale * 100)}%</output>
+            <output className="text-center text-xs font-bold text-[#766b5b]" aria-label="当前缩放比例">{Math.round(view.scale * 100)}%</output>
             <button
+              className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] disabled:cursor-not-allowed disabled:opacity-40"
               type="button"
               aria-label="缩小地图"
               disabled={view.scale <= ATLAS_MIN_SCALE}
@@ -399,7 +401,7 @@ export default function NationalCityAtlas({
             >
               <span aria-hidden="true">−</span> 缩小
             </button>
-            <button type="button" onClick={resetView}>
+            <button className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0]" type="button" onClick={resetView}>
               <span aria-hidden="true">⌂</span> 复位
             </button>
           </div>

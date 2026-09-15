@@ -6,6 +6,10 @@ const root = process.cwd();
 const srcRoot = join(root, "src");
 const maxLines = 500;
 const sourceExtensions = new Set([".ts", ".tsx", ".css"]);
+const allowedCssFiles = new Set([
+  "src/app/globals.css",
+  "src/app/styles/maps.css",
+]);
 const kebabCaseFile = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:ts|tsx|css)$/;
 const businessFeatures = new Set([
   "admin",
@@ -75,6 +79,9 @@ for (const path of walk(srcRoot)) {
     : null;
   const sourceFeatureLayer = sourceFeature ? projectSegments[3] : null;
   const lineCount = sourceLineCount(source);
+  if (extname(path) === ".css" && !allowedCssFiles.has(projectPath)) {
+    errors.push(`${projectPath} 不在允许的 CSS 文件清单中；常规样式应直接使用 Tailwind utilities。`);
+  }
   if (lineCount > maxLines) {
     errors.push(`${projectPath} 有 ${lineCount} 行，超过 ${maxLines} 行上限。`);
   }
@@ -158,5 +165,5 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`架构检查通过：源码文件不超过 ${maxLines} 行，目录、命名、依赖方向和包管理器符合约定。`);
+  console.log(`架构检查通过：源码文件不超过 ${maxLines} 行，Tailwind、目录、命名、依赖方向和包管理器符合约定。`);
 }

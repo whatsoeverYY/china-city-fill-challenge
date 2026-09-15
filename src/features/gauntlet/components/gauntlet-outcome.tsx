@@ -37,25 +37,25 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
 
   if (d.hasTimedOut || d.hasLostBoss) {
     return (
-      <section className="gauntlet-passed gauntlet-timeout" aria-live="polite">
-        <span className="gauntlet-pass-seal" aria-hidden="true">
+      <section className="gauntlet-passed gauntlet-timeout mx-auto grid max-w-3xl justify-items-center gap-4 rounded-[28px_28px_28px_8px] bg-card p-[clamp(28px,6vw,64px)] text-center shadow-xl" aria-live="polite">
+        <span className="gauntlet-pass-seal grid size-24 place-items-center rounded-[30px_30px_30px_8px] bg-brand-red text-4xl font-black text-white" aria-hidden="true">
           {d.hasLostBoss ? "败" : "时"}
         </span>
-        <p className="eyebrow">
+        <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">
           第 {displayNumber} 关 · {d.hasLostBoss ? "生命耗尽" : "时间耗尽"}
         </p>
-        <h1>还差一点，再冲一次</h1>
-        <p>
+        <h1 className="m-0 text-[clamp(34px,6vw,62px)] font-black">还差一点，再冲一次</h1>
+        <p className="m-0 text-sm text-ink-soft">
           {d.hasLostBoss
             ? "三条生命已经用完，本轮成绩不会计入通关记录。"
             : `${s.timeLimit} 秒倒计时已结束，本轮成绩不会计入通关记录。`}
         </p>
         {d.hasLostBoss ? <BossSkillSummary stats={s.bossStats} /> : null}
-        <div>
-          <button type="button" onClick={() => actions.startLevel(s.level!)}>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button className="min-h-11 cursor-pointer rounded-full border-0 bg-brand-red px-5 font-black text-white" type="button" onClick={() => actions.startLevel(s.level!)}>
             重新挑战
           </button>
-          <button type="button" className="is-text" onClick={actions.returnToLevels}>
+          <button type="button" className="is-text min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 font-black text-ink" onClick={actions.returnToLevels}>
             返回选关
           </button>
         </div>
@@ -65,28 +65,28 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
 
   if (!s.passedLevel) return null;
   return (
-    <section className="gauntlet-passed" aria-live="polite">
-      <span className="gauntlet-pass-seal" aria-hidden="true">胜</span>
-      <p className="eyebrow">第 {displayNumber} 关 · 挑战达成</p>
-      <h1>{activeConfig?.title}，过关！</h1>
-      <p>{completedTarget}，这一关已留下通关印记。</p>
+    <section className="gauntlet-passed mx-auto grid max-w-3xl justify-items-center gap-4 rounded-[28px_28px_28px_8px] bg-card p-[clamp(28px,6vw,64px)] text-center shadow-xl" aria-live="polite">
+      <span className="gauntlet-pass-seal grid size-24 place-items-center rounded-[30px_30px_30px_8px] bg-brand-green text-4xl font-black text-white" aria-hidden="true">胜</span>
+      <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">第 {displayNumber} 关 · 挑战达成</p>
+      <h1 className="m-0 text-[clamp(34px,6vw,62px)] font-black">{activeConfig?.title}，过关！</h1>
+      <p className="m-0 text-sm text-ink-soft">{completedTarget}，这一关已留下通关印记。</p>
       {s.passedLevel === LEVEL.FINAL_BOSS
         ? <BossSkillSummary stats={s.bossStats} />
         : null}
-      <div>
+      <div className="flex flex-wrap justify-center gap-2">
         {nextLevel ? (
-          <button type="button" onClick={() => actions.startLevel(nextLevel.id)}>
+          <button className="min-h-11 cursor-pointer rounded-full border-0 bg-brand-red px-5 font-black text-white" type="button" onClick={() => actions.startLevel(nextLevel.id)}>
             挑战下一关
           </button>
         ) : null}
         <button
           type="button"
-          className="is-secondary"
+          className="is-secondary min-h-11 cursor-pointer rounded-full border-0 bg-brand-green px-5 font-black text-white"
           onClick={() => actions.startLevel(s.passedLevel!)}
         >
           再来一次
         </button>
-        <button type="button" className="is-text" onClick={actions.returnToLevels}>
+        <button type="button" className="is-text min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 font-black text-ink" onClick={actions.returnToLevels}>
           返回选关
         </button>
       </div>

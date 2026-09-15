@@ -45,30 +45,30 @@ export default function ChallengeAnswerDock({
 }) {
   if (province && hardMode) {
     return (
-      <section className="answer-dock hard-mode-dock" aria-labelledby="hard-city-title">
-        <div className="dock-heading">
+      <section className="answer-dock hard-mode-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5 shadow-[0_20px_60px_rgba(43,48,43,0.08)]" aria-labelledby="hard-city-title">
+        <div className="dock-heading mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">{neighborMode ? "邻省连城 · 无提示" : "无提示模式"}</p>
-            <h2 id="hard-city-title">点区块，写名称</h2>
+            <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">{neighborMode ? "邻省连城 · 无提示" : "无提示模式"}</p>
+            <h2 className="m-0 text-xl font-black" id="hard-city-title">点区块，写名称</h2>
           </div>
         </div>
-        <div className="hard-mode-card">
-          <span className="hard-mode-mark" aria-hidden="true">?</span>
+        <div className="hard-mode-card grid gap-3 rounded-2xl border border-dashed border-brand-red/30 bg-brand-red/5 p-5">
+          <span className="hard-mode-mark grid size-12 place-items-center rounded-full bg-brand-red text-xl font-black text-white" aria-hidden="true">?</span>
           <strong>城市名称已全部隐藏</strong>
-          <p>
+          <p className="m-0 text-sm leading-6 text-ink-soft">
             {neighborMode
               ? `从 ${challengeProvinces.length} 个省级行政区的联合地图中挑选区块，输入城市、地区或区县名称。`
               : "从地图中挑选一个尚未填充的区块，输入它的城市、地区或区县名称。"}
           </p>
-          <ol>
-            <li><i>1</i> 点击地图区块</li>
-            <li><i>2</i> 手动输入名称</li>
-            <li><i>3</i> 回答正确后填入地图</li>
+          <ol className="m-0 grid list-none gap-2 p-0 text-sm">
+            <li className="flex items-center gap-2"><i className="grid size-5 place-items-center rounded-full bg-black/10 text-[10px] not-italic">1</i> 点击地图区块</li>
+            <li className="flex items-center gap-2"><i className="grid size-5 place-items-center rounded-full bg-black/10 text-[10px] not-italic">2</i> 手动输入名称</li>
+            <li className="flex items-center gap-2"><i className="grid size-5 place-items-center rounded-full bg-black/10 text-[10px] not-italic">3</i> 回答正确后填入地图</li>
           </ol>
         </div>
-        <div className="hard-mode-summary">
-          <span>已识别</span>
-          <strong>{completedNames.size}<i> / {answerCount}</i></strong>
+        <div className="hard-mode-summary mt-4 flex items-end justify-between rounded-2xl bg-ink p-4 text-white">
+          <span className="text-xs">已识别</span>
+          <strong className="text-2xl">{completedNames.size}<i className="text-sm not-italic text-white/60"> / {answerCount}</i></strong>
         </div>
       </section>
     );
@@ -76,19 +76,19 @@ export default function ChallengeAnswerDock({
 
   if (province) {
     return (
-      <section className="answer-dock" aria-labelledby="answer-title">
-        <div className="dock-heading">
+      <section className="answer-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5 shadow-[0_20px_60px_rgba(43,48,43,0.08)]" aria-labelledby="answer-title">
+        <div className="dock-heading mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">
+            <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">
               {neighborMode ? `${challengeProvinces.length} 省连城` : "名称卡片"}
             </p>
-            <h2 id="answer-title">
+            <h2 className="m-0 text-xl font-black" id="answer-title">
               {neighborMode ? "让群城各归其位" : "把名字送回地图"}
             </h2>
           </div>
-          <p><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
+          <p className="m-0 text-xs text-ink-soft"><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
         </div>
-        <div className="answer-grid">
+        <div className="answer-grid grid max-h-[620px] grid-cols-2 gap-2 overflow-y-auto pr-1 max-sm:grid-cols-1">
           {visibleAnswers.map((name) => {
             const isPlaced = completedNames.has(name);
             const isSelected = selectedAnswer === name;
@@ -96,7 +96,7 @@ export default function ChallengeAnswerDock({
               <button
                 key={name}
                 type="button"
-                className={`answer-chip ${isPlaced ? "is-placed" : ""} ${isSelected ? "is-selected" : ""}`}
+                className={`answer-chip flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${isPlaced ? "is-placed cursor-default border-brand-green/20 bg-brand-green/10 text-brand-green-dark opacity-60" : "cursor-grab border-black/10 bg-white/65 hover:-translate-y-0.5 hover:border-brand-red/30 hover:shadow-sm"} ${isSelected ? "is-selected border-brand-red bg-brand-red/10" : ""}`}
                 draggable={!isPlaced}
                 disabled={isPlaced}
                 aria-pressed={isSelected}
@@ -149,9 +149,9 @@ export default function ChallengeAnswerDock({
                   }
                 }}
               >
-                <span className="chip-grip" aria-hidden="true">⠿</span>
+                <span className="chip-grip text-ink-soft/50" aria-hidden="true">⠿</span>
                 <span>{name}</span>
-                {isPlaced ? <b aria-label="已完成">✓</b> : null}
+                {isPlaced ? <b className="ml-auto text-brand-green" aria-label="已完成">✓</b> : null}
               </button>
             );
           })}
@@ -162,28 +162,28 @@ export default function ChallengeAnswerDock({
 
   if (hardMode) {
     return (
-      <section className="province-dock hard-mode-dock" aria-labelledby="hard-province-title">
-        <div className="dock-heading">
+      <section className="province-dock hard-mode-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5" aria-labelledby="hard-province-title">
+        <div className="dock-heading mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">无提示模式</p>
-            <h2 id="hard-province-title">辨认 34 个省份</h2>
+            <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">无提示模式</p>
+            <h2 className="m-0 text-xl font-black" id="hard-province-title">辨认 34 个省份</h2>
           </div>
         </div>
-        <div className="hard-mode-card">
-          <span className="hard-mode-mark" aria-hidden="true">?</span>
+        <div className="hard-mode-card grid gap-3 rounded-2xl border border-dashed border-brand-red/30 bg-brand-red/5 p-5">
+          <span className="hard-mode-mark grid size-12 place-items-center rounded-full bg-brand-red text-xl font-black text-white" aria-hidden="true">?</span>
           <strong>省份名称已全部隐藏</strong>
-          <p>
+          <p className="m-0 text-sm leading-6 text-ink-soft">
             点击全国地图中的任一区块，输入省份名称。回答正确后
             {neighborMode ? "展开它与接壤省份的联合挑战" : "进入该省挑战"}。
           </p>
         </div>
-        <div className="blind-progress" aria-label={`已完成 ${completedProvinceCodes.size} 个挑战`}>
+        <div className="blind-progress mt-4 grid grid-cols-7 gap-1.5 max-sm:grid-cols-6" aria-label={`已完成 ${completedProvinceCodes.size} 个挑战`}>
           {PROVINCES.map((item, index) => {
             const complete = completedProvinceCodes.has(item.code);
             return (
               <span
                 key={item.code}
-                className={complete ? "is-complete" : ""}
+                className={`grid aspect-square place-items-center rounded-lg text-[10px] font-bold ${complete ? "is-complete bg-brand-green text-white" : "bg-black/5"}`}
                 aria-label={`进度位 ${index + 1}${complete ? "，已完成" : "，未完成"}`}
               >
                 {complete ? "✓" : index + 1}
@@ -196,41 +196,41 @@ export default function ChallengeAnswerDock({
   }
 
   return (
-    <section className="province-dock" aria-labelledby="province-title">
-      <div className="dock-heading">
+    <section className="province-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5" aria-labelledby="province-title">
+      <div className="dock-heading mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="eyebrow">34 个省级行政区</p>
-          <h2 id="province-title">
+          <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">34 个省级行政区</p>
+          <h2 className="m-0 text-xl font-black" id="province-title">
             {neighborMode ? "选择连城起点" : "也可以从名称进入"}
           </h2>
         </div>
         <button
-          className="text-button"
+          className="text-button cursor-pointer border-0 bg-transparent p-1 text-xs font-black text-brand-red"
           type="button"
           onClick={() => setShowAllProvinces((value) => !value)}
         >
           {showAllProvinces ? "只看未完成" : "查看全部"}
         </button>
       </div>
-      <div className="province-grid">
+      <div className="province-grid grid grid-cols-2 gap-2 max-sm:grid-cols-1">
         {visibleProvinceList.map((item, index) => {
           const complete = completedProvinceCodes.has(item.code);
           return (
             <button
               key={item.code}
               type="button"
-              className={`province-chip ${complete ? "is-complete" : ""}`}
+              className={`province-chip grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 rounded-xl border border-black/10 px-3 py-2 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${complete ? "is-complete bg-brand-green/10 text-brand-green-dark" : "bg-white/65"}`}
               onClick={() => onEnterProvince(item)}
             >
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{item.shortName}</strong>
-              <i>{complete ? "✓" : "→"}</i>
+              <span className="text-[10px] font-black text-ink-soft">{String(index + 1).padStart(2, "0")}</span>
+              <strong className="font-black">{item.shortName}</strong>
+              <i className="not-italic text-brand-red">{complete ? "✓" : "→"}</i>
             </button>
           );
         })}
       </div>
       {visibleProvinceList.length === 0 ? (
-        <div className="all-complete-note">
+        <div className="all-complete-note rounded-2xl bg-brand-green/10 p-5 text-center font-black text-brand-green-dark">
           {neighborMode
             ? "34 个邻省连城起点已全部完成，太厉害了！"
             : "全国 34 个省级行政区已全部点亮，太厉害了！"}

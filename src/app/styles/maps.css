@@ -1,0 +1,187 @@
+/* SVG geometry needs selectors for vector states, painted text, and hit areas. */
+.game-map {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(100%, 1180px);
+  height: min(68vw, 650px);
+  min-height: 360px;
+  overflow: visible;
+}
+
+.map-shadow-layer { transform-origin: center; }
+.map-region {
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: fill 180ms ease, filter 180ms ease, opacity 180ms ease;
+}
+.map-region-hit {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.001);
+  stroke-width: 0;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+.game-map--national .map-region {
+  fill: #e9dfc9;
+  stroke: var(--red);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+}
+.game-map--national .map-region:hover,
+.game-map--national .map-region:focus-visible { fill: #e5c08b; filter: brightness(1.03); }
+.game-map--national .map-region.is-complete { fill: #b8d5b5; }
+.game-map--detail .map-region {
+  fill: url(#paper-dots);
+  stroke: var(--green);
+  stroke-linejoin: round;
+  stroke-width: 1.25;
+}
+.game-map--detail .map-region:hover,
+.game-map--detail .map-region.is-targetable:hover { fill: #eadcb5; }
+.game-map--detail .map-region.is-complete { fill: #c6dec3; cursor: default; }
+.game-map--detail .map-region.is-province-tinted { fill: var(--province-fill); }
+.game-map--detail .map-region.is-province-tinted:hover { filter: brightness(0.96) saturate(1.08); }
+.game-map--detail .map-region.is-wrong { animation: wrong-region 520ms ease; }
+.is-hard-mode .game-map .map-region:not(.is-complete) { cursor: crosshair; }
+.province-outline {
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+  stroke: var(--red);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+}
+.region-label {
+  pointer-events: none;
+  fill: var(--green-dark);
+  font-size: 13px;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: rgba(248, 247, 236, 0.96);
+  stroke-linejoin: round;
+  stroke-width: 4px;
+}
+.region-label.is-long { font-size: 10px; }
+.region-label.is-hint { fill: #7e5d39; opacity: 0.78; }
+.region-label.is-national { fill: var(--red-dark); font-size: 15px; stroke-width: 4.5px; }
+.game-map.is-joined .region-label { font-size: 8px; stroke-width: 2.6px; }
+.game-map.is-joined .region-label.is-long { font-size: 6.5px; }
+.game-map.is-joined .province-outline { stroke-width: 2.1; }
+
+.city-atlas-region { stroke: var(--green); stroke-linejoin: round; stroke-width: 0.72px; }
+.city-atlas-region:hover { filter: brightness(0.96) saturate(1.08); }
+.city-atlas-province-outline {
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 2.1px;
+  pointer-events: none;
+}
+.city-atlas-labels { pointer-events: none; }
+.city-atlas-labels text {
+  fill: #27362f;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 3.7px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: rgba(255, 253, 247, 0.95);
+  stroke-linejoin: round;
+  stroke-width: 0.86px;
+}
+.city-atlas-labels text.is-long { font-size: 2.95px; }
+.city-atlas-labels .city-atlas-plate { fill: #9c2f28; font-size: 0.9em; stroke-width: 0.78px; }
+
+.gauntlet-silhouette path {
+  fill: #d9cda9;
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 15px 14px rgba(68, 55, 35, 0.14));
+}
+.gauntlet-national-map,
+.gauntlet-detail-map { overflow: visible; filter: drop-shadow(0 15px 14px rgba(68, 55, 35, 0.1)); }
+.gauntlet-national-region {
+  fill: #eee4cf;
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 1.25px;
+  cursor: pointer;
+  transition: fill 130ms ease, filter 130ms ease;
+}
+.gauntlet-national-region:hover,
+.gauntlet-national-region:focus-visible { fill: #e4d5b9; filter: brightness(0.98); outline: none; }
+.gauntlet-national-region.is-selected { fill: #94c7aa; stroke-width: 2px; }
+.gauntlet-national-region.is-origin { fill: #e3bd72; stroke-width: 2.5px; }
+.gauntlet-national-region.is-route { fill: #a9c9dd; stroke: #355f91; stroke-width: 1.8px; }
+.gauntlet-national-region.is-route.is-origin { fill: #e3bd72; stroke: var(--red); }
+.gauntlet-national-region.is-current { fill: #4d8c76; stroke: #173f32; stroke-width: 2.8px; }
+.gauntlet-national-region.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px rgba(241, 199, 91, 0.72));
+}
+.gauntlet-national-map text {
+  fill: #4c574f;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  paint-order: stroke;
+  pointer-events: none;
+  stroke: rgba(255, 253, 247, 0.9);
+  stroke-width: 2px;
+}
+.gauntlet-national-map text.is-long { font-size: 8px; }
+.gauntlet-detail-map path,
+.gauntlet-province-map-panel path {
+  fill: #eee4cf;
+  stroke: var(--green);
+  stroke-linejoin: round;
+  stroke-width: 1.8px;
+  cursor: pointer;
+  transition: fill 130ms ease, stroke-width 130ms ease, filter 130ms ease;
+}
+.gauntlet-detail-map path:hover,
+.gauntlet-detail-map path:focus-visible,
+.gauntlet-province-map-panel path:hover,
+.gauntlet-province-map-panel path:focus-visible { fill: #b9d8c4; stroke-width: 2.8px; outline: none; }
+.gauntlet-detail-map path.is-correct-answer,
+.gauntlet-province-map-panel path.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 5px rgba(241, 199, 91, 0.68));
+}
+.gauntlet-detail-map path.is-wrong-selection { fill: #e7a09a; stroke: #8f302a; stroke-width: 3px; }
+.gauntlet-province-map-wall.is-read-only path:not(.is-correct-answer) { cursor: default; fill: #eee4cf; }
+.gauntlet-detail-map .detail-map-label {
+  fill: #3f4d47;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  paint-order: stroke;
+  pointer-events: none;
+  stroke: rgba(255, 253, 247, 0.92);
+  stroke-width: 2.6px;
+}
+.gauntlet-detail-map .detail-map-label.is-answer-review-label { font-size: 12px; stroke-width: 3px; }
+.gauntlet-detail-map .detail-map-label.is-correct-answer-label { fill: #71430f; font-size: 15px; stroke: #fff7d3; stroke-width: 4px; }
+.gauntlet-detail-map .detail-map-label.is-wrong-selection-label { fill: #8f302a; font-size: 15px; stroke: #fff0ed; stroke-width: 4px; }
+.gauntlet-detail-map .detail-answer-marker { font-size: 10px; letter-spacing: 0.04em; }
+
+@media (hover: none), (pointer: coarse) {
+  .map-region-hit { stroke-width: 44; pointer-events: stroke; }
+}
+
+@media (max-width: 620px) {
+  .game-map { height: 54vw; min-height: 315px; }
+  .region-label { font-size: 10px; stroke-width: 3px; }
+  .region-label.is-national { font-size: 11px; stroke-width: 3.5px; }
+}
+
+@keyframes wrong-region {
+  0%, 100% { fill: url(#paper-dots); }
+  35% { fill: #efb0a2; }
+  70% { fill: #f5d1c3; }
+}

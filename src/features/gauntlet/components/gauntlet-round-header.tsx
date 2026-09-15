@@ -36,23 +36,23 @@ export default function GauntletRoundHeader({
   const activeConfig = GAUNTLET_LEVEL_BY_ID.get(s.level) ?? null;
   const displayNumber = gauntletLevelNumber(s.level);
   return (
-    <section className="gauntlet-round-heading">
+    <section className="gauntlet-round-heading mb-5 grid grid-cols-[1fr_auto] items-end gap-5 max-lg:grid-cols-1">
       <div>
-        <button type="button" onClick={actions.returnToLevels}>← 返回选关</button>
-        <p className="eyebrow">第 {displayNumber} 关 · {activeConfig?.title}</p>
-        <h1>{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
+        <button className="cursor-pointer border-0 bg-transparent p-0 text-xs font-black text-brand-red max-md:hidden" type="button" onClick={actions.returnToLevels}>← 返回选关</button>
+        <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">第 {displayNumber} 关 · {activeConfig?.title}</p>
+        <h1 className="mb-0 mt-2 text-[clamp(30px,5vw,58px)] font-black leading-none">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
       </div>
       <div
-        className={`gauntlet-round-actions ${
+        className={`gauntlet-round-actions flex gap-3 max-sm:grid max-sm:grid-cols-2 ${
           !d.timedMode && s.level !== LEVEL.FINAL_BOSS ? "is-progress-only" : ""
         }`}
       >
         {s.level === LEVEL.FINAL_BOSS ? (
-          <div className="boss-lives" aria-label={`剩余 ${s.bossLives} 条生命`}>
-            <span>生命</span>
+          <div className="boss-lives rounded-2xl bg-[#3b243d] p-3 text-white" aria-label={`剩余 ${s.bossLives} 条生命`}>
+            <span className="text-[9px] font-black text-white/60">生命</span>
             <strong>
               {Array.from({ length: FINAL_BOSS_LIFE_COUNT }, (_, index) => (
-                <i key={index} className={index < s.bossLives ? "is-alive" : ""}>
+                <i key={index} className={`not-italic ${index < s.bossLives ? "is-alive text-brand-red" : "text-white/20"}`}>
                   ♥
                 </i>
               ))}
@@ -60,22 +60,23 @@ export default function GauntletRoundHeader({
           </div>
         ) : null}
         {d.timedMode ? (
-          <div className={`gauntlet-timer ${
-            s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "is-urgent" : ""
+          <div className={`gauntlet-timer min-w-32 rounded-2xl p-3 text-white ${
+            s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "is-urgent animate-pulse bg-brand-red-dark" : "bg-ink"
           }`}>
-            <span>剩余时间</span>
-            <strong>{s.timeLeft}<i> 秒</i></strong>
+            <span className="text-[9px] font-black text-white/60">剩余时间</span>
+            <strong className="block text-2xl">{s.timeLeft}<i className="text-xs not-italic"> 秒</i></strong>
           </div>
         ) : null}
-        <div className="gauntlet-progress-card">
-          <span>{progressLabel(s.level)}</span>
-          <strong>
+        <div className="gauntlet-progress-card min-w-44 rounded-2xl border border-black/10 bg-card p-3">
+          <span className="text-[9px] font-black text-ink-soft">{progressLabel(s.level)}</span>
+          <strong className="block text-2xl">
             {s.level === LEVEL.MISTAKE_REVENGE && d.target === 0
               ? "暂无"
-              : <>{d.progress}<i> / {d.target}</i></>}
+              : <>{d.progress}<i className="text-xs not-italic text-ink-soft"> / {d.target}</i></>}
           </strong>
-          <div>
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/10">
             <span
+              className="block h-full bg-brand-green"
               style={{
                 width: `${d.target ? (d.progress / d.target) * 100 : 0}%`,
               }}

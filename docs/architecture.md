@@ -42,8 +42,10 @@ src/
 - `model`、`hooks`、`data`、`config`、`services` 不得依赖 `components`；展示层可以消费模型，模型不能反向消费展示层。
 - 业务 feature 不得直接引用另一个业务 feature；需要共享的内容先下沉到 `domain` 或 `shared`。
 - 业务关系使用稳定 ID（省份使用行政区划 `code`），名称只用于展示和用户输入兼容。
-- 可复用布局、间距、颜色和响应式状态优先使用 Tailwind；地图 path、复杂动画等保留在对应的功能样式文件中。
+- 常规布局、间距、颜色、交互状态和响应式规则直接使用 Tailwind utilities。禁止用大型 `*-styles.ts`、任意后代选择器集合或 `@apply` 变相恢复集中样式表。
+- CSS 文件固定为 `src/app/globals.css`（主题、全局基线、关键帧）与 `src/app/styles/maps.css`（SVG path、地图文字描边及触控命中区）；架构检查会拒绝其他 CSS 文件。
+- 重复的 Tailwind 组合优先提取为职责明确的小型展示组件；仅供一个文件复用的静态组合可定义为该文件内的 class 常量。
 - 常量放入 feature config 或领域数据，禁止在组件中复制关卡 ID、存储 key 等魔法字符串。
 - 项目只使用 pnpm，并只提交 `pnpm-lock.yaml`。
 
-运行 `pnpm check:architecture` 可检查文件大小、命名、关键目录、依赖方向、业务模块边界、UI 反向依赖、路由和包管理器约束。
+运行 `pnpm check:architecture` 可检查文件大小、CSS 白名单、命名、关键目录、依赖方向、业务模块边界、UI 反向依赖、路由和包管理器约束。

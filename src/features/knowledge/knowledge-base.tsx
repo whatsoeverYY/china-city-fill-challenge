@@ -220,15 +220,15 @@ export default function KnowledgeBase({
 
     if (activeCategoryId === "neighbors") {
       return (
-        <div className="knowledge-neighbor-layout">
-          <aside>
-            <p>选择中心省份</p>
-            <div className="knowledge-province-selector">
+        <div className="knowledge-neighbor-layout grid grid-cols-[280px_1fr] gap-5 max-lg:grid-cols-1">
+          <aside className="rounded-2xl bg-card p-5">
+            <p className="mt-0 font-black">选择中心省份</p>
+            <div className="knowledge-province-selector grid grid-cols-4 gap-2">
               {provinces.map((province) => (
                 <button
                   key={province.code}
                   type="button"
-                  className={province.code === selectedNeighborProvince?.code ? "is-active" : ""}
+                  className={`cursor-pointer rounded-lg border border-black/10 p-2 text-xs ${province.code === selectedNeighborProvince?.code ? "is-active bg-[#735285] text-white" : "bg-white"}`}
                   onClick={() => setSelectedNeighborCode(province.code)}
                 >
                   {province.shortName}
@@ -236,20 +236,21 @@ export default function KnowledgeBase({
               ))}
             </div>
           </aside>
-          <section className="knowledge-neighbor-stage">
+          <section className="knowledge-neighbor-stage rounded-2xl bg-card p-6">
             <div className="neighbor-orbit" aria-label={`${selectedNeighborProvince?.name}的陆地邻省`}>
-              <article className="neighbor-center">
+              <article className="neighbor-center mx-auto grid size-40 place-items-center rounded-full bg-[#735285] text-center text-white [&_h3]:m-0">
                 <span>{provincePlatePrefixes[selectedNeighborProvince?.code]}</span>
                 <h3>{selectedNeighborProvince?.shortName}</h3>
                 <p>{plainPlaceName(provinceCapitals[selectedNeighborProvince?.code])}</p>
               </article>
-              <div className="neighbor-satellites">
+              <div className="neighbor-satellites mt-5 grid grid-cols-4 gap-2 max-sm:grid-cols-2">
                 {selectedNeighborCodes.length > 0 ? selectedNeighborCodes.map((code, index) => {
                   const neighbor = provinceByCode.get(code);
                   if (!neighbor) return null;
                   return (
                     <button
                       key={code}
+                      className="rounded-xl border border-black/10 bg-paper p-3"
                       type="button"
                       onClick={() => setSelectedNeighborCode(code)}
                     >
@@ -259,11 +260,11 @@ export default function KnowledgeBase({
                     </button>
                   );
                 }) : (
-                  <p className="knowledge-empty-note">没有陆地相邻的省级行政区</p>
+                  <p className="knowledge-empty-note text-sm text-ink-soft">没有陆地相邻的省级行政区</p>
                 )}
               </div>
             </div>
-            <div className="knowledge-neighbor-mnemonic">
+            <div className="knowledge-neighbor-mnemonic mt-5 flex items-center gap-3 rounded-xl bg-[#735285]/10 p-4 text-sm">
               <span>围</span>
               <p>
                 <strong>{selectedNeighborProvince?.shortName}有 {selectedNeighborCodes.length} 个陆地邻省</strong>
@@ -282,21 +283,21 @@ export default function KnowledgeBase({
       const maxCount = Math.max(...sortedCounts.map((item) => item.cityCount));
       return (
         <div className="knowledge-count-layout">
-          <div className="knowledge-memory-banner is-gold">
-            <span>数</span>
+          <div className="knowledge-memory-banner is-gold mb-5 flex items-center gap-4 rounded-2xl bg-brand-gold/20 p-5">
+            <span className="grid size-12 place-items-center rounded-full bg-brand-gold font-black">数</span>
             <div>
               <strong>先记两端，再记密集区</strong>
-              <p>广东 21 居首；港澳按现行行政区划口径计 0。相同数量的省份可以成组记。</p>
+              <p className="mb-0 text-xs text-ink-soft">广东 21 居首；港澳按现行行政区划口径计 0。相同数量的省份可以成组记。</p>
             </div>
           </div>
-          <ol className="knowledge-count-ranking">
+          <ol className="knowledge-count-ranking m-0 grid list-none gap-2 p-0">
             {sortedCounts.map((item, index) => (
-              <li key={item.code}>
+              <li className="grid grid-cols-[40px_80px_1fr_65px] items-center gap-3 rounded-xl bg-card p-3 max-sm:grid-cols-[30px_50px_1fr_55px]" key={item.code}>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <strong>{item.shortName}</strong>
-                <div aria-hidden="true"><i style={{ width: `${Math.max((item.cityCount / maxCount) * 100, 2)}%` }} /></div>
+                <div className="h-2 overflow-hidden rounded-full bg-black/10" aria-hidden="true"><i className="block h-full bg-[#735285]" style={{ width: `${Math.max((item.cityCount / maxCount) * 100, 2)}%` }} /></div>
                 <b>{item.cityCount}<small>座</small></b>
-                <p>{item.explanation}</p>
+                <p className="col-span-full m-0 text-xs text-ink-soft">{item.explanation}</p>
               </li>
             ))}
           </ol>
@@ -306,26 +307,26 @@ export default function KnowledgeBase({
 
     if (activeCategoryId === "rivers") {
       return (
-        <div className="knowledge-river-list">
+        <div className="knowledge-river-list grid gap-5">
           {RIVER_KNOWLEDGE.map((river) => (
-            <article className={`knowledge-river-card is-${river.id}`} key={river.id}>
-              <header>
+            <article className={`knowledge-river-card is-${river.id} rounded-[20px_20px_20px_6px] bg-card p-6 shadow-sm`} key={river.id}>
+              <header className="flex justify-between gap-5 max-md:block">
                 <div>
                   <p>{river.label}</p>
-                  <h3>{river.name}</h3>
+                  <h3 className="mt-1 text-3xl font-black">{river.name}</h3>
                 </div>
-                <dl>
+                <dl className="flex gap-4 [&_dd]:m-0 [&_dd]:text-xs [&_dd]:font-bold [&_dt]:text-[9px] [&_dt]:text-ink-soft">
                   <div><dt>源头</dt><dd>{river.source}</dd></div>
                   <div><dt>入海</dt><dd>{river.mouth}</dd></div>
                   <div><dt>长度</dt><dd>{river.length}</dd></div>
                 </dl>
               </header>
-              <section className="river-mnemonic">
+              <section className="river-mnemonic rounded-xl bg-[#735285]/10 p-4">
                 <span>口诀</span>
                 <strong>{river.mnemonic}</strong>
               </section>
               <div
-                className="river-route"
+                className="river-route my-5 flex flex-wrap gap-2 [&>div]:rounded-full [&>div]:bg-paper [&>div]:px-3 [&>div]:py-2"
                 aria-label={`${river.name}干流流经省级行政区顺序`}
                 style={{ "--river-stop-count": river.provinceCodes.length } as CSSProperties}
               >
@@ -336,7 +337,7 @@ export default function KnowledgeBase({
                   </div>
                 ))}
               </div>
-              <div className="river-cities">
+              <div className="river-cities text-xs text-ink-soft">
                 <span>代表城市节点（非完整名录）</span>
                 <p>{river.representativeCities.join(" · ")}</p>
               </div>
@@ -356,21 +357,21 @@ export default function KnowledgeBase({
         "青川甘宁内蒙古，陕晋豫鲁",
       ];
       return (
-        <div className="knowledge-territory-grid">
+        <div className="knowledge-territory-grid grid grid-cols-2 gap-4 max-md:grid-cols-1">
           {groups.map((group, groupIndex) => (
-            <article key={group.title}>
-              <header>
+            <article className="rounded-2xl bg-card p-5" key={group.title}>
+              <header className="flex gap-3">
                 <span>{String(groupIndex + 1).padStart(2, "0")}</span>
                 <div><h3>{group.title}</h3><p>{group.description}</p></div>
               </header>
-              <div className="territory-province-cloud">
+              <div className="territory-province-cloud flex flex-wrap gap-2">
                 {group.codes.map((code) => (
-                  <span key={code}>
+                  <span className="rounded-full bg-[#735285]/10 px-3 py-2" key={code}>
                     {provinceByCode.get(code)?.shortName}
                   </span>
                 ))}
               </div>
-              <p className="territory-memory-tip"><b>记忆抓手</b>{memoryTips[groupIndex]}</p>
+              <p className="territory-memory-tip text-xs leading-5 text-ink-soft"><b>记忆抓手</b>{memoryTips[groupIndex]}</p>
             </article>
           ))}
         </div>
@@ -392,20 +393,20 @@ export default function KnowledgeBase({
         return <KnowledgeSearchEmpty query={query} />;
       }
       return (
-        <div className="knowledge-confusable-grid">
+        <div className="knowledge-confusable-grid grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
           {filteredPairs.map((pair, index) => (
-            <article key={`${pair.left.city}-${pair.right.city}`}>
-              <header><span>辨析 {String(index + 1).padStart(2, "0")}</span><b>VS</b></header>
-              <div>
+            <article className="rounded-2xl bg-card p-5" key={`${pair.left.city}-${pair.right.city}`}>
+              <header className="flex justify-between"><span>辨析 {String(index + 1).padStart(2, "0")}</span><b>VS</b></header>
+              <div className="grid grid-cols-2 gap-2">
                 {[pair.left, pair.right].map((city) => (
-                  <section key={`${city.province}-${city.city}`}>
+                  <section className="rounded-xl bg-paper p-3" key={`${city.province}-${city.city}`}>
                     <span>{plainPlaceName(city.city).slice(0, 1)}</span>
-                    <h3>{plainPlaceName(city.city)}</h3>
-                    <p>{city.provinceShort}</p>
+                    <h3 className="mb-1 text-xl">{plainPlaceName(city.city)}</h3>
+                    <p className="text-xs text-ink-soft">{city.provinceShort}</p>
                   </section>
                 ))}
               </div>
-              <p><b>记忆钩子</b>{pair.memoryTip}</p>
+              <p className="text-xs text-ink-soft"><b>记忆钩子</b>{pair.memoryTip}</p>
             </article>
           ))}
         </div>
@@ -413,21 +414,21 @@ export default function KnowledgeBase({
     }
 
     return (
-      <div className="knowledge-reading-layout">
-        <section className="knowledge-reading-intro">
+      <div className="knowledge-reading-layout grid grid-cols-[minmax(260px,.7fr)_1.3fr] gap-5 max-lg:grid-cols-1">
+        <section className="knowledge-reading-intro rounded-2xl bg-[#735285] p-7 text-white">
           <span>读图五步法</span>
-          <h3>大范围 → 小范围<br />位置 → 边界 → 路线</h3>
+          <h3 className="text-3xl">大范围 → 小范围<br />位置 → 边界 → 路线</h3>
           <p>地图题不是只靠死记轮廓。把观察顺序固定下来，陌生题也能用排除法解决。</p>
-          <button type="button" onClick={onOpenAtlas}>打开全国车牌图鉴练读图</button>
+          <button className="cursor-pointer rounded-full border-0 bg-white px-4 py-3 font-black text-[#735285]" type="button" onClick={onOpenAtlas}>打开全国车牌图鉴练读图</button>
         </section>
-        <ol className="knowledge-tip-list">
+        <ol className="knowledge-tip-list m-0 grid list-none gap-3 p-0">
           {MAP_READING_TIPS.map((tip, index) => (
-            <li key={tip.mark}>
-              <span>{tip.mark}</span>
+            <li className="flex gap-4 rounded-2xl bg-card p-5" key={tip.mark}>
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#735285] font-black text-white">{tip.mark}</span>
               <div>
                 <small>第 {index + 1} 步</small>
-                <h3>{tip.title}</h3>
-                <p>{tip.detail}</p>
+                <h3 className="m-0">{tip.title}</h3>
+                <p className="text-xs text-ink-soft">{tip.detail}</p>
                 <strong>{tip.mnemonic}</strong>
               </div>
             </li>
@@ -438,20 +439,20 @@ export default function KnowledgeBase({
   };
 
   return (
-    <main className="knowledge-shell">
-      <header className="knowledge-header">
-        <button className="knowledge-brand" type="button" onClick={backToCatalog}>
-          <span aria-hidden="true">知</span>
+    <main className="knowledge-shell min-h-dvh bg-[#f1ece1] text-ink">
+      <header className="knowledge-header sticky top-0 z-40 flex min-h-[78px] items-center justify-between gap-6 border-b border-black/10 bg-card/95 px-[max(24px,calc((100vw_-_1380px)/2))] py-3 shadow-sm backdrop-blur-xl max-sm:px-3">
+        <button className="knowledge-brand flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left" type="button" onClick={backToCatalog}>
+          <span className="grid size-12 place-items-center rounded-[14px_14px_14px_5px] bg-[#735285] text-xl font-black text-white max-sm:size-10" aria-hidden="true">知</span>
           <div>
-            <p>CHINA GEO KNOWLEDGE</p>
-            <h1>中国地理知识馆</h1>
+            <p className="m-0 text-[8px] font-black tracking-[0.16em] text-[#817588] max-sm:hidden">CHINA GEO KNOWLEDGE</p>
+            <h1 className="m-0 text-xl font-black max-sm:text-base">中国地理知识馆</h1>
           </div>
         </button>
-        <div className="knowledge-header-actions">
+        <div className="knowledge-header-actions flex gap-2 [&>button]:min-h-10 [&>button]:cursor-pointer [&>button]:rounded-full [&>button]:border [&>button]:border-black/20 [&>button]:bg-white [&>button]:px-3.5 [&>button]:text-[10px] [&>button]:font-black">
           {activeCategory ? (
             <button type="button" onClick={backToCatalog}>← 返回分类</button>
           ) : null}
-          <button className="knowledge-exit" type="button" onClick={onExit}>返回游戏</button>
+          <button className="knowledge-exit !border-brand-red-dark !bg-brand-red-dark !text-white" type="button" onClick={onExit}>返回游戏</button>
         </div>
       </header>
 
@@ -459,23 +460,24 @@ export default function KnowledgeBase({
         <KnowledgeCatalog onOpenCategory={openCategory} />
       ) : (
         <>
-          <section className={`knowledge-detail-hero is-${activeCategory.tone}`}>
-            <span aria-hidden="true">{activeCategory.icon}</span>
+          <section className={`knowledge-detail-hero is-${activeCategory.tone} mx-auto my-10 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[auto_1fr_auto] items-center gap-6 rounded-[24px_24px_24px_8px] bg-[#735285] p-8 text-white shadow-xl max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:p-5`}>
+            <span className="grid size-16 place-items-center rounded-2xl bg-white/15 text-3xl" aria-hidden="true">{activeCategory.icon}</span>
             <div>
-              <p>{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>
-              <h2>{activeCategory.title}</h2>
-              <strong>{activeCategory.subtitle}</strong>
+              <p className="m-0 text-[10px] font-black">{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>
+              <h2 className="my-1 text-4xl font-black">{activeCategory.title}</h2>
+              <strong className="text-sm">{activeCategory.subtitle}</strong>
               <div>{activeCategory.levelRefs.map((levelId) => {
                 const levelNumber = gauntletLevelNumber(levelId);
                 return levelNumber > 0
-                  ? <i key={levelId}>关联第 {levelNumber} 关</i>
+                  ? <i className="mr-2 mt-2 inline-flex rounded-full bg-white/15 px-2 py-1 text-[9px] not-italic" key={levelId}>关联第 {levelNumber} 关</i>
                   : null;
               })}</div>
             </div>
             {SEARCHABLE_CATEGORIES.has(activeCategory.id) ? (
-              <label className="knowledge-search">
-                <span>搜索本专题</span>
+              <label className="knowledge-search grid gap-1.5 max-md:col-span-2">
+                <span className="text-[9px] font-black">搜索本专题</span>
                 <input
+                  className="min-h-11 w-64 rounded-xl border border-white/25 bg-white/95 px-3 text-ink outline-none max-md:w-full"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="输入省份、城市、车牌或学校"
@@ -484,10 +486,10 @@ export default function KnowledgeBase({
               </label>
             ) : null}
           </section>
-          <section className="knowledge-detail-content">{renderDetailContent()}</section>
-          <footer className="knowledge-page-footer">
-            <button type="button" onClick={backToCatalog}>← 继续浏览其他知识专题</button>
-            <span>知识来自当前关卡题库及注明的权威公开资料</span>
+          <section className="knowledge-detail-content mx-auto min-h-[50vh] w-[min(1380px,calc(100%_-_48px))] pb-12 max-sm:w-[calc(100%_-_24px)]">{renderDetailContent()}</section>
+          <footer className="knowledge-page-footer mx-auto flex w-[min(1380px,calc(100%_-_48px))] items-center justify-between gap-4 border-t border-black/10 py-8 max-sm:w-[calc(100%_-_24px)] max-sm:flex-col">
+            <button className="cursor-pointer rounded-full border-0 bg-[#735285] px-4 py-3 font-black text-white" type="button" onClick={backToCatalog}>← 继续浏览其他知识专题</button>
+            <span className="text-[10px] text-ink-soft">知识来自当前关卡题库及注明的权威公开资料</span>
           </footer>
         </>
       )}

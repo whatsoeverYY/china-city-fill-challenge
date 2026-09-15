@@ -1,29 +1,5 @@
 @import "tailwindcss";
-@import "./styles/base.css";
-@import "./styles/account.css";
-@import "./styles/admin.css";
-@import "./styles/admin-responsive.css";
-@import "./styles/app-navigation.css";
-@import "./styles/atlas.css";
-@import "./styles/challenge-header.css";
-@import "./styles/challenge-map.css";
-@import "./styles/challenge-map-regions.css";
-@import "./styles/challenge-answer.css";
-@import "./styles/gauntlet-lobby.css";
-@import "./styles/gauntlet-progress.css";
-@import "./styles/gauntlet-map.css";
-@import "./styles/gauntlet-question.css";
-@import "./styles/gauntlet-results.css";
-@import "./styles/knowledge-shell.css";
-@import "./styles/knowledge-profiles.css";
-@import "./styles/knowledge-lists.css";
-@import "./styles/knowledge-topics.css";
-@import "./styles/responsive-large.css";
-@import "./styles/responsive-tablet.css";
-@import "./styles/responsive-phone.css";
-@import "./styles/knowledge-responsive-large.css";
-@import "./styles/knowledge-responsive-tablet.css";
-@import "./styles/knowledge-responsive-phone.css";
+@import "./styles/maps.css";
 
 @theme inline {
   --color-ink: var(--ink);
@@ -37,4 +13,55 @@
   --color-brand-green-dark: var(--green-dark);
   --color-brand-gold: var(--gold);
   --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+:root {
+  --ink: #19221d;
+  --ink-soft: #5b625d;
+  --paper: #f2eee4;
+  --paper-deep: #e6dfd0;
+  --card: #fbf8f0;
+  --red: #b43b32;
+  --red-dark: #7d2924;
+  --green: #2d7d5f;
+  --green-dark: #17543e;
+  --gold: #d5a945;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { min-width: 320px; background: var(--paper); scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 14% 6%, rgba(255, 255, 255, 0.9), transparent 24rem),
+      radial-gradient(circle at 84% 28%, rgba(198, 177, 127, 0.14), transparent 30rem),
+      linear-gradient(rgba(53, 66, 56, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(53, 66, 56, 0.035) 1px, transparent 1px),
+      var(--paper);
+    background-size: auto, auto, 28px 28px, 28px 28px, auto;
+  }
+  button, input, select { font: inherit; }
+  button { color: inherit; }
+  button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+    outline: 3px solid rgba(213, 169, 69, 0.82);
+    outline-offset: 3px;
+  }
+}
+
+@keyframes dialog-shake {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-7px); }
+  65% { transform: translateX(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

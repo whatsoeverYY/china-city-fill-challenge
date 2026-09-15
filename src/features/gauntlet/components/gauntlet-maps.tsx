@@ -82,7 +82,7 @@ export function ProvinceSilhouette({
   return (
     <ProvinceShape
       feature={feature}
-      className="gauntlet-silhouette"
+      className="gauntlet-silhouette h-auto max-h-[360px] w-full max-w-xl"
       rotation={rotation}
       ariaLabel="待辨认的省级行政区轮廓"
     />
@@ -107,7 +107,7 @@ export function GauntletDetailMap({
   const project = useMemo(() => makeProjection(map.features), [map.features]);
   return (
     <svg
-      className="gauntlet-detail-map"
+      className="gauntlet-detail-map block h-auto max-h-[520px] w-full"
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
       aria-label={readOnly
@@ -234,15 +234,15 @@ export function GauntletProvinceMapWall({
 
   return (
     <div
-      className={`gauntlet-province-map-wall ${panels.length === 1 ? "is-single" : ""} ${panels.length > 8 ? "is-many" : ""} ${readOnly ? "is-read-only" : ""}`}
+      className={`gauntlet-province-map-wall grid size-full max-h-[560px] grid-cols-3 gap-2 overflow-auto p-1 max-lg:grid-cols-2 max-sm:grid-cols-1 ${panels.length === 1 ? "is-single grid-cols-1" : ""} ${panels.length > 8 ? "is-many" : ""} ${readOnly ? "is-read-only" : ""}`}
       role="group"
       aria-label={`所选 ${panels.length} 个省份的行政区地图墙`}
     >
       {panels.map(({ province, features, project }) => (
-        <section className="gauntlet-province-map-panel" key={province.code}>
+        <section className="gauntlet-province-map-panel relative min-h-44 overflow-hidden rounded-xl border border-black/10 bg-white/60" key={province.code}>
           {onProvinceFocus && panels.length > 1 && !readOnly ? (
             <button
-              className="gauntlet-province-focus-button"
+              className="gauntlet-province-focus-button absolute right-2 top-2 z-[2] inline-flex cursor-pointer items-center gap-1 rounded-full border border-brand-green/25 bg-card/90 px-2.5 py-1.5 text-[9px] font-black text-brand-green-dark shadow-sm"
               type="button"
               aria-label="选择此省并放大地图"
               onClick={() => onProvinceFocus(province.code)}
@@ -251,7 +251,7 @@ export function GauntletProvinceMapWall({
               放大
             </button>
           ) : null}
-          <svg viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} role="img" aria-label="无名称省内行政区地图">
+          <svg className="block size-full min-h-44" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} role="img" aria-label="无名称省内行政区地图">
             {features.map((feature) => {
               const name = feature.properties.name;
               return (
@@ -311,7 +311,7 @@ export function GauntletNationalMap({
 
   return (
     <svg
-      className="gauntlet-national-map"
+      className="gauntlet-national-map block h-auto max-h-[520px] w-full"
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
       aria-label="闯关用中国省级行政区地图"

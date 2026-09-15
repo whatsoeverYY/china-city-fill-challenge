@@ -406,7 +406,7 @@ export default function CityGame() {
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
 
   return (
-    <main className={`game-shell ${hardMode ? "is-hard-mode" : ""} ${neighborMode ? "is-neighbor-mode" : ""}`}>
+    <main className={`game-shell mx-auto min-h-dvh w-full max-w-[1540px] px-6 pb-10 pt-5 text-ink max-md:px-3 max-md:pb-24 max-md:pt-3 ${hardMode ? "is-hard-mode" : ""} ${neighborMode ? "is-neighbor-mode" : ""}`}>
       <ChallengeHeader
         province={province}
         neighborMode={neighborMode}
@@ -420,15 +420,15 @@ export default function CityGame() {
       />
 
       {isChallengeComplete && province ? (
-        <section className="success-banner" aria-live="polite">
-          <span className="success-kicker">挑战达成</span>
-          <strong>{neighborMode ? `${province.shortName}邻省连城` : province.name}</strong>
-          <span className="success-icon" aria-label="成功">✓</span>
-          <p>这片区域的每一个名字，都已回到正确的位置。</p>
+        <section className="success-banner mb-5 grid grid-cols-[auto_1fr_auto] items-center gap-3 overflow-hidden rounded-3xl bg-brand-green p-5 text-white shadow-lg" aria-live="polite">
+          <span className="success-kicker text-xs font-black tracking-[0.15em]">挑战达成</span>
+          <strong className="text-xl">{neighborMode ? `${province.shortName}邻省连城` : province.name}</strong>
+          <span className="success-icon grid size-11 place-items-center rounded-full bg-white/15 text-2xl" aria-label="成功">✓</span>
+          <p className="col-start-2 m-0 text-sm text-white/75">这片区域的每一个名字，都已回到正确的位置。</p>
         </section>
       ) : null}
 
-      <div className={`challenge-layout ${province ? "" : "is-national"} ${neighborMode ? "is-joined" : ""}`}>
+      <div className={`challenge-layout grid grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] items-start gap-5 max-lg:grid-cols-1 ${province ? "" : "is-national"} ${neighborMode ? "is-joined" : ""}`}>
       <ChallengeMapPanel
         province={province}
         neighborMode={neighborMode}

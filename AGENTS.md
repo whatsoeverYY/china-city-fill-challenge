@@ -22,8 +22,9 @@
 ## UI、逻辑与样式
 
 - 页面和组件只负责渲染及事件连接；可复用状态放 hook/context，业务计算写成可测试的纯函数，数据读取和持久化通过 service/infrastructure。
-- 常规布局、间距、颜色、排版与响应式样式优先使用 Tailwind CSS。
-- 只有 SVG 地图、复杂动画或大量状态选择器等 Tailwind 表达明显不合适的样式，才保留在对应功能 CSS 中；不得重新形成大型全局 CSS。
+- 常规布局、间距、颜色、排版、交互状态与响应式样式直接写 Tailwind utilities；不得用 `*-styles.ts`、大段任意后代选择器或 `@apply` 把大 CSS 换一个位置隐藏。
+- CSS 文件只允许 `src/app/globals.css`（主题、全局基线、关键帧）和 `src/app/styles/maps.css`（SVG path、地图文字描边、触控命中区）。新增 CSS 文件必须先修改架构规则并说明 Tailwind 无法合理表达的原因。
+- 重复的 Tailwind 组合优先抽成职责明确的小型 UI 组件；仅在同一组件文件内重复使用时，才提取为含完整静态 class 字符串的局部常量。
 - 不在组件中复制存储 key、关卡 ID、行政区编码、阈值、延迟等魔法值；统一放到领域数据或 feature config。
 
 ## 数据与兼容策略

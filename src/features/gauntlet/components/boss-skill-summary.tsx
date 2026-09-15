@@ -10,17 +10,17 @@ export default function BossSkillSummary({
   stats: Record<BossSkill, BossSkillStat>;
 }) {
   return (
-    <div className="boss-skill-summary" aria-label="终极混战能力统计">
+    <div className="boss-skill-summary grid w-full grid-cols-3 gap-2" aria-label="终极混战能力统计">
       {BOSS_SKILL_CATALOG.map(({ id, label }) => {
         const stat = stats[id];
         const accuracy = stat.total
           ? Math.round((stat.correct / stat.total) * 100)
           : 0;
         return (
-          <div key={id}>
-            <span>{label}</span>
-            <strong>{accuracy}%</strong>
-            <small>{stat.correct} / {stat.total}</small>
+          <div className="rounded-xl bg-paper p-3" key={id}>
+            <span className="block text-[9px] text-ink-soft">{label}</span>
+            <strong className="block text-xl">{accuracy}%</strong>
+            <small className="text-[9px]">{stat.correct} / {stat.total}</small>
           </div>
         );
       })}
