@@ -19,11 +19,6 @@ const LEVEL = GAUNTLET_LEVEL_ID;
 function progressLabel(level: NonNullable<ReturnType<typeof useGauntletSession>["level"]>) {
   if (level === LEVEL.PROVINCE_SHAPE) return "答题进度";
   if (level === LEVEL.NEIGHBOR_CHAIN) return "路线长度";
-  if (level === LEVEL.PROVINCE_PUZZLE) return "拼图进度";
-  if (
-    level === LEVEL.PROVINCE_SHORTEST_ROUTE ||
-    level === LEVEL.CITY_SHORTEST_ROUTE
-  ) return "完成路线";
   if (level === LEVEL.MISTAKE_REVENGE) return "错题进度";
   if (level === LEVEL.FINAL_BOSS) return "题目进度";
   return "当前连胜";

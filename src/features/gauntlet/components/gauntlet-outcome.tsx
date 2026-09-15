@@ -28,14 +28,12 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
   const nextLevel = GAUNTLET_LEVELS[activeIndex + 1] ?? null;
   const completedTarget = s.passedLevel === LEVEL.PROVINCE_SHAPE
     ? `已完成 ${d.provinceShapeNormalTarget} 道普通轮廓，并连续答对 ${ROTATED_SILHOUETTE_STREAK_TARGET} 道旋转轮廓`
-    : s.passedLevel === LEVEL.PROVINCE_PUZZLE
-      ? `已完成本轮所选的 ${d.target} 块省份拼图`
-      : s.passedLevel === LEVEL.REGION_MAP &&
-          d.target < GAUNTLET_REGION_MAP_MAX_TARGET
-        ? `已连续答对当前范围完整一轮（${d.target} 题）`
-        : activeConfig
-          ? `已完成目标：${activeConfig.target}`
-          : "已完成本关目标";
+    : s.passedLevel === LEVEL.REGION_MAP &&
+        d.target < GAUNTLET_REGION_MAP_MAX_TARGET
+      ? `已连续答对当前范围完整一轮（${d.target} 题）`
+      : activeConfig
+        ? `已完成目标：${activeConfig.target}`
+        : "已完成本关目标";
 
   if (d.hasTimedOut || d.hasLostBoss) {
     return (

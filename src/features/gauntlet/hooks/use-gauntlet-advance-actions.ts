@@ -213,9 +213,6 @@ export function useGauntletAdvanceActions(round: GauntletRoundActions) {
       round.focusProvinceInput();
       return;
     }
-    if (reviewedLevel === LEVEL.CITY_SHORTEST_ROUTE) {
-      s.setCityRouteAttempt(null);
-    }
     if (reviewedLevel === LEVEL.REGION_MAP) {
       s.setMapRegionOrder(createCityMapQuestionQueue(
         d.selectedMapRegionItems,

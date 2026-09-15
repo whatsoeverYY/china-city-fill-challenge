@@ -25,12 +25,6 @@ export type PlateFaultQuestion = {
   explanation: string;
 };
 
-export type RouteChallenge = {
-  startCode: string;
-  endCode: string;
-  shortestPath: string[];
-};
-
 export type ConfusableCityQuestion = {
   id: string;
   pair: [string, string];
@@ -39,15 +33,6 @@ export type ConfusableCityQuestion = {
   options: string[];
   answer: string;
   explanation: string;
-};
-
-export type CityAdjacencyMap = Record<string, string[]>;
-
-export type CityRouteChallenge = {
-  provinceCode: string;
-  startName: string;
-  endName: string;
-  shortestPath: string[];
 };
 
 export type BossQuestion = {

@@ -55,7 +55,7 @@ const questionGeneratorsUrl = new URL(
 test("gauntlet levels use stable IDs while display numbers follow catalog order", () => {
   const ids = GAUNTLET_LEVELS.map((level) => level.id);
 
-  assert.equal(GAUNTLET_LEVEL_COUNT, 22);
+  assert.equal(GAUNTLET_LEVEL_COUNT, 19);
   assert.equal(new Set(ids).size, GAUNTLET_LEVEL_COUNT);
   assert.ok(ids.every((id) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id)));
   assert.ok(ids.every(isGauntletLevelId));

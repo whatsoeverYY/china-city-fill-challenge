@@ -11,7 +11,6 @@ import { UNIVERSITY_QUIZ_DATA } from "@/domain/geography/data/universities";
 import { PROVINCE_NEIGHBORS, PROVINCES } from "@/domain/geography/data/provinces";
 import { PROVINCE_GROUPS } from "@/domain/geography/data/geographic-groups";
 import {
-  ALL_CITY_ROUTE_PROVINCE_CODES,
   FIXED_SCOPE_LEVELS,
   GAUNTLET_FIXED_TARGETS,
   GAUNTLET_REGION_MAP_MAX_TARGET,
@@ -33,10 +32,6 @@ import { MAP_REGION_QUIZ_DATA } from "@/features/gauntlet/data/map-region-quiz-d
 import {
   cityQuizKey,
 } from "@/features/gauntlet/model/city-map-question-queue";
-import {
-  buildCityAdjacencyMap,
-  createCityRouteChallenge,
-} from "@/features/gauntlet/model/city-route";
 import type { GauntletLevel } from "@/features/gauntlet/model/gauntlet-types";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import { normalizeMistakeList } from "@/domain/game/mistakes";
@@ -56,17 +51,17 @@ const LEVEL = GAUNTLET_LEVEL_ID;
 function useGauntletDerivedValue() {
   const session = useGauntletSession();
   const {
-    answerReview, bossLives, bossOrder, cityOrder, cityRouteAttempt,
-    cityRouteProvinceOrder, confusableOrder, draftShapeProvinceCodes,
-    dualIntruderOrder, groupOrder, level, mapRegionOrder, mapSelections,
+    answerReview, bossLives, bossOrder, cityOrder, confusableOrder,
+    draftShapeProvinceCodes,
+    dualIntruderOrder, groupOrder, level, mapRegionOrder,
     mistakeOrder, mistakeSessionTotal, nationalMap, passedLevel,
     plateCityMapFocusedProvinceCode, plateFaultOrder, progressStorage,
     provinceChallengeOrder, provinceCityCountOrder, provinceOrder,
     provincePickerOpen, questionIndex, routeCodes, selectedShapeProvinceCodes,
-    setCityRouteAttempt, setCompletedLevels, setDraftShapeProvinceCodes,
-    setMistakes, setProvinceScopeReady, setSelectedShapeProvinceCodes,
-    setTimeLeft, streak, timeLeft, timeLimit, truthOrder, undercoverOrder,
-    universityOrder, regionMapHistoryRef, plateCityMapHistoryRef,
+    setCompletedLevels, setDraftShapeProvinceCodes, setMistakes,
+    setProvinceScopeReady, setSelectedShapeProvinceCodes, setTimeLeft, streak,
+    timeLeft, timeLimit, truthOrder, undercoverOrder, universityOrder,
+    regionMapHistoryRef, plateCityMapHistoryRef,
   } = session;
   const timedMode = timeLimit > 0;
   const selectedQuizProvinces = useMemo(
@@ -82,14 +77,6 @@ function useGauntletDerivedValue() {
       UNIVERSITY_QUIZ_DATA
         .filter((item) => selectedShapeProvinceCodes.has(item.provinceCode))
         .map((item) => item.provinceCode),
-    ),
-    [selectedShapeProvinceCodes],
-  );
-  const selectedCityRouteProvinceCodes = useMemo(
-    () => new Set(
-      ALL_CITY_ROUTE_PROVINCE_CODES.filter((code) =>
-        selectedShapeProvinceCodes.has(code)
-      ),
     ),
     [selectedShapeProvinceCodes],
   );
@@ -228,9 +215,6 @@ function useGauntletDerivedValue() {
   const currentConfusableQuestion = confusableOrder.length
     ? confusableOrder[questionIndex % confusableOrder.length]
     : null;
-  const currentCityRouteProvinceCode = cityRouteProvinceOrder.length
-    ? cityRouteProvinceOrder[questionIndex % cityRouteProvinceOrder.length]
-    : null;
   const currentProvinceCityCount = provinceCityCountOrder.length
     ? provinceCityCountOrder[questionIndex % provinceCityCountOrder.length]
     : null;
@@ -253,10 +237,6 @@ function useGauntletDerivedValue() {
     ? groupOrder[questionIndex % groupOrder.length]
     : null;
   const currentBossQuestion = bossOrder[questionIndex] ?? null;
-  const currentPuzzleFeature = provinceOrder.find((feature) => {
-    const province = provinceForFeature(feature);
-    return Boolean(province && !mapSelections.has(province.code));
-  }) ?? null;
   const bossShapeFeature = currentBossQuestion?.kind === "shape" && nationalMap
     ? nationalMap.features.find(
         (feature) =>
@@ -274,9 +254,7 @@ function useGauntletDerivedValue() {
     : null;
   const detailProvinceCode = level === LEVEL.REGION_MAP && currentMapRegion
     ? currentMapRegion.provinceCode
-    : level === LEVEL.CITY_SHORTEST_ROUTE
-      ? currentCityRouteProvinceCode
-      : null;
+    : null;
   const detailProvinceCodes = level === LEVEL.PLATE_CITY_MAP
     ? selectedCityMapProvinces.map((province) => province.code)
     : detailProvinceCode
@@ -297,39 +275,6 @@ function useGauntletDerivedValue() {
       )
     ),
   );
-  const cityAdjacency = useMemo(
-    () => level === LEVEL.CITY_SHORTEST_ROUTE &&
-        gauntletDetailMap && gauntletDetailReady
-      ? buildCityAdjacencyMap(gauntletDetailMap)
-      : {},
-    [gauntletDetailMap, gauntletDetailReady, level],
-  );
-  const cityRouteChallenge = useMemo(
-    () => level === LEVEL.CITY_SHORTEST_ROUTE &&
-        currentCityRouteProvinceCode && gauntletDetailMap && gauntletDetailReady
-      ? createCityRouteChallenge(
-          currentCityRouteProvinceCode,
-          gauntletDetailMap,
-          cityAdjacency,
-          questionIndex,
-        )
-      : null,
-    [
-      cityAdjacency, currentCityRouteProvinceCode, gauntletDetailMap,
-      gauntletDetailReady, level, questionIndex,
-    ],
-  );
-  const cityRouteKey = cityRouteChallenge
-    ? `${questionIndex}-${cityRouteChallenge.provinceCode}-${cityRouteChallenge.startName}-${cityRouteChallenge.endName}`
-    : "";
-  const cityRouteNames = cityRouteChallenge
-    ? cityRouteAttempt?.key === cityRouteKey
-      ? cityRouteAttempt.names
-      : [cityRouteChallenge.startName]
-    : [];
-  const setCityRouteNames = (names: string[]) => {
-    setCityRouteAttempt(cityRouteChallenge ? { key: cityRouteKey, names } : null);
-  };
   const selectedQuizItems = useMemo(
     () => CITY_QUIZ_DATA.filter(
       (item) => selectedShapeProvinceCodes.has(item.provinceCode),
@@ -364,30 +309,26 @@ function useGauntletDerivedValue() {
   );
   const target = level === LEVEL.PROVINCE_SHAPE
     ? provinceShapeNormalTarget + ROTATED_SILHOUETTE_STREAK_TARGET
-    : level === LEVEL.PROVINCE_PUZZLE
-      ? provinceOrder.length
-      : level === LEVEL.MISTAKE_REVENGE
-        ? mistakeSessionTotal
-        : level === LEVEL.REGION_MAP
-          ? regionMapTarget
-          : level === LEVEL.TERRITORY_GROUPS
-            ? PROVINCE_GROUPS.length
-            : level
-              ? GAUNTLET_FIXED_TARGETS[level] ?? 0
-              : 0;
+    : level === LEVEL.MISTAKE_REVENGE
+      ? mistakeSessionTotal
+      : level === LEVEL.REGION_MAP
+        ? regionMapTarget
+        : level === LEVEL.TERRITORY_GROUPS
+          ? PROVINCE_GROUPS.length
+          : level
+            ? GAUNTLET_FIXED_TARGETS[level] ?? 0
+            : 0;
   const progress = level === LEVEL.PROVINCE_SHAPE
     ? isRotatedProvinceShapeStage
       ? provinceShapeNormalTarget + streak
       : questionIndex
-    : level === LEVEL.PROVINCE_PUZZLE
-      ? mapSelections.size
-      : level === LEVEL.NEIGHBOR_CHAIN
-        ? routeCodes.length
-        : level === LEVEL.MISTAKE_REVENGE
-          ? Math.max(0, mistakeSessionTotal - mistakeOrder.length)
-          : level === LEVEL.FINAL_BOSS
-            ? questionIndex + (answerReview ? 1 : 0)
-            : streak;
+    : level === LEVEL.NEIGHBOR_CHAIN
+      ? routeCodes.length
+      : level === LEVEL.MISTAKE_REVENGE
+        ? Math.max(0, mistakeSessionTotal - mistakeOrder.length)
+        : level === LEVEL.FINAL_BOSS
+          ? questionIndex + (answerReview ? 1 : 0)
+          : streak;
   const provinceScopeIssue = (challengeLevel: GauntletLevel) => {
     if (!session.provinceScopeReady) return "正在读取已保存的省份范围";
     if (FIXED_SCOPE_LEVELS.has(challengeLevel)) return null;
@@ -401,10 +342,6 @@ function useGauntletDerivedValue() {
     if (challengeLevel === LEVEL.UNIVERSITY_CITY && !selectedUniversityItems.length) {
       return "当前范围没有 985、211 大学题目";
     }
-    if (
-      challengeLevel === LEVEL.CITY_SHORTEST_ROUTE &&
-      !selectedCityRouteProvinceCodes.size
-    ) return "省内穿越暂不支持当前范围";
     if (
       (challengeLevel === LEVEL.CITY_UNDERCOVER ||
         challengeLevel === LEVEL.GEOGRAPHY_ELIMINATION) &&
@@ -444,12 +381,11 @@ function useGauntletDerivedValue() {
   const hasLostBoss = level === LEVEL.FINAL_BOSS && bossLives === 0 && !passedLevel;
 
   return {
-    bossShapeFeature, cityAdjacency, cityPoolSize, cityRouteChallenge, cityRouteKey,
-    cityRouteNames, currentBossQuestion, currentChallengeProvince, currentCity,
-    currentCityRouteProvinceCode, currentConfusableQuestion,
+    bossShapeFeature, cityPoolSize, currentBossQuestion, currentChallengeProvince,
+    currentCity, currentConfusableQuestion,
     currentDualIntruderQuestion, currentGroupQuestion, currentMapRegion,
     currentMistake, currentPlateFaultQuestion, currentProvince,
-    currentProvinceCityCount, currentProvinceFeature, currentPuzzleFeature,
+    currentProvinceCityCount, currentProvinceFeature,
     currentTruthQuestion, currentUndercoverQuestion, currentUniversity,
     draftSelectionValid: draftShapeProvinceCodes.size > 0, gauntletDetailError,
     gauntletDetailMap, gauntletDetailReady, hasLostBoss, hasTimedOut,
@@ -457,10 +393,10 @@ function useGauntletDerivedValue() {
     progress, provincePickerOptions, provinceScopeIssue, provinceScopeSummary,
     provinceShapeNormalTarget,
     reviewProvinceCodes: new Set(answerReview?.highlightProvinceCodes ?? []),
-    selectedCityMapProvinces, selectedCityRouteProvinceCodes,
-    selectedMapRegionItems, selectedPlateCityMapItems, selectedPlateQuizItems,
+    selectedCityMapProvinces, selectedMapRegionItems, selectedPlateCityMapItems,
+    selectedPlateQuizItems,
     selectedQuizItems, selectedQuizProvinces, selectedUniversityItems,
-    selectedUniversityProvinces, setCityRouteNames, target, timedMode,
+    selectedUniversityProvinces, target, timedMode,
   };
 }
 

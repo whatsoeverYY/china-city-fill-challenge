@@ -92,15 +92,6 @@ export const GAUNTLET_LEVELS: readonly GauntletLevelDefinition[] = [
     roundHeading: "沿陆地邻省连成路线",
   },
   {
-    id: GAUNTLET_LEVEL_ID.PROVINCE_PUZZLE,
-    title: "省份拼图",
-    badge: "拼图",
-    description: "观察省份轮廓，把它拖放或点击到全国地图的正确位置。",
-    target: "完成所选省份拼图",
-    openingFeedback: "拖动轮廓到全国地图的正确位置",
-    roundHeading: "把省份轮廓送回正确位置",
-  },
-  {
     id: GAUNTLET_LEVEL_ID.CITY_UNDERCOVER,
     title: "谁是卧底",
     badge: "卧底",
@@ -126,15 +117,6 @@ export const GAUNTLET_LEVELS: readonly GauntletLevelDefinition[] = [
     target: "完成 3 组疆域题",
     openingFeedback: "三组疆域题各完成一次即可过关",
     roundHeading: "沿海、沿边与长江疆域",
-  },
-  {
-    id: GAUNTLET_LEVEL_ID.PROVINCE_SHORTEST_ROUTE,
-    title: "最短省际路线",
-    badge: "最短",
-    description: "用陆地接壤关系连接起终点，并走出最短路线。",
-    target: "完成 10 条最短路线",
-    openingFeedback: "从起点出发，用最少步数抵达终点",
-    roundHeading: "寻找最短省际路线",
   },
   {
     id: GAUNTLET_LEVEL_ID.GEOGRAPHY_ELIMINATION,
@@ -171,15 +153,6 @@ export const GAUNTLET_LEVELS: readonly GauntletLevelDefinition[] = [
     target: "连续答对 20 题",
     openingFeedback: "辨清读音、字形相近的城市及其所属省份",
     roundHeading: "相似城名，也要分得一清二楚",
-  },
-  {
-    id: GAUNTLET_LEVEL_ID.CITY_SHORTEST_ROUTE,
-    title: "省内穿越",
-    badge: "穿越",
-    description: "在省内市级地图上沿接壤区块连接起终点，并走出最短路线。",
-    target: "完成 10 条最短路线",
-    openingFeedback: "沿市级接壤区块走出省内最短路线",
-    roundHeading: "沿市界寻找省内最短通路",
   },
   {
     id: GAUNTLET_LEVEL_ID.PROVINCE_CITY_COUNT,

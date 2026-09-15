@@ -6,7 +6,6 @@ import {
   GauntletNationalMap,
   GauntletProvinceMapWall,
   ProvinceSilhouette,
-  PuzzlePiece,
 } from "@/features/gauntlet/components/gauntlet-maps";
 import GauntletQuestionCount from "@/features/gauntlet/components/gauntlet-question-count";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
@@ -14,7 +13,6 @@ import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-act
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import LoadingMap from "@/features/map/components/loading-map";
-import { stripAdministrativeSuffix } from "@/shared/lib/place-name";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -36,22 +34,6 @@ export default function GauntletQuestionStage({
             ? ((s.questionIndex - d.provinceShapeNormalTarget) * 137 + 47) % 360
             : 0}
         />
-      ) : <LoadingMap />;
-    }
-    if (s.level === LEVEL.PROVINCE_PUZZLE) {
-      return s.nationalMap && d.currentPuzzleFeature ? (
-        <div className="gauntlet-map-question puzzle-question-stage">
-          <PuzzlePiece feature={d.currentPuzzleFeature} />
-          <GauntletNationalMap
-            map={s.nationalMap}
-            selectedCodes={s.mapSelections}
-            routeCodes={[]}
-            originCode={null}
-            showLabels={false}
-            onProvince={actions.handleGauntletProvince}
-            onProvinceDrop={actions.placePuzzleProvince}
-          />
-        </div>
       ) : <LoadingMap />;
     }
     if (s.level === LEVEL.CITY_UNDERCOVER) {
@@ -98,28 +80,6 @@ export default function GauntletQuestionStage({
             correctCodes={d.reviewProvinceCodes}
             routeCodes={[]}
             originCode={null}
-            showLabels
-            onProvince={actions.handleGauntletProvince}
-          />
-        </div>
-      ) : <LoadingMap />;
-    }
-    if (s.level === LEVEL.PROVINCE_SHORTEST_ROUTE) {
-      return s.nationalMap && s.routeChallenge ? (
-        <div className="gauntlet-map-question">
-          <div className="map-question-banner route-target-banner">
-            <small>用最少步数连接</small>
-            <strong>
-              {PROVINCE_BY_CODE.get(s.routeChallenge.startCode)?.shortName}
-              <i>→</i>
-              {PROVINCE_BY_CODE.get(s.routeChallenge.endCode)?.shortName}
-            </strong>
-          </div>
-          <GauntletNationalMap
-            map={s.nationalMap}
-            selectedCodes={new Set([s.routeChallenge.endCode])}
-            routeCodes={s.routeCodes}
-            originCode={s.routeChallenge.startCode}
             showLabels
             onProvince={actions.handleGauntletProvince}
           />
@@ -179,34 +139,6 @@ export default function GauntletQuestionStage({
           <p>{d.currentConfusableQuestion.instruction}</p>
           <strong>{d.currentConfusableQuestion.prompt}</strong>
           <small>{d.currentConfusableQuestion.pair.join(" · ")}</small>
-        </div>
-      ) : <LoadingMap />;
-    }
-    if (s.level === LEVEL.CITY_SHORTEST_ROUTE) {
-      if (d.gauntletDetailError) {
-        return <p className="map-error">省内地图载入失败，请重试本关</p>;
-      }
-      return d.gauntletDetailMap && d.gauntletDetailReady && d.cityRouteChallenge ? (
-        <div className="gauntlet-map-question city-route-question">
-          <div className="map-question-banner route-target-banner">
-            <small>
-              {PROVINCE_BY_CODE.get(d.cityRouteChallenge.provinceCode)?.name}
-              · 用最少步数连接
-            </small>
-            <strong>
-              {stripAdministrativeSuffix(d.cityRouteChallenge.startName)}
-              <i>→</i>
-              {stripAdministrativeSuffix(d.cityRouteChallenge.endName)}
-            </strong>
-          </div>
-          <GauntletDetailMap
-            map={d.gauntletDetailMap}
-            onRegion={actions.handleDetailRegion}
-            routeRegionNames={d.cityRouteNames}
-            originRegionName={d.cityRouteChallenge.startName}
-            targetRegionName={d.cityRouteChallenge.endName}
-            showLabels
-          />
         </div>
       ) : <LoadingMap />;
     }

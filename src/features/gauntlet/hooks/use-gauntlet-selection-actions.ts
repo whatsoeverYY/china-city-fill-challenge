@@ -10,8 +10,6 @@ import { PROVINCE_GROUPS } from "@/domain/geography/data/geographic-groups";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
-import { createRouteChallenge } from "@/features/gauntlet/model/question-generators";
-import { provinceForFeature } from "@/features/map/lib/map-geometry";
 import { setsEqual } from "@/shared/lib/graph";
 import { placeNameMatches } from "@/shared/lib/place-name";
 import { randomShuffle } from "@/shared/lib/random";
@@ -170,63 +168,6 @@ export function useGauntletSelectionActions(
   };
 
   const handleDetailRegion = (regionName: string) => {
-    if (s.level === LEVEL.CITY_SHORTEST_ROUTE) {
-      const challenge = d.cityRouteChallenge;
-      if (!challenge || d.cityRouteNames.length === 0 || s.answerReview) return;
-      const currentRegion = d.cityRouteNames[d.cityRouteNames.length - 1];
-      if (d.cityRouteNames.includes(regionName)) {
-        s.setFeedbackType("wrong");
-        s.setFeedback("路线不能重复经过同一个市级区块");
-        return;
-      }
-      if (!(d.cityAdjacency[currentRegion] ?? []).includes(regionName)) {
-        d.setCityRouteNames([challenge.startName]);
-        s.setFeedbackType("wrong");
-        s.setFeedback("两个区块不接壤，路线已回到起点");
-        return;
-      }
-      const nextRoute = [...d.cityRouteNames, regionName];
-      if (regionName !== challenge.endName) {
-        const canContinue = (d.cityAdjacency[regionName] ?? []).some(
-          (neighbor) => !nextRoute.includes(neighbor),
-        );
-        if (!canContinue) {
-          d.setCityRouteNames([challenge.startName]);
-          s.setFeedbackType("wrong");
-          s.setFeedback("这里已经无路可走，路线已回到起点");
-          return;
-        }
-        d.setCityRouteNames(nextRoute);
-        s.setFeedbackType("right");
-        s.setFeedback(`路线有效，当前已走 ${nextRoute.length - 1} 步`);
-        return;
-      }
-      const correct = nextRoute.length === challenge.shortestPath.length;
-      const nextCompleted = correct ? s.streak + 1 : s.streak;
-      d.setCityRouteNames(nextRoute);
-      s.setStreak(nextCompleted);
-      if (correct) {
-        s.setFeedbackType("right");
-        if (nextCompleted === d.target) {
-          round.finishLevel(LEVEL.CITY_SHORTEST_ROUTE);
-          return;
-        }
-        s.setCityRouteAttempt(null);
-        s.setQuestionIndex((value) => value + 1);
-        s.setFeedback("省内最短路线正确，已自动生成下一条路线");
-        return;
-      }
-      s.setFeedbackType("wrong");
-      s.setFeedback("已经抵达终点，但还不是最短路线");
-      s.setAnswerReview({
-        correct: false,
-        correctAnswer: challenge.shortestPath.join(" → "),
-        explanation: `${PROVINCE_BY_CODE.get(challenge.provinceCode)?.name ?? "本省"}内，从${challenge.startName}到${challenge.endName}最少需要 ${challenge.shortestPath.length - 1} 步。`,
-        level: LEVEL.CITY_SHORTEST_ROUTE,
-        nextAction: "next",
-      });
-      return;
-    }
     if (s.level === LEVEL.REGION_MAP) {
       const region = d.currentMapRegion;
       if (!region || s.answerReview) return;
@@ -284,28 +225,6 @@ export function useGauntletSelectionActions(
     );
   };
 
-  const placePuzzleProvince = (province: Province, draggedCode?: string) => {
-    if (s.level !== LEVEL.PROVINCE_PUZZLE || !d.currentPuzzleFeature) return;
-    const expected = provinceForFeature(d.currentPuzzleFeature);
-    if (!expected) return;
-    const correct = province.code === expected.code &&
-      (!draggedCode || draggedCode === expected.code);
-    if (!correct) {
-      s.setFeedbackType("wrong");
-      s.setFeedback("位置不对，再观察轮廓与全国地图中的相对位置");
-      return;
-    }
-    const next = new Set(s.mapSelections).add(expected.code);
-    if (next.size === s.provinceOrder.length) {
-      s.setMapSelections(next);
-      round.finishLevel(LEVEL.PROVINCE_PUZZLE);
-      return;
-    }
-    s.setMapSelections(next);
-    s.setFeedbackType("right");
-    s.setFeedback(`放置正确：${expected.name}。继续下一块拼图`);
-  };
-
   const answerBossTruth = (answer: boolean) => {
     const question = d.currentBossQuestion;
     if (s.level !== LEVEL.FINAL_BOSS || question?.kind !== "truth" || s.answerReview) return;
@@ -327,10 +246,6 @@ export function useGauntletSelectionActions(
 
   const handleGauntletProvince = (province: Province) => {
     if (s.answerReview) return;
-    if (s.level === LEVEL.PROVINCE_PUZZLE) {
-      placePuzzleProvince(province);
-      return;
-    }
     if (s.level === LEVEL.TERRITORY_GROUPS) {
       s.setMapSelections((current) => {
         const next = new Set(current);
@@ -365,56 +280,6 @@ export function useGauntletSelectionActions(
       });
       s.setFeedbackType("idle");
       s.setFeedback("选择完成后，点击右侧确认答案");
-      return;
-    }
-    if (s.level === LEVEL.PROVINCE_SHORTEST_ROUTE) {
-      const challenge = s.routeChallenge;
-      if (!challenge || s.routeCodes.length === 0) return;
-      const currentCode = s.routeCodes[s.routeCodes.length - 1];
-      if (s.routeCodes.includes(province.code)) {
-        s.setFeedbackType("wrong");
-        s.setFeedback("这条路线不能重复经过同一省份");
-        return;
-      }
-      if (!(PROVINCE_NEIGHBORS[currentCode] ?? []).includes(province.code)) {
-        s.setRouteCodes([challenge.startCode]);
-        s.setFeedbackType("wrong");
-        s.setFeedback("两地不接壤，路线已回到起点");
-        return;
-      }
-      const nextRoute = [...s.routeCodes, province.code];
-      if (province.code !== challenge.endCode) {
-        const hasNext = (PROVINCE_NEIGHBORS[province.code] ?? [])
-          .some((code) => !nextRoute.includes(code));
-        if (!hasNext) {
-          s.setRouteCodes([challenge.startCode]);
-          s.setFeedbackType("wrong");
-          s.setFeedback("这里已经无路可走，路线已回到起点");
-          return;
-        }
-        s.setRouteCodes(nextRoute);
-        s.setFeedbackType("right");
-        s.setFeedback(`路线有效，当前已走 ${nextRoute.length - 1} 步`);
-        return;
-      }
-      if (nextRoute.length !== challenge.shortestPath.length) {
-        s.setRouteCodes([challenge.startCode]);
-        s.setFeedbackType("wrong");
-        s.setFeedback(`已经抵达终点，但不是最短路线；最少需要 ${challenge.shortestPath.length - 1} 步`);
-        return;
-      }
-      const nextCompleted = s.streak + 1;
-      if (nextCompleted === d.target) {
-        s.setRouteCodes(nextRoute);
-        round.finishLevel(LEVEL.PROVINCE_SHORTEST_ROUTE);
-        return;
-      }
-      const nextChallenge = createRouteChallenge();
-      s.setStreak(nextCompleted);
-      s.setRouteChallenge(nextChallenge);
-      s.setRouteCodes([nextChallenge.startCode]);
-      s.setFeedbackType("right");
-      s.setFeedback(`最短路线正确，已完成 ${nextCompleted} / ${d.target} 条`);
       return;
     }
     if (s.level === LEVEL.CITY_MAP) {
@@ -472,7 +337,6 @@ export function useGauntletSelectionActions(
     answerTruthQuestion,
     handleDetailRegion,
     handleGauntletProvince,
-    placePuzzleProvince,
     submitNeighborSelection,
     submitProvinceGroup,
   };

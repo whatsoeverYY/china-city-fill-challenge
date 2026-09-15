@@ -31,7 +31,6 @@ import {
   createConfusableCityQuestions,
   createDualIntruderQuestions,
   createPlateFaultQuestions,
-  createRouteChallenge,
   createTruthQuestions,
   createUndercoverQuestions,
 } from "@/features/gauntlet/model/question-generators";
@@ -81,7 +80,6 @@ export function useGauntletRoundActions() {
     s.setMapSelections(new Set());
     s.setPlateCityMapFocusedProvinceCode(null);
     s.setRouteCodes([]);
-    s.setCityRouteAttempt(null);
     s.setFeedbackType("idle");
     s.setFeedback(message);
   };
@@ -151,23 +149,16 @@ export function useGauntletRoundActions() {
     s.setDualIntruderOrder([]);
     s.setPlateFaultOrder([]);
     s.setGroupOrder([]);
-    s.setRouteChallenge(null);
     s.setBossOrder([]);
     s.setUniversityOrder([]);
     s.setMistakeOrder([]);
     s.setMistakeSessionTotal(0);
     s.setConfusableOrder([]);
-    s.setCityRouteProvinceOrder([]);
-    s.setCityRouteAttempt(null);
     s.setProvinceCityCountOrder([]);
     s.setBossLives(FINAL_BOSS_LIFE_COUNT);
     s.setBossStats(createEmptyBossStats());
 
-    if (
-      (nextLevel === LEVEL.PROVINCE_SHAPE ||
-        nextLevel === LEVEL.PROVINCE_PUZZLE) &&
-      s.nationalMap
-    ) {
+    if (nextLevel === LEVEL.PROVINCE_SHAPE && s.nationalMap) {
       s.setProvinceOrder(randomShuffle(s.nationalMap.features.filter((feature) => {
         const province = provinceForFeature(feature);
         return Boolean(province && s.selectedShapeProvinceCodes.has(province.code));
@@ -199,11 +190,6 @@ export function useGauntletRoundActions() {
     } else if (nextLevel === LEVEL.TERRITORY_GROUPS) {
       s.setGroupOrder(randomShuffle(PROVINCE_GROUPS));
       clearQuestionOrders();
-    } else if (nextLevel === LEVEL.PROVINCE_SHORTEST_ROUTE) {
-      const challenge = createRouteChallenge();
-      s.setRouteChallenge(challenge);
-      s.setRouteCodes([challenge.startCode]);
-      clearQuestionOrders();
     } else if (nextLevel === LEVEL.UNIVERSITY_CITY) {
       s.setUniversityOrder(randomShuffle(d.selectedUniversityItems));
       clearQuestionOrders();
@@ -214,11 +200,6 @@ export function useGauntletRoundActions() {
       clearQuestionOrders();
     } else if (nextLevel === LEVEL.CONFUSABLE_CITIES) {
       s.setConfusableOrder(createConfusableCityQuestions());
-      clearQuestionOrders();
-    } else if (nextLevel === LEVEL.CITY_SHORTEST_ROUTE) {
-      s.setCityRouteProvinceOrder(randomShuffle(
-        Array.from(d.selectedCityRouteProvinceCodes),
-      ));
       clearQuestionOrders();
     } else if (nextLevel === LEVEL.PROVINCE_CITY_COUNT) {
       s.setProvinceCityCountOrder(randomShuffle(PROVINCE_CITY_COUNT_DATA.filter(

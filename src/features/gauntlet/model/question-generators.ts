@@ -24,17 +24,14 @@ import {
   ConfusableCityQuestion,
   DualIntruderQuestion,
   PlateFaultQuestion,
-  RouteChallenge,
   TruthQuestion,
   UndercoverQuestion,
 } from "@/features/gauntlet/model/gauntlet-types";
 import { BOSS_SKILL_ID } from "@/features/gauntlet/model/boss-stats";
-import { findShortestPath } from "@/shared/lib/graph";
 import { normalizePlaceName } from "@/shared/lib/place-name";
 import { randomShuffle } from "@/shared/lib/random";
 
-const DEFAULT_ROUTE_START_CODE = "110000";
-const DEFAULT_ROUTE_END_CODE = "310000";
+const FALLBACK_PROVINCE_CODE = "110000";
 
 export function createConfusableCityQuestions() {
   return randomShuffle(
@@ -195,7 +192,7 @@ export function createDualIntruderQuestions(pool: CityQuizItem[]) {
       );
       const wrongCapital = replacementProvince
         ? PROVINCE_CAPITALS[replacementProvince.code]
-        : PROVINCE_CAPITALS[DEFAULT_ROUTE_START_CODE];
+        : PROVINCE_CAPITALS[FALLBACK_PROVINCE_CODE];
       const options = pairProvinces.map((item, optionIndex) =>
         `${item.shortName} · ${optionIndex === wrongIndex ? wrongCapital : PROVINCE_CAPITALS[item.code]}`,
       );
@@ -229,28 +226,6 @@ export function createPlateFaultQuestions(pool: CityQuizItem[]) {
       explanation: `${items[wrongIndex].city}正确的车牌前缀是 ${items[wrongIndex].plate}`,
     };
   });
-}
-
-export function createRouteChallenge(): RouteChallenge {
-  const connected = PROVINCES.filter(
-    (item) => (PROVINCE_NEIGHBORS[item.code]?.length ?? 0) > 0,
-  );
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    const [start, end] = randomShuffle(connected).slice(0, 2);
-    const shortestPath = findShortestPath(start.code, end.code, PROVINCE_NEIGHBORS);
-    if (shortestPath.length >= 3 && shortestPath.length <= 7) {
-      return { startCode: start.code, endCode: end.code, shortestPath };
-    }
-  }
-  return {
-    startCode: DEFAULT_ROUTE_START_CODE,
-    endCode: DEFAULT_ROUTE_END_CODE,
-    shortestPath: findShortestPath(
-      DEFAULT_ROUTE_START_CODE,
-      DEFAULT_ROUTE_END_CODE,
-      PROVINCE_NEIGHBORS,
-    ),
-  };
 }
 
 export function createBossQuestions() {

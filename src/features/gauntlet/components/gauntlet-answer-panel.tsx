@@ -9,7 +9,6 @@ import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-act
 import { CITY_MAP_RECENT_QUESTION_LIMIT } from "@/domain/game/gauntlet-rules";
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
-import { stripAdministrativeSuffix } from "@/shared/lib/place-name";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -29,24 +28,6 @@ export default function GauntletAnswerPanel({
           review={s.answerReview}
           onContinue={actions.continueAfterReview}
         />
-      );
-    }
-    if (s.level === LEVEL.PROVINCE_PUZZLE) {
-      return (
-        <>
-          <h2>放回正确的省份位置</h2>
-          <p className="map-answer-summary">
-            把左侧上方的轮廓拖到地图；手机端或键盘操作可以直接点击目标省份。
-          </p>
-          <div
-            className="puzzle-progress-dots"
-            aria-label={`已完成 ${s.mapSelections.size} 块拼图`}
-          >
-            {Array.from({ length: d.target }, (_, index) => (
-              <i key={index} className={index < s.mapSelections.size ? "is-done" : ""} />
-            ))}
-          </div>
-        </>
       );
     }
     if (s.level === LEVEL.CITY_UNDERCOVER) {
@@ -95,24 +76,6 @@ export default function GauntletAnswerPanel({
           >
             确认选择
           </button>
-        </>
-      );
-    }
-    if (s.level === LEVEL.PROVINCE_SHORTEST_ROUTE) {
-      return (
-        <>
-          <h2>沿陆地邻省走到终点</h2>
-          <p className="map-answer-summary">
-            路线不能重复省份。抵达终点后，系统会检查是否为最短路径。
-          </p>
-          <ol className="province-route" aria-label="当前最短路线尝试">
-            {s.routeCodes.map((code, index) => (
-              <li key={code}>
-                <span>{index + 1}</span>
-                {PROVINCE_BY_CODE.get(code)?.shortName}
-              </li>
-            ))}
-          </ol>
         </>
       );
     }
@@ -207,24 +170,6 @@ export default function GauntletAnswerPanel({
               </button>
             ))}
           </div>
-        </>
-      );
-    }
-    if (s.level === LEVEL.CITY_SHORTEST_ROUTE) {
-      return (
-        <>
-          <h2>依次点击接壤的市级区块</h2>
-          <p className="map-answer-summary">
-            地图显示市级名称；路线不能重复，抵达终点后会检查是否为最短路径。
-          </p>
-          <ol className="province-route city-route-list" aria-label="当前省内路线">
-            {d.cityRouteNames.map((name, index) => (
-              <li key={name}>
-                <span>{index + 1}</span>
-                {stripAdministrativeSuffix(name)}
-              </li>
-            ))}
-          </ol>
         </>
       );
     }

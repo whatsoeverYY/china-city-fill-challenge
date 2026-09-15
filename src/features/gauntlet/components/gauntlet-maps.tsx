@@ -89,33 +89,11 @@ export function ProvinceSilhouette({
   );
 }
 
-export function PuzzlePiece({ feature }: { feature: MapFeature }) {
-  const province = provinceForFeature(feature);
-  return (
-    <div
-      className="province-puzzle-piece"
-      draggable
-      role="img"
-      aria-label="可拖动的省份轮廓拼图"
-      onDragStart={(event) => {
-        event.dataTransfer.setData("gauntlet-province-code", province?.code ?? "");
-        event.dataTransfer.effectAllowed = "move";
-      }}
-    >
-      <span>拖动轮廓到地图，也可以直接点击目标省份</span>
-      <ProvinceShape feature={feature} />
-    </div>
-  );
-}
-
 export function GauntletDetailMap({
   map,
   onRegion,
   correctRegionName,
   selectedRegionName,
-  routeRegionNames = [],
-  originRegionName,
-  targetRegionName,
   showLabels = false,
   readOnly = false,
 }: {
@@ -123,14 +101,10 @@ export function GauntletDetailMap({
   onRegion: (name: string) => void;
   correctRegionName?: string;
   selectedRegionName?: string;
-  routeRegionNames?: string[];
-  originRegionName?: string;
-  targetRegionName?: string;
   showLabels?: boolean;
   readOnly?: boolean;
 }) {
   const project = useMemo(() => makeProjection(map.features), [map.features]);
-  const routeSet = new Set(routeRegionNames);
   return (
     <svg
       className="gauntlet-detail-map"
@@ -147,9 +121,6 @@ export function GauntletDetailMap({
         const className = [
           correctRegionName === name ? "is-correct-answer" : "",
           selectedRegionName === name ? "is-wrong-selection" : "",
-          routeSet.has(name) ? "is-city-route" : "",
-          originRegionName === name ? "is-city-origin" : "",
-          targetRegionName === name ? "is-city-target" : "",
         ].filter(Boolean).join(" ");
         return (
           <path
@@ -186,14 +157,14 @@ export function GauntletDetailMap({
             const isCorrectAnswer = correctRegionName === name;
             const isWrongSelection = selectedRegionName === name;
             const className = [
-              "city-route-label",
+              "detail-map-label",
               readOnly ? "is-answer-review-label" : "",
               isCorrectAnswer ? "is-correct-answer-label" : "",
               isWrongSelection ? "is-wrong-selection-label" : "",
             ].filter(Boolean).join(" ");
             return (
               <text
-                key={`city-route-label-${name}`}
+                key={`detail-map-label-${name}`}
                 x={x}
                 y={y}
                 className={className}
@@ -205,7 +176,7 @@ export function GauntletDetailMap({
                   {stripAdministrativeSuffix(name)}
                 </tspan>
                 {isCorrectAnswer || isWrongSelection ? (
-                  <tspan x={x} dy="1.35em" className="city-answer-marker">
+                  <tspan x={x} dy="1.35em" className="detail-answer-marker">
                     {isCorrectAnswer ? "✓ 正确答案" : "× 你的选择"}
                   </tspan>
                 ) : null}
@@ -321,7 +292,6 @@ export function GauntletNationalMap({
   originCode,
   showLabels,
   onProvince,
-  onProvinceDrop,
 }: {
   map: MapData;
   selectedCodes: Set<string>;
@@ -330,7 +300,6 @@ export function GauntletNationalMap({
   originCode: string | null;
   showLabels: boolean;
   onProvince: (province: Province) => void;
-  onProvinceDrop?: (province: Province, draggedCode: string) => void;
 }) {
   const features = useMemo(
     () => map.features.filter((feature) => Boolean(provinceForFeature(feature))),
@@ -365,17 +334,6 @@ export function GauntletNationalMap({
               tabIndex={0}
               aria-label={`${province.name}${selected ? "，已选择" : ""}${correctAnswer ? "，正确答案" : ""}${inRoute ? "，已加入路线" : ""}`}
               onClick={() => onProvince(province)}
-              onDragOver={(event) => {
-                if (onProvinceDrop) event.preventDefault();
-              }}
-              onDrop={(event) => {
-                if (!onProvinceDrop) return;
-                event.preventDefault();
-                onProvinceDrop(
-                  province,
-                  event.dataTransfer.getData("gauntlet-province-code"),
-                );
-              }}
               onKeyDown={(event) => handleKeyboardActivation(
                 event,
                 () => onProvince(province),

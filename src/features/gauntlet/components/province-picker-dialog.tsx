@@ -32,7 +32,7 @@ export default function ProvincePickerDialog({
         <p className="eyebrow">过关斩将 · 全局设置</p>
         <h2 id="province-picker-title">统一选择省份范围（可多选）</h2>
         <p className="province-picker-hint">
-          保存后，辨轮廓、城市、车牌、大学与地图落点等关卡都会自动使用这套范围，下次进入无需重选。邻省连锁、疆域集合、最短省际路线、错题复仇、易混城市和终极混战仍使用各自的全国固定题库。
+          保存后，辨轮廓、城市、车牌、大学与地图落点等关卡都会自动使用这套范围，下次进入无需重选。邻省连锁、疆域集合、错题复仇、易混城市和终极混战仍使用各自的全国固定题库。
         </p>
         <div className="province-picker-tools">
           <button type="button" onClick={actions.selectAllPickerProvinces}>全选</button>

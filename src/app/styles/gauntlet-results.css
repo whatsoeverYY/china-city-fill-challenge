@@ -47,25 +47,6 @@
   font-size: 12px;
 }
 
-.puzzle-progress-dots {
-  display: flex;
-  margin-top: 20px;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.puzzle-progress-dots i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d6cec0;
-}
-
-.puzzle-progress-dots i.is-done {
-  background: var(--green);
-  box-shadow: 0 2px 4px rgba(45, 125, 95, 0.2);
-}
-
 .map-answer-summary {
   min-height: 58px;
   margin: -12px 0 4px;
@@ -140,18 +121,6 @@
   background: #557ca8;
   font-family: Georgia, serif;
   font-size: 9px;
-}
-
-.city-route-list li {
-  color: #315d73;
-  border-color: rgba(49, 93, 115, 0.22);
-  background: #e4eff3;
-}
-
-.city-route-list li:first-child {
-  color: #7a5415;
-  border-color: rgba(139, 93, 22, 0.25);
-  background: #f3e7bf;
 }
 
 .gauntlet-feedback {

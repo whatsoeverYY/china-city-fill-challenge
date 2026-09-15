@@ -32,7 +32,6 @@ import type {
   DualIntruderQuestion,
   GauntletLevel,
   PlateFaultQuestion,
-  RouteChallenge,
   TruthQuestion,
   UndercoverQuestion,
 } from "@/features/gauntlet/model/gauntlet-types";
@@ -62,20 +61,14 @@ function useGauntletSessionValue({
   const [mistakeOrder, setMistakeOrder] = useState<MistakeQuestion[]>([]);
   const [mistakeSessionTotal, setMistakeSessionTotal] = useState(0);
   const [confusableOrder, setConfusableOrder] = useState<ConfusableCityQuestion[]>([]);
-  const [cityRouteProvinceOrder, setCityRouteProvinceOrder] = useState<string[]>([]);
   const [provinceCityCountOrder, setProvinceCityCountOrder] =
     useState<ProvinceCityCountItem[]>([]);
-  const [cityRouteAttempt, setCityRouteAttempt] = useState<{
-    key: string;
-    names: string[];
-  } | null>(null);
   const [truthOrder, setTruthOrder] = useState<TruthQuestion[]>([]);
   const [undercoverOrder, setUndercoverOrder] = useState<UndercoverQuestion[]>([]);
   const [dualIntruderOrder, setDualIntruderOrder] =
     useState<DualIntruderQuestion[]>([]);
   const [plateFaultOrder, setPlateFaultOrder] = useState<PlateFaultQuestion[]>([]);
   const [groupOrder, setGroupOrder] = useState<ProvinceGroup[]>([]);
-  const [routeChallenge, setRouteChallenge] = useState<RouteChallenge | null>(null);
   const [bossOrder, setBossOrder] = useState<BossQuestion[]>([]);
   const [bossLives, setBossLives] = useState(FINAL_BOSS_LIFE_COUNT);
   const [bossStats, setBossStats] = useState<Record<BossSkill, BossSkillStat>>(
@@ -120,27 +113,27 @@ function useGauntletSessionValue({
   };
 
   return {
-    answerReview, bossLives, bossOrder, bossStats, cityOrder, cityRouteAttempt,
-    cityRouteProvinceOrder, completedLevels, confusableOrder, draftShapeProvinceCodes,
+    answerReview, bossLives, bossOrder, bossStats, cityOrder, completedLevels,
+    confusableOrder, draftShapeProvinceCodes,
     dualIntruderOrder, feedback, feedbackType, groupOrder, identity, level,
     mapRegionOrder, mapSelections, mistakeOrder, mistakes, mistakeSessionTotal,
     nationalError, nationalMap, onExit, passedLevel, plateAnswer,
     plateCityMapFocusedProvinceCode, plateCityMapHistoryRef, plateFaultOrder,
     progressStorage, provinceAnswer, provinceChallengeOrder, provinceCityCountOrder,
     provinceInputRef, provinceOrder, provincePickerOpen, provinceScopeMessage,
-    provinceScopeReady, questionIndex, regionMapHistoryRef, routeChallenge, routeCodes,
+    provinceScopeReady, questionIndex, regionMapHistoryRef, routeCodes,
     selectedShapeProvinceCodes, streak, timeLeft, timeLimit, truthOrder,
     undercoverOrder, universityOrder,
     setAnswerReview, setBossLives, setBossOrder, setBossStats, setCityOrder,
-    setCityRouteAttempt, setCityRouteProvinceOrder, setCompletedLevels,
-    setConfusableOrder, setDraftShapeProvinceCodes, setDualIntruderOrder,
+    setCompletedLevels, setConfusableOrder, setDraftShapeProvinceCodes,
+    setDualIntruderOrder,
     setFeedback, setFeedbackType, setGroupOrder, setLevel, setMapRegionOrder,
     setMapSelections, setMistakeOrder, setMistakes, setMistakeSessionTotal,
     setPassedLevel, setPlateAnswer, setPlateCityMapFocusedProvinceCode,
     setPlateFaultOrder, setProvinceAnswer, setProvinceChallengeOrder,
     setProvinceCityCountOrder, setProvinceOrder, setProvincePickerOpen,
     setProvinceScopeMessage, setProvinceScopeReady, setQuestionIndex,
-    setRouteChallenge, setRouteCodes, setSelectedShapeProvinceCodes, setStreak,
+    setRouteCodes, setSelectedShapeProvinceCodes, setStreak,
     setTimeLeft, setTimeLimit, setTruthOrder, setUndercoverOrder,
     setUniversityOrder, setRecentQuestionHistory,
   };

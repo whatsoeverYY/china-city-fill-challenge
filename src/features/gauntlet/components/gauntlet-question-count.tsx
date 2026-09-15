@@ -18,22 +18,16 @@ export default function GauntletQuestionCount() {
     label = d.isRotatedProvinceShapeStage
       ? `旋转阶段 · 当前连胜 ${s.streak} / ${ROTATED_SILHOUETTE_STREAK_TARGET}`
       : `普通阶段 · 第 ${s.questionIndex + 1} / ${d.provinceShapeNormalTarget} 题`;
-  } else if (s.level === LEVEL.PROVINCE_PUZZLE) {
-    label = `${s.selectedShapeProvinceCodes.size} 省 · 已放置 ${s.mapSelections.size} / ${d.target}`;
   } else if (s.level === LEVEL.PROVINCE_NEIGHBORS) {
     label = `${s.selectedShapeProvinceCodes.size} 省 · 第 ${s.questionIndex + 1} 题`;
   } else if (s.level === LEVEL.NEIGHBOR_CHAIN) {
     label = `全国路线 · 已走 ${s.routeCodes.length} / ${d.target}`;
   } else if (s.level === LEVEL.TERRITORY_GROUPS) {
     label = `疆域集合 · 第 ${(s.questionIndex % PROVINCE_GROUPS.length) + 1} / ${PROVINCE_GROUPS.length} 组`;
-  } else if (s.level === LEVEL.PROVINCE_SHORTEST_ROUTE) {
-    label = `最短路线 · 已完成 ${s.streak} / ${d.target}`;
   } else if (s.level === LEVEL.MISTAKE_REVENGE) {
     label = `历史错题 · 剩余 ${s.mistakeOrder.length} 题`;
   } else if (s.level === LEVEL.CONFUSABLE_CITIES) {
     label = `易混城市 · 第 ${s.questionIndex + 1} 题`;
-  } else if (s.level === LEVEL.CITY_SHORTEST_ROUTE) {
-    label = `省内路线 · 已完成 ${s.streak} / ${d.target} 条`;
   } else if (s.level === LEVEL.PROVINCE_CITY_COUNT) {
     label = `${s.selectedShapeProvinceCodes.size} 省 · 第 ${s.questionIndex + 1} 题`;
   } else if (s.level === LEVEL.FINAL_BOSS) {

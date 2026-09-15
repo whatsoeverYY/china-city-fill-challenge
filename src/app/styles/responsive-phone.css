@@ -172,22 +172,6 @@
     height: 310px;
   }
 
-  .province-puzzle-piece {
-    grid-template-columns: 100px 1fr;
-    min-height: 96px;
-    margin-bottom: -24px;
-    padding: 9px 11px;
-  }
-
-  .province-puzzle-piece svg {
-    width: 100px;
-    height: 72px;
-  }
-
-  .province-puzzle-piece span {
-    font-size: 12px;
-  }
-
   .map-question-banner {
     margin-bottom: -16px;
   }
