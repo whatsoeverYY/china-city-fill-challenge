@@ -6,10 +6,7 @@ const root = process.cwd();
 const srcRoot = join(root, "src");
 const maxLines = 500;
 const sourceExtensions = new Set([".ts", ".tsx", ".css"]);
-const allowedCssFiles = new Set([
-  "src/app/globals.css",
-  "src/app/styles/maps.css",
-]);
+const allowedCssFiles = new Set(["src/app/globals.css"]);
 const kebabCaseFile = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:ts|tsx|css)$/;
 const businessFeatures = new Set([
   "admin",

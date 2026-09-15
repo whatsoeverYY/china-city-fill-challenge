@@ -1,0 +1,125 @@
+"use client";
+
+import { useMemo } from "react";
+import {
+  featureLabelPosition,
+  geometryToPath,
+  handleKeyboardActivation,
+  makeProjection,
+  MAP_HEIGHT,
+  MAP_WIDTH,
+} from "@/features/map/lib/map-geometry";
+import type { MapData } from "@/features/map/model/map-data";
+import { stripAdministrativeSuffix } from "@/shared/lib/place-name";
+
+export default function GauntletDetailMap({
+  map,
+  onRegion,
+  correctRegionName,
+  selectedRegionName,
+  showLabels = false,
+  readOnly = false,
+}: {
+  map: MapData;
+  onRegion: (name: string) => void;
+  correctRegionName?: string;
+  selectedRegionName?: string;
+  showLabels?: boolean;
+  readOnly?: boolean;
+}) {
+  const project = useMemo(() => makeProjection(map.features), [map.features]);
+
+  return (
+    <svg
+      className="block h-auto max-h-[520px] w-full overflow-visible drop-shadow-[0_15px_14px_rgba(68,55,35,0.1)]"
+      viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+      role="img"
+      aria-label={readOnly
+        ? "显示区块名称和答题结果的省内行政区地图"
+        : showLabels
+          ? "显示区块名称的省内行政区地图"
+          : "无名称省内行政区地图"}
+    >
+      {map.features.map((feature) => {
+        const name = feature.properties.name;
+        const isCorrectAnswer = correctRegionName === name;
+        const isWrongSelection = selectedRegionName === name;
+        const isHighlighted = isCorrectAnswer || isWrongSelection;
+        const fill = isCorrectAnswer ? "#f1c75b" : isWrongSelection ? "#e7a09a" : "#eee4cf";
+        const stroke = isCorrectAnswer ? "#8b4a16" : isWrongSelection ? "#8f302a" : "var(--green)";
+        const strokeWidth = isHighlighted ? 3 : 1.8;
+        return (
+          <path
+            key={`${feature.properties.adcode}-${name}`}
+            d={geometryToPath(feature.geometry, project)}
+            className={`${readOnly ? "cursor-default" : "cursor-pointer"} [transition:fill_130ms_ease,stroke-width_130ms_ease,filter_130ms_ease] ${
+              !readOnly && !isHighlighted
+                ? "hover:fill-[#b9d8c4] hover:[stroke-width:2.8px] focus-visible:fill-[#b9d8c4] focus-visible:[stroke-width:2.8px]"
+                : ""
+            } ${isCorrectAnswer ? "drop-shadow-[0_0_5px_rgba(241,199,91,0.68)]" : ""}`}
+            fill={fill}
+            fillRule="evenodd"
+            role="button"
+            stroke={stroke}
+            strokeLinejoin="round"
+            strokeWidth={strokeWidth}
+            tabIndex={readOnly ? -1 : 0}
+            aria-disabled={readOnly || undefined}
+            aria-label={isCorrectAnswer
+              ? `${name}，正确答案`
+              : isWrongSelection
+                ? `${name}，你的选择`
+                : showLabels
+                  ? name
+                  : "待选择行政区块"}
+            onClick={() => {
+              if (!readOnly) onRegion(name);
+            }}
+            onKeyDown={(event) => handleKeyboardActivation(
+              event,
+              () => {
+                if (!readOnly) onRegion(name);
+              },
+            )}
+          />
+        );
+      })}
+      {showLabels
+        ? map.features.map((feature) => {
+            const [x, y] = featureLabelPosition(feature, project);
+            const name = feature.properties.name;
+            const isCorrectAnswer = correctRegionName === name;
+            const isWrongSelection = selectedRegionName === name;
+            const fill = isCorrectAnswer ? "#71430f" : isWrongSelection ? "#8f302a" : "#3f4d47";
+            const stroke = isCorrectAnswer ? "#fff7d3" : isWrongSelection ? "#fff0ed" : "rgba(255, 253, 247, 0.92)";
+            const fontSize = isCorrectAnswer || isWrongSelection ? 15 : readOnly ? 12 : 10;
+            const strokeWidth = isCorrectAnswer || isWrongSelection ? 4 : readOnly ? 3 : 2.6;
+            return (
+              <text
+                key={`detail-map-label-${name}`}
+                x={x}
+                y={y}
+                className="pointer-events-none font-sans font-black [paint-order:stroke]"
+                fill={fill}
+                fontSize={fontSize}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+                textAnchor="middle"
+                dominantBaseline="central"
+                aria-hidden="true"
+              >
+                <tspan x={x} dy={isCorrectAnswer || isWrongSelection ? "-0.45em" : 0}>
+                  {stripAdministrativeSuffix(name)}
+                </tspan>
+                {isCorrectAnswer || isWrongSelection ? (
+                  <tspan x={x} dy="1.35em" fontSize={10} letterSpacing="0.04em">
+                    {isCorrectAnswer ? "✓ 正确答案" : "× 你的选择"}
+                  </tspan>
+                ) : null}
+              </text>
+            );
+          })
+        : null}
+    </svg>
+  );
+}

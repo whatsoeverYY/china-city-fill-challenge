@@ -1,12 +1,10 @@
 "use client";
 
 import { PROVINCE_BY_CODE } from "@/domain/geography/data/provinces";
-import {
-  GauntletDetailMap,
-  GauntletNationalMap,
-  GauntletProvinceMapWall,
-  ProvinceSilhouette,
-} from "@/features/gauntlet/components/gauntlet-maps";
+import GauntletDetailMap from "@/features/gauntlet/components/maps/gauntlet-detail-map";
+import GauntletNationalMap from "@/features/gauntlet/components/maps/gauntlet-national-map";
+import GauntletProvinceMapWall from "@/features/gauntlet/components/maps/gauntlet-province-map-wall";
+import ProvinceSilhouette from "@/features/gauntlet/components/maps/province-silhouette";
 import GauntletQuestionCount from "@/features/gauntlet/components/gauntlet-question-count";
 import ChoiceQuestion from "@/features/gauntlet/components/choice-question";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";

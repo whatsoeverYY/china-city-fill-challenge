@@ -444,7 +444,6 @@ export default function CityGame() {
         hoveredName={hoveredName}
         completedNames={completedNames}
         completedProvinceCodes={activeCompletedProvinceCodes}
-        selectedAnswer={selectedAnswer}
         wrongRegion={wrongRegion}
         outlineFeatures={outlineFeatures}
         answerCount={answerNames.length}

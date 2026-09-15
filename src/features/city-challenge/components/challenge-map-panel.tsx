@@ -19,7 +19,6 @@ export default function ChallengeMapPanel({
   hoveredName,
   completedNames,
   completedProvinceCodes,
-  selectedAnswer,
   wrongRegion,
   outlineFeatures,
   answerCount,
@@ -47,7 +46,6 @@ export default function ChallengeMapPanel({
   hoveredName: string | null;
   completedNames: Set<string>;
   completedProvinceCodes: Set<string>;
-  selectedAnswer: string | null;
   wrongRegion: string | null;
   outlineFeatures: MapFeature[];
   answerCount: number;
@@ -161,7 +159,6 @@ export default function ChallengeMapPanel({
             mode={province ? "detail" : "national"}
             completedNames={completedNames}
             completedProvinceCodes={completedProvinceCodes}
-            selectedAnswer={selectedAnswer}
             wrongRegion={wrongRegion}
             provinceOutlines={outlineFeatures}
             provinceFillColors={provinceFillColors}
@@ -170,6 +167,7 @@ export default function ChallengeMapPanel({
             hideProvinceNames={hardMode}
             showAllLabels={province ? showAllCityNames : showAllProvinceNames}
             joined={neighborMode && Boolean(province)}
+            hardMode={hardMode}
             hiddenProvinceCodes={hiddenProvinceCodes}
           />
         ) : (

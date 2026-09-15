@@ -47,14 +47,17 @@ export const AtlasRegionShapes = memo(function AtlasRegionShapes({
   onRegionLeave: () => void;
 }) {
   return (
-    <g className="city-atlas-region-layer">
+    <g>
       {regions.map((region) => (
         <path
           key={region.key}
-          className="city-atlas-region"
+          className="hover:brightness-[0.96] hover:saturate-[1.08]"
           d={region.path}
           fill={region.fill}
           fillRule="evenodd"
+          stroke="var(--green)"
+          strokeLinejoin="round"
+          strokeWidth={0.72}
           vectorEffect="non-scaling-stroke"
           data-region-name={region.name}
           onPointerEnter={(event) => onRegionEnter(region, event)}
@@ -71,14 +74,17 @@ export const AtlasProvinceOutlines = memo(function AtlasProvinceOutlines({
   provinces: AtlasProvinceDrawing[];
 }) {
   return (
-    <g className="city-atlas-province-layer">
+    <g>
       {provinces.map((province) => (
         <path
           key={province.key}
-          className="city-atlas-province-outline"
+          className="pointer-events-none"
           d={province.path}
           fill="none"
           fillRule="evenodd"
+          stroke="var(--red)"
+          strokeLinejoin="round"
+          strokeWidth={2.1}
           vectorEffect="non-scaling-stroke"
         />
       ))}
@@ -92,18 +98,23 @@ export const AtlasLabels = memo(function AtlasLabels({
   regions: AtlasRegionDrawing[];
 }) {
   return (
-    <g className="city-atlas-labels">
+    <g className="pointer-events-none">
       {regions.map((region) => (
         <text
           key={`label-${region.key}`}
           x={region.labelX}
           y={region.labelY}
-          className={region.longLabel ? "is-long" : ""}
+          className="font-sans font-black [paint-order:stroke]"
+          fill="#27362f"
+          fontSize={region.longLabel ? 2.95 : 3.7}
+          stroke="rgba(255, 253, 247, 0.95)"
+          strokeLinejoin="round"
+          strokeWidth={0.86}
           textAnchor="middle"
           aria-hidden="true"
         >
           <tspan x={region.labelX} dy="-0.1em">{region.name}</tspan>
-          <tspan className="city-atlas-plate" x={region.labelX} dy="1.2em">
+          <tspan fill="#9c2f28" fontSize="0.9em" strokeWidth={0.78} x={region.labelX} dy="1.2em">
             {region.plate}
           </tspan>
         </text>
