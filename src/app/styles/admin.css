@@ -1,0 +1,438 @@
+.admin-shell {
+  width: min(1460px, calc(100% - 48px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 30px 0 70px;
+}
+
+.admin-header {
+  display: flex;
+  padding: 12px 0 28px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-header h1,
+.admin-header p,
+.admin-panel-heading h2,
+.admin-panel-heading p {
+  margin-top: 0;
+}
+
+.admin-header h1 {
+  margin-bottom: 8px;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1;
+}
+
+.admin-header > div > p:last-child {
+  margin-bottom: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-header-actions a,
+.admin-header-actions button {
+  display: grid;
+  min-height: 42px;
+  padding: 8px 14px;
+  place-items: center;
+  border: 1px solid rgba(38, 47, 41, 0.16);
+  border-radius: 11px;
+  background: var(--card);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 24px 0;
+  gap: 14px;
+}
+
+.admin-stat-grid article {
+  min-height: 142px;
+  padding: 19px;
+  border: 1px solid rgba(38, 47, 41, 0.13);
+  border-radius: 16px 16px 16px 5px;
+  background: rgba(251, 248, 240, 0.88);
+  box-shadow: 0 10px 24px rgba(38, 47, 41, 0.05);
+}
+
+.admin-stat-grid span,
+.admin-stat-grid small,
+.admin-stat-grid strong {
+  display: block;
+}
+
+.admin-stat-grid span {
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.admin-stat-grid strong {
+  margin: 12px 0 3px;
+  color: var(--green-dark);
+  font-family: Georgia, serif;
+  font-size: 42px;
+}
+
+.admin-stat-grid small {
+  color: #7b827d;
+  font-size: 9px;
+}
+
+.admin-player-panel {
+  overflow: hidden;
+  border: 1px solid rgba(38, 47, 41, 0.14);
+  border-radius: 20px 20px 20px 7px;
+  background: var(--card);
+  box-shadow: 0 18px 45px rgba(38, 47, 41, 0.07);
+}
+
+.admin-panel-heading {
+  display: flex;
+  padding: 22px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-panel-heading h2 {
+  margin-bottom: 0;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 28px;
+}
+
+.admin-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-filters label {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-filters label > span {
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-filters input {
+  width: min(260px, 30vw);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-player-table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-player-table th {
+  padding: 11px 15px;
+  color: #6d756f;
+  border-bottom: 1px solid var(--line);
+  background: rgba(230, 223, 208, 0.38);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.admin-player-table td {
+  padding: 15px;
+  border-bottom: 1px solid rgba(38, 47, 41, 0.08);
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+.admin-player-table td > strong,
+.admin-player-table td > small {
+  display: block;
+}
+
+.admin-player-table td > strong {
+  max-width: 270px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-player-table td > strong i {
+  color: #8a918d;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.admin-player-table td > small {
+  max-width: 270px;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #818783;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-player-table td button {
+  min-height: 34px;
+  padding: 6px 10px;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 9px;
+  background: rgba(45, 125, 95, 0.08);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-role {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.1);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-role--admin {
+  color: #745719;
+  background: rgba(213, 169, 69, 0.18);
+}
+
+.admin-no-save {
+  color: #858c87;
+  font-size: 9px;
+}
+
+.admin-pagination {
+  display: flex;
+  padding: 14px 22px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+}
+
+.admin-pagination div {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-pagination button {
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid rgba(45, 125, 95, 0.22);
+  border-radius: 9px;
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.07);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.admin-detail-loading {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.admin-error,
+.admin-notice,
+.admin-empty {
+  margin: 18px 22px;
+  padding: 14px;
+  border-radius: 11px;
+  font-size: 11px;
+}
+
+.admin-error {
+  color: var(--red-dark);
+  background: rgba(180, 59, 50, 0.09);
+}
+
+.admin-notice {
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.1);
+}
+
+.admin-empty {
+  color: var(--ink-soft);
+  text-align: center;
+  background: var(--paper);
+}
+
+.admin-detail-dialog {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 44px);
+  padding: 30px;
+  overflow: auto;
+  border-radius: 22px 22px 22px 7px;
+  background: var(--card);
+  box-shadow: 0 30px 90px rgba(15, 25, 18, 0.32);
+}
+
+.admin-detail-dialog h2 {
+  margin: 0 0 20px;
+  overflow-wrap: anywhere;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 30px;
+}
+
+.admin-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.admin-detail-metrics div {
+  padding: 12px;
+  border-radius: 11px;
+  background: var(--paper);
+}
+
+.admin-detail-metrics span,
+.admin-detail-metrics strong {
+  display: block;
+}
+
+.admin-detail-metrics span {
+  color: var(--ink-soft);
+  font-size: 8px;
+}
+
+.admin-detail-metrics strong {
+  margin-top: 5px;
+  color: var(--green-dark);
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.admin-account-details {
+  display: grid;
+  margin: 18px 0;
+  gap: 8px;
+}
+
+.admin-account-details > div {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+  font-size: 10px;
+}
+
+.admin-account-details dt {
+  color: var(--ink-soft);
+  font-weight: 800;
+}
+
+.admin-account-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-json-details {
+  padding: 12px;
+  border-radius: 11px;
+  background: #202822;
+  color: #e5eee8;
+}
+
+.admin-json-details summary {
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-json-details pre {
+  max-height: 340px;
+  margin: 14px 0 0;
+  overflow: auto;
+  font-size: 9px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.admin-delete-progress {
+  width: 100%;
+  margin-top: 14px;
+  color: var(--red-dark);
+  border-color: rgba(180, 59, 50, 0.24);
+  background: rgba(180, 59, 50, 0.06);
+}
+
+.admin-state-page {
+  display: grid;
+  min-height: 100dvh;
+  padding: 28px;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.admin-state-page h1 {
+  margin: 14px 0 8px;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(28px, 6vw, 48px);
+}
+
+.admin-state-page p {
+  max-width: 520px;
+  margin: 0 0 20px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.admin-state-page a {
+  padding: 10px 16px;
+  color: #fff;
+  border-radius: 10px;
+  background: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-state-mark {
+  display: grid;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  color: #fff;
+  border-radius: 20px 20px 20px 5px;
+  background: var(--red);
+  font-family: "Songti SC", STSong, serif;
+  font-size: 22px;
+  font-weight: 900;
+}

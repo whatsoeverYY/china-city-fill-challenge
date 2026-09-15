@@ -1,0 +1,388 @@
+/* 账号、云存档与管理员后台 */
+
+.account-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1400;
+  display: grid;
+  grid-template-columns: 30px auto 8px;
+  min-height: 46px;
+  padding: 7px 12px 7px 8px;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(25, 34, 29, 0.94);
+  box-shadow: 0 12px 34px rgba(25, 34, 29, 0.26);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.account-fab > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.account-fab > b {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.account-fab > i,
+.sync-state > i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa39e;
+  box-shadow: 0 0 0 3px rgba(154, 163, 158, 0.15);
+}
+
+.account-fab--synced > i,
+.sync-state--synced > i {
+  background: #67c693;
+  box-shadow: 0 0 0 3px rgba(103, 198, 147, 0.16);
+}
+
+.account-fab--pending > i,
+.account-fab--syncing > i,
+.account-fab--loading > i,
+.sync-state--pending > i,
+.sync-state--syncing > i,
+.sync-state--loading > i {
+  background: var(--gold);
+}
+
+.account-fab--offline > i,
+.sync-state--offline > i {
+  background: #81a5bb;
+}
+
+.account-fab--error > i,
+.sync-state--error > i {
+  background: #e07269;
+}
+
+.account-dialog-backdrop,
+.admin-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  padding: 22px;
+  place-items: center;
+  background: rgba(20, 28, 23, 0.56);
+  backdrop-filter: blur(7px);
+}
+
+.account-dialog {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 44px);
+  padding: 32px;
+  overflow: auto;
+  border: 1px solid rgba(56, 68, 59, 0.14);
+  border-radius: 24px 24px 24px 7px;
+  background: var(--card);
+  box-shadow: 0 30px 90px rgba(15, 25, 18, 0.3);
+}
+
+.account-dialog h2,
+.account-dialog p {
+  margin-top: 0;
+}
+
+.account-dialog h2 {
+  margin-bottom: 12px;
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1.18;
+}
+
+.account-dialog-lede {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.account-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 24px 0 18px;
+  padding: 4px;
+  border-radius: 13px;
+  background: var(--paper-deep);
+}
+
+.account-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.account-tabs button.is-active {
+  color: var(--green-dark);
+  background: var(--card);
+  box-shadow: 0 3px 10px rgba(38, 47, 41, 0.08);
+}
+
+.account-form {
+  display: grid;
+  gap: 8px;
+}
+
+.account-form label {
+  margin-top: 6px;
+  color: #59645e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.account-form input,
+.admin-filters input,
+.admin-filters select {
+  min-height: 44px;
+  padding: 9px 12px;
+  color: var(--ink);
+  border: 1px solid rgba(38, 47, 41, 0.18);
+  border-radius: 11px;
+  outline: none;
+  background: #fffdf7;
+}
+
+.account-form input:focus,
+.admin-filters input:focus,
+.admin-filters select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(45, 125, 95, 0.12);
+}
+
+.account-form > button,
+.account-primary-link {
+  display: grid;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  place-items: center;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  background: var(--green);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.account-form > button:disabled,
+.account-actions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.account-form-success,
+.account-form-error {
+  margin: 13px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.account-form-success {
+  color: var(--green-dark);
+  background: rgba(45, 125, 95, 0.1);
+}
+
+.account-form-error {
+  color: var(--red-dark);
+  background: rgba(180, 59, 50, 0.1);
+}
+
+.account-privacy-note {
+  margin: 16px 0 0 !important;
+  color: #7b827d;
+  font-size: 10px;
+  text-align: center;
+}
+
+.account-identity-card {
+  display: flex;
+  padding: 14px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(38, 47, 41, 0.12);
+  border-radius: 14px;
+  background: #fffdf8;
+}
+
+.account-identity-card > span {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: white;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: Georgia, serif;
+  font-weight: 900;
+}
+
+.account-identity-card div {
+  min-width: 0;
+}
+
+.account-identity-card strong,
+.account-identity-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-identity-card strong {
+  font-size: 13px;
+}
+
+.account-identity-card small {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.sync-state {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  margin-top: 14px;
+  padding: 13px 14px;
+  align-items: center;
+  gap: 10px;
+  border-radius: 13px;
+  background: var(--paper);
+}
+
+.sync-state strong,
+.sync-state small {
+  display: block;
+}
+
+.sync-state strong {
+  font-size: 11px;
+}
+
+.sync-state small {
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 9px;
+}
+
+.account-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+  gap: 8px;
+}
+
+.account-actions .account-primary-link {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.account-actions button {
+  min-height: 40px;
+  border: 1px solid rgba(38, 47, 41, 0.16);
+  border-radius: 10px;
+  background: #fffdf8;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.account-actions button.account-signout {
+  color: var(--red-dark);
+}
+
+.account-actions button.account-delete-progress {
+  grid-column: 1 / -1;
+  color: var(--red-dark);
+  border-color: rgba(180, 59, 50, 0.24);
+  background: rgba(180, 59, 50, 0.06);
+}
+
+.account-actions button.account-delete-progress:hover:not(:disabled),
+.admin-delete-progress:hover:not(:disabled) {
+  border-color: rgba(180, 59, 50, 0.48);
+  background: rgba(180, 59, 50, 0.11);
+}
+
+.account-delete-confirm,
+.admin-delete-confirm {
+  margin-top: 14px;
+  padding: 14px;
+  color: var(--red-dark);
+  border: 1px solid rgba(180, 59, 50, 0.2);
+  border-radius: 13px;
+  background: rgba(180, 59, 50, 0.07);
+}
+
+.account-delete-confirm > strong,
+.admin-delete-confirm > strong {
+  display: block;
+  font-size: 12px;
+}
+
+.account-delete-confirm > p,
+.admin-delete-confirm > p {
+  margin: 7px 0 12px;
+  color: #765653;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.account-delete-confirm > div,
+.admin-delete-confirm > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.account-delete-confirm button,
+.admin-delete-confirm button,
+.admin-delete-progress {
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid rgba(38, 47, 41, 0.16);
+  border-radius: 9px;
+  background: #fffdf8;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.account-delete-confirm button.is-danger,
+.admin-delete-confirm button.is-danger {
+  color: #fff;
+  border-color: var(--red-dark);
+  background: var(--red-dark);
+}
+
+.account-delete-confirm button:disabled,
+.admin-delete-confirm button:disabled,
+.admin-delete-progress:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}

@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@import "./styles/base.css";
+@import "./styles/account.css";
+@import "./styles/admin.css";
+@import "./styles/admin-responsive.css";
+@import "./styles/app-navigation.css";
+@import "./styles/atlas.css";
+@import "./styles/challenge-header.css";
+@import "./styles/challenge-map.css";
+@import "./styles/challenge-map-regions.css";
+@import "./styles/challenge-answer.css";
+@import "./styles/gauntlet-lobby.css";
+@import "./styles/gauntlet-progress.css";
+@import "./styles/gauntlet-map.css";
+@import "./styles/gauntlet-question.css";
+@import "./styles/gauntlet-results.css";
+@import "./styles/knowledge-shell.css";
+@import "./styles/knowledge-profiles.css";
+@import "./styles/knowledge-lists.css";
+@import "./styles/knowledge-topics.css";
+@import "./styles/responsive-large.css";
+@import "./styles/responsive-tablet.css";
+@import "./styles/responsive-phone.css";
+@import "./styles/knowledge-responsive-large.css";
+@import "./styles/knowledge-responsive-tablet.css";
+@import "./styles/knowledge-responsive-phone.css";
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-card: var(--card);
+  --color-brand-red: var(--red);
+  --color-brand-red-dark: var(--red-dark);
+  --color-brand-green: var(--green);
+  --color-brand-green-dark: var(--green-dark);
+  --color-brand-gold: var(--gold);
+  --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}

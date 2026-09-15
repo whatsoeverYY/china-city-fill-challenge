@@ -1,0 +1,461 @@
+.gauntlet-play-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(330px, 0.8fr);
+  min-height: 590px;
+  overflow: hidden;
+  border: 1px solid rgba(39, 50, 42, 0.15);
+  border-radius: 24px;
+  background: rgba(251, 248, 240, 0.94);
+  box-shadow: 0 30px 70px rgba(57, 46, 31, 0.1);
+}
+
+.gauntlet-play-card.has-error {
+  animation: dialog-shake 300ms ease;
+}
+
+.gauntlet-question-stage {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 590px;
+  padding: 45px;
+  place-items: center;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.85), transparent 21rem),
+    linear-gradient(rgba(53, 66, 56, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(53, 66, 56, 0.035) 1px, transparent 1px),
+    #ede7d8;
+  background-size: auto, 24px 24px, 24px 24px, auto;
+}
+
+.question-count {
+  position: absolute;
+  top: 22px;
+  left: 25px;
+  padding: 6px 10px;
+  color: #716b5f;
+  border: 1px solid rgba(59, 65, 60, 0.13);
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.74);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.gauntlet-silhouette {
+  width: min(100%, 760px);
+  height: 500px;
+  overflow: visible;
+}
+
+.gauntlet-silhouette path {
+  fill: #d9cda9;
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 15px 14px rgba(68, 55, 35, 0.14));
+}
+
+.gauntlet-map-question {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  align-content: center;
+  justify-items: center;
+}
+
+.map-question-banner {
+  z-index: 2;
+  display: grid;
+  margin-bottom: -24px;
+  padding: 10px 18px 11px;
+  justify-items: center;
+  border: 1px solid rgba(180, 59, 50, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 253, 247, 0.94);
+  box-shadow: 0 10px 25px rgba(62, 49, 33, 0.12);
+}
+
+.map-question-banner small {
+  color: #8c8276;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.map-question-banner strong {
+  font-family: "Songti SC", STSong, serif;
+  font-size: 23px;
+}
+
+.gauntlet-national-map {
+  width: min(100%, 790px);
+  height: 500px;
+  overflow: visible;
+  filter: drop-shadow(0 15px 14px rgba(68, 55, 35, 0.1));
+}
+
+.gauntlet-national-region {
+  fill: #eee4cf;
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 1.25px;
+  cursor: pointer;
+  transition: fill 130ms ease, filter 130ms ease;
+}
+
+.gauntlet-national-region:hover,
+.gauntlet-national-region:focus-visible {
+  fill: #e4d5b9;
+  filter: brightness(0.98);
+  outline: none;
+}
+
+.gauntlet-national-region.is-selected {
+  fill: #94c7aa;
+  stroke-width: 2px;
+}
+
+.gauntlet-national-region.is-origin {
+  fill: #e3bd72;
+  stroke-width: 2.5px;
+}
+
+.gauntlet-national-region.is-route {
+  fill: #a9c9dd;
+  stroke: #355f91;
+  stroke-width: 1.8px;
+}
+
+.gauntlet-national-region.is-route.is-origin {
+  fill: #e3bd72;
+  stroke: var(--red);
+}
+
+.gauntlet-national-region.is-current {
+  fill: #4d8c76;
+  stroke: #173f32;
+  stroke-width: 2.8px;
+}
+
+.gauntlet-national-region.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px rgba(241, 199, 91, 0.72));
+}
+
+.gauntlet-national-map text {
+  fill: #4c574f;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  paint-order: stroke;
+  pointer-events: none;
+  stroke: rgba(255, 253, 247, 0.9);
+  stroke-width: 2px;
+}
+
+.gauntlet-national-map text.is-long {
+  font-size: 8px;
+}
+
+.puzzle-question-stage {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.province-puzzle-piece {
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  width: min(420px, 88%);
+  min-height: 122px;
+  margin-bottom: -45px;
+  padding: 12px 16px;
+  align-items: center;
+  gap: 14px;
+  color: #76684e;
+  border: 1px solid rgba(180, 59, 50, 0.22);
+  border-radius: 15px;
+  background: rgba(255, 253, 247, 0.96);
+  box-shadow: 0 14px 35px rgba(62, 49, 33, 0.15);
+  cursor: grab;
+}
+
+.province-puzzle-piece:active {
+  cursor: grabbing;
+}
+
+.province-puzzle-piece span {
+  grid-column: 2;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.province-puzzle-piece svg {
+  grid-column: 1;
+  grid-row: 1;
+  width: 150px;
+  height: 96px;
+  overflow: visible;
+}
+
+.province-puzzle-piece path {
+  fill: #e0c788;
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 4px;
+  filter: drop-shadow(0 8px 8px rgba(68, 55, 35, 0.16));
+}
+
+.gauntlet-detail-map {
+  width: min(100%, 760px);
+  height: 500px;
+  overflow: visible;
+  filter: drop-shadow(0 15px 14px rgba(68, 55, 35, 0.1));
+}
+
+.gauntlet-detail-map path {
+  fill: #eee4cf;
+  stroke: var(--green);
+  stroke-linejoin: round;
+  stroke-width: 1.8px;
+  cursor: pointer;
+  transition: fill 130ms ease, stroke-width 130ms ease;
+}
+
+.gauntlet-detail-map path:hover,
+.gauntlet-detail-map path:focus-visible {
+  fill: #b9d8c4;
+  stroke-width: 2.8px;
+  outline: none;
+}
+
+.gauntlet-detail-map path.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 5px rgba(241, 199, 91, 0.68));
+}
+
+.gauntlet-detail-map path.is-wrong-selection {
+  fill: #e7a09a;
+  stroke: #8f302a;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 5px rgba(143, 48, 42, 0.58));
+}
+
+.plate-city-map-question {
+  padding-top: 16px;
+  align-content: start;
+}
+
+.plate-city-map-question .map-question-banner {
+  margin-bottom: 12px;
+}
+
+.gauntlet-province-map-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  width: 100%;
+  max-height: 470px;
+  padding: 4px 10px 10px;
+  align-items: stretch;
+  gap: 12px;
+  overflow: auto;
+  scrollbar-color: rgba(45, 125, 95, 0.38) transparent;
+}
+
+.gauntlet-province-map-wall.is-many {
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+}
+
+.gauntlet-province-map-wall.is-single {
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.gauntlet-province-map-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 205px;
+  overflow: hidden;
+  border: 1px solid rgba(45, 125, 95, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 253, 247, 0.78);
+  box-shadow: 0 9px 24px rgba(68, 55, 35, 0.07);
+}
+
+.gauntlet-province-focus-button {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  padding: 5px 8px;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.92);
+  box-shadow: 0 3px 10px rgba(45, 88, 67, 0.1);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.gauntlet-province-focus-button:hover,
+.gauntlet-province-focus-button:focus-visible {
+  color: white;
+  border-color: var(--green);
+  outline: none;
+  background: var(--green);
+}
+
+.gauntlet-province-focus-button span {
+  font-size: 12px;
+}
+
+.gauntlet-province-map-panel svg {
+  display: block;
+  width: 100%;
+  height: 205px;
+  padding: 12px;
+  overflow: visible;
+}
+
+.gauntlet-province-map-panel path {
+  fill: #eee4cf;
+  stroke: var(--green);
+  stroke-linejoin: round;
+  stroke-width: 2.2px;
+  cursor: pointer;
+  transition: fill 130ms ease, stroke-width 130ms ease, filter 130ms ease;
+}
+
+.gauntlet-province-map-panel path:hover,
+.gauntlet-province-map-panel path:focus-visible {
+  fill: #b9d8c4;
+  stroke-width: 3.2px;
+  outline: none;
+}
+
+.gauntlet-province-map-panel path.is-correct-answer {
+  fill: #f1c75b;
+  stroke: #8b4a16;
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 0 5px rgba(241, 199, 91, 0.68));
+}
+
+.gauntlet-province-map-wall.is-read-only path:not(.is-correct-answer),
+.gauntlet-province-map-wall.is-read-only path:not(.is-correct-answer):hover {
+  fill: #eee4cf;
+  stroke: var(--green);
+  stroke-width: 2.2px;
+  cursor: default;
+}
+
+.gauntlet-province-map-wall.is-single .gauntlet-province-map-panel,
+.gauntlet-province-map-wall.is-single .gauntlet-province-map-panel svg {
+  min-height: 430px;
+  height: 430px;
+}
+
+.gauntlet-focused-province-map {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+}
+
+.gauntlet-focused-province-toolbar {
+  display: flex;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gauntlet-focused-province-toolbar span {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.gauntlet-focused-province-toolbar button {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  color: var(--green-dark);
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 999px;
+  background: #f0f6ec;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.gauntlet-focused-province-toolbar button:hover,
+.gauntlet-focused-province-toolbar button:focus-visible {
+  border-color: var(--green);
+  outline: none;
+  background: #e3efde;
+}
+
+.gauntlet-detail-map path.is-city-route {
+  fill: #b8d5e8;
+  stroke: #355f91;
+  stroke-width: 2.4px;
+}
+
+.gauntlet-detail-map path.is-city-origin {
+  fill: #e6c878;
+  stroke: #8b5d16;
+  stroke-width: 3px;
+}
+
+.gauntlet-detail-map path.is-city-target {
+  fill: #e7b5ad;
+  stroke: var(--red);
+  stroke-width: 3px;
+}
+
+.gauntlet-detail-map .city-route-label {
+  fill: #3f4d47;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  paint-order: stroke;
+  pointer-events: none;
+  stroke: rgba(255, 253, 247, 0.92);
+  stroke-width: 2.6px;
+}
+
+.gauntlet-detail-map .city-route-label.is-answer-review-label {
+  font-size: 12px;
+  stroke-width: 3px;
+}
+
+.gauntlet-detail-map .city-route-label.is-correct-answer-label {
+  fill: #71430f;
+  font-size: 15px;
+  stroke: rgba(255, 247, 211, 0.98);
+  stroke-width: 4px;
+}
+
+.gauntlet-detail-map .city-route-label.is-wrong-selection-label {
+  fill: #8f302a;
+  font-size: 15px;
+  stroke: rgba(255, 240, 237, 0.98);
+  stroke-width: 4px;
+}
+
+.gauntlet-detail-map .city-answer-marker {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}

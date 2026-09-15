@@ -1,0 +1,410 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CITY_PLATE_PREFIX_COUNT, PLATE_QUIZ_DATA } from "@/domain/geography/data/city-plates";
+import { PROVINCE_PLATE_PREFIXES, PROVINCES } from "@/domain/geography/data/provinces";
+import LoadingMap from "@/features/map/components/loading-map";
+import type { MapData, Position } from "@/features/map/model/map-data";
+import { featureLabelPosition, geometryToPath, makeProjection, MAP_HEIGHT, MAP_WIDTH, PROVINCE_FILL_COLORS } from "@/features/map/lib/map-geometry";
+import { normalizePlaceName } from "@/shared/lib/place-name";
+import {
+  ATLAS_MAX_SCALE,
+  ATLAS_MIN_SCALE,
+  AtlasLabels,
+  AtlasProvinceOutlines,
+  AtlasRegionShapes,
+  atlasPointerPosition,
+  type AtlasHoverLabel,
+  type AtlasProvinceDrawing,
+  type AtlasRegionDrawing,
+  type AtlasView,
+} from "@/features/atlas/components/atlas-map-layers";
+
+const CITY_PLATE_BY_NAME = new Map(
+  PLATE_QUIZ_DATA.map((item) => [normalizePlaceName(item.city), item.plate]),
+);
+
+export default function NationalCityAtlas({
+  map,
+  nationalMap,
+  error,
+  onExit,
+}: {
+  map: MapData | null;
+  nationalMap: MapData | null;
+  error: boolean;
+  onExit: () => void;
+}) {
+  const [view, setView] = useState<AtlasView>({ scale: 1, x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [labelsVisible, setLabelsVisible] = useState(true);
+  const [hoverLabel, setHoverLabel] = useState<AtlasHoverLabel | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    viewX: number;
+    viewY: number;
+  } | null>(null);
+  const activePointersRef = useRef(
+    new Map<number, { clientX: number; clientY: number }>(),
+  );
+  const pinchRef = useRef<{
+    distance: number;
+    midpoint: Position;
+  } | null>(null);
+  const project = useMemo(
+    () => (map?.features.length ? makeProjection(map.features) : null),
+    [map],
+  );
+  const provinceFillColors = useMemo(
+    () =>
+      Object.fromEntries(
+        PROVINCES.map((province, index) => [
+          province.code,
+          PROVINCE_FILL_COLORS[index % PROVINCE_FILL_COLORS.length],
+        ]),
+      ),
+    [],
+  );
+  const atlasRegions = useMemo<AtlasRegionDrawing[]>(() => {
+    if (!map || !project) return [];
+    return map.features.map((feature) => {
+      const provinceCode = feature.properties.provinceCode ?? "";
+      const name = feature.properties.name;
+      const [labelX, labelY] = featureLabelPosition(feature, project);
+      return {
+        key: `${provinceCode}-${String(feature.properties.adcode)}`,
+        path: geometryToPath(feature.geometry, project),
+        fill: provinceFillColors[provinceCode] ?? "#ece4d4",
+        name,
+        plate:
+          CITY_PLATE_BY_NAME.get(normalizePlaceName(name)) ??
+          PROVINCE_PLATE_PREFIXES[provinceCode] ??
+          "—",
+        labelX,
+        labelY,
+        longLabel: name.length > 6,
+      };
+    });
+  }, [map, project, provinceFillColors]);
+  const atlasProvinces = useMemo<AtlasProvinceDrawing[]>(() => {
+    if (!nationalMap || !project) return [];
+    return nationalMap.features.map((feature) => ({
+      key: String(feature.properties.adcode),
+      path: geometryToPath(feature.geometry, project),
+    }));
+  }, [nationalMap, project]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  const zoomBy = useCallback(
+    (factor: number, anchorX = MAP_WIDTH / 2, anchorY = MAP_HEIGHT / 2) => {
+      setView((current) => {
+        const scale = Math.min(
+          ATLAS_MAX_SCALE,
+          Math.max(ATLAS_MIN_SCALE, current.scale * factor),
+        );
+        if (scale === current.scale) return current;
+        const mapX = (anchorX - current.x) / current.scale;
+        const mapY = (anchorY - current.y) / current.scale;
+        return {
+          scale,
+          x: anchorX - mapX * scale,
+          y: anchorY - mapY * scale,
+        };
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const [anchorX, anchorY] = atlasPointerPosition(
+        svg,
+        event.clientX,
+        event.clientY,
+      );
+      const deltaPixels = event.deltaY * (
+        event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? svg.clientHeight : 1
+      );
+      const limitedDelta = Math.max(-120, Math.min(120, deltaPixels));
+      zoomBy(Math.exp(-limitedDelta * 0.002), anchorX, anchorY);
+    };
+    svg.addEventListener("wheel", handleWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", handleWheel);
+  }, [atlasRegions.length, zoomBy]);
+
+  const resetView = useCallback(() => {
+    setView({ scale: 1, x: 0, y: 0 });
+  }, []);
+
+  const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    setHoverLabel(null);
+    activePointersRef.current.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    if (activePointersRef.current.size >= 2) {
+      const [first, second] = Array.from(activePointersRef.current.values());
+      const midpointClientX = (first.clientX + second.clientX) / 2;
+      const midpointClientY = (first.clientY + second.clientY) / 2;
+      pinchRef.current = {
+        distance: Math.hypot(
+          second.clientX - first.clientX,
+          second.clientY - first.clientY,
+        ),
+        midpoint: atlasPointerPosition(
+          event.currentTarget,
+          midpointClientX,
+          midpointClientY,
+        ),
+      };
+      dragRef.current = null;
+      setDragging(true);
+      return;
+    }
+
+    const [viewX, viewY] = atlasPointerPosition(
+      event.currentTarget,
+      event.clientX,
+      event.clientY,
+    );
+    dragRef.current = {
+      pointerId: event.pointerId,
+      viewX,
+      viewY,
+    };
+    setDragging(true);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (!activePointersRef.current.has(event.pointerId)) return;
+    activePointersRef.current.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    if (activePointersRef.current.size >= 2) {
+      const [first, second] = Array.from(activePointersRef.current.values());
+      const nextDistance = Math.hypot(
+        second.clientX - first.clientX,
+        second.clientY - first.clientY,
+      );
+      const nextMidpoint = atlasPointerPosition(
+        event.currentTarget,
+        (first.clientX + second.clientX) / 2,
+        (first.clientY + second.clientY) / 2,
+      );
+      const previousPinch = pinchRef.current;
+      if (previousPinch && previousPinch.distance > 0 && nextDistance > 0) {
+        setView((current) => {
+          const scale = Math.min(
+            ATLAS_MAX_SCALE,
+            Math.max(
+              ATLAS_MIN_SCALE,
+              current.scale * (nextDistance / previousPinch.distance),
+            ),
+          );
+          const mapX = (previousPinch.midpoint[0] - current.x) / current.scale;
+          const mapY = (previousPinch.midpoint[1] - current.y) / current.scale;
+          return {
+            scale,
+            x: nextMidpoint[0] - mapX * scale,
+            y: nextMidpoint[1] - mapY * scale,
+          };
+        });
+      }
+      pinchRef.current = { distance: nextDistance, midpoint: nextMidpoint };
+      return;
+    }
+
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const [viewX, viewY] = atlasPointerPosition(
+      event.currentTarget,
+      event.clientX,
+      event.clientY,
+    );
+    const deltaX = viewX - drag.viewX;
+    const deltaY = viewY - drag.viewY;
+    dragRef.current = {
+      ...drag,
+      viewX,
+      viewY,
+    };
+    setView((current) => ({
+      ...current,
+      x: current.x + deltaX,
+      y: current.y + deltaY,
+    }));
+  };
+
+  const endPointerDrag = (event: React.PointerEvent<SVGSVGElement>) => {
+    activePointersRef.current.delete(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    pinchRef.current = null;
+
+    const remainingPointer = activePointersRef.current.entries().next().value as
+      | [number, { clientX: number; clientY: number }]
+      | undefined;
+    if (remainingPointer) {
+      const [pointerId, pointer] = remainingPointer;
+      const [viewX, viewY] = atlasPointerPosition(
+        event.currentTarget,
+        pointer.clientX,
+        pointer.clientY,
+      );
+      dragRef.current = { pointerId, viewX, viewY };
+      setDragging(true);
+      return;
+    }
+
+    dragRef.current = null;
+    setDragging(false);
+  };
+
+  const handleRegionEnter = useCallback((
+    region: AtlasRegionDrawing,
+    event: React.PointerEvent<SVGPathElement>,
+  ) => {
+    if (labelsVisible || activePointersRef.current.size > 0) return;
+    const bounds = svgRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    setHoverLabel({
+      name: region.name,
+      plate: region.plate,
+      left: Math.max(8, Math.min(bounds.width - 170, event.clientX - bounds.left + 14)),
+      top: Math.max(8, Math.min(bounds.height - 70, event.clientY - bounds.top + 14)),
+    });
+  }, [labelsVisible]);
+
+  const handleRegionLeave = useCallback(() => {
+    setHoverLabel(null);
+  }, []);
+
+  const toggleLabels = () => {
+    setLabelsVisible((current) => !current);
+    setHoverLabel(null);
+  };
+
+  return (
+    <main className="city-atlas-shell">
+      <header className="city-atlas-header">
+        <div className="city-atlas-title">
+          <span aria-hidden="true">图</span>
+          <div>
+            <p>可缩放全国城市参考地图</p>
+            <h1>全国车牌图鉴</h1>
+          </div>
+        </div>
+        <div className="city-atlas-summary" aria-label="图鉴数据范围">
+          <span><strong>34</strong> 省级行政区</span>
+          <span><strong>{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
+          <span><strong>{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
+        </div>
+        <button className="city-atlas-exit" type="button" onClick={onExit}>
+          <span aria-hidden="true">←</span> 返回挑战首页
+        </button>
+      </header>
+
+      <section className="city-atlas-workspace">
+        <div className="city-atlas-help">
+          <p><span className="legend-line legend-line--red" />红色省界</p>
+          <p><span className="legend-line legend-line--green" />绿色市界 / 区县界</p>
+          <p>滚轮或双指缩放 · 按住拖动</p>
+          <button
+            className={`city-atlas-label-toggle ${labelsVisible ? "is-active" : ""}`}
+            type="button"
+            aria-label={labelsVisible ? "隐藏全部文字" : "显示全部文字"}
+            aria-pressed={labelsVisible}
+            onClick={toggleLabels}
+          >
+            <span aria-hidden="true">文</span>
+            {labelsVisible ? "隐藏文字" : "显示文字"}
+          </button>
+          <small>车牌题库已收录的城市、自治州、地区和盟显示完整前缀；其余区县显示省级车牌简称。</small>
+        </div>
+
+        <div className="city-atlas-canvas">
+          {error ? (
+            <div className="map-error city-atlas-error" role="alert">
+              全国市级地图加载失败，请刷新页面后重试。
+            </div>
+          ) : !map || !nationalMap || !project ? (
+            <LoadingMap />
+          ) : (
+            <svg
+              ref={svgRef}
+              className={`city-atlas-map ${dragging ? "is-dragging" : ""}`}
+              viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+              role="img"
+              aria-label="标注城市名称与车牌前缀的中国地图"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={endPointerDrag}
+              onPointerCancel={endPointerDrag}
+            >
+              <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
+                <AtlasRegionShapes
+                  regions={atlasRegions}
+                  onRegionEnter={handleRegionEnter}
+                  onRegionLeave={handleRegionLeave}
+                />
+                <AtlasProvinceOutlines provinces={atlasProvinces} />
+                {labelsVisible ? <AtlasLabels regions={atlasRegions} /> : null}
+              </g>
+            </svg>
+          )}
+
+          {!labelsVisible && hoverLabel ? (
+            <div
+              className="city-atlas-hover-label"
+              style={{ left: hoverLabel.left, top: hoverLabel.top }}
+              role="status"
+            >
+              <strong>{hoverLabel.name}</strong>
+              <span>{hoverLabel.plate}</span>
+            </div>
+          ) : null}
+
+          <div className="city-atlas-toolbar" aria-label="地图缩放工具栏">
+            <button
+              type="button"
+              aria-label="放大地图"
+              disabled={view.scale >= ATLAS_MAX_SCALE}
+              onClick={() => zoomBy(1.35)}
+            >
+              <span aria-hidden="true">＋</span> 放大
+            </button>
+            <output aria-label="当前缩放比例">{Math.round(view.scale * 100)}%</output>
+            <button
+              type="button"
+              aria-label="缩小地图"
+              disabled={view.scale <= ATLAS_MIN_SCALE}
+              onClick={() => zoomBy(1 / 1.35)}
+            >
+              <span aria-hidden="true">−</span> 缩小
+            </button>
+            <button type="button" onClick={resetView}>
+              <span aria-hidden="true">⌂</span> 复位
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

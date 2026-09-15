@@ -1,0 +1,360 @@
+@media (max-width: 470px) {
+  .gauntlet-passed > .boss-skill-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .answer-review {
+    padding: 18px;
+  }
+
+  .site-header {
+    align-items: flex-start;
+  }
+
+  .national-progress {
+    width: 78px;
+  }
+
+  .neighbor-mode-button,
+  .difficulty-button,
+  .atlas-mode-button,
+  .knowledge-mode-button,
+  .gauntlet-mode-button {
+    gap: 5px;
+    padding-inline: 8px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .atlas-mode-button > span,
+  .knowledge-mode-button > span,
+  .gauntlet-mode-button > span {
+    display: none;
+  }
+
+  .city-atlas-title p {
+    display: none;
+  }
+
+  .city-atlas-title h1 {
+    font-size: 19px;
+  }
+
+  .city-atlas-exit {
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+
+  .city-atlas-toolbar button {
+    min-height: 44px;
+  }
+
+  .gauntlet-header {
+    flex-wrap: nowrap;
+  }
+
+  .gauntlet-exit {
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+
+  .gauntlet-level-card {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    padding: 16px;
+    column-gap: 14px;
+  }
+
+  .gauntlet-level-card > i {
+    width: 52px;
+    height: 52px;
+    margin: 8px 0 0;
+    border-radius: 16px 16px 16px 6px;
+    font-size: 14px;
+  }
+
+  .gauntlet-level-card > strong,
+  .gauntlet-level-card > p,
+  .gauntlet-level-card > b,
+  .gauntlet-level-card > .level-state {
+    display: block;
+  }
+
+  .gauntlet-level-card > strong {
+    font-size: 20px;
+  }
+
+  .gauntlet-level-card > p {
+    min-height: 0;
+    margin: 7px 0 9px;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .level-state {
+    margin-top: 9px;
+    text-align: right;
+  }
+
+  .gauntlet-intro {
+    padding-top: 28px;
+  }
+
+  .gauntlet-question-stage {
+    min-height: 200px;
+    padding: 38px 16px 16px;
+  }
+
+  .question-count {
+    top: 12px;
+    left: 14px;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .choice-question > span,
+  .city-question > span,
+  .truth-question > span,
+  .mistake-empty-state > span {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 14px;
+    font-size: 30px;
+  }
+
+  .choice-question p,
+  .city-question p,
+  .truth-question p,
+  .boss-shape-question > p {
+    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .choice-question small,
+  .city-question small {
+    margin-top: 10px;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .gauntlet-silhouette {
+    height: 310px;
+  }
+
+  .gauntlet-map-question {
+    min-height: 330px;
+  }
+
+  .gauntlet-national-map {
+    height: 330px;
+  }
+
+  .gauntlet-detail-map {
+    height: 330px;
+  }
+
+  .gauntlet-province-map-wall,
+  .gauntlet-province-map-wall.is-many {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 330px;
+  }
+
+  .gauntlet-province-map-panel,
+  .gauntlet-province-map-panel svg {
+    min-height: 245px;
+    height: 245px;
+  }
+
+  .gauntlet-province-map-wall.is-single .gauntlet-province-map-panel,
+  .gauntlet-province-map-wall.is-single .gauntlet-province-map-panel svg {
+    min-height: 310px;
+    height: 310px;
+  }
+
+  .province-puzzle-piece {
+    grid-template-columns: 100px 1fr;
+    min-height: 96px;
+    margin-bottom: -24px;
+    padding: 9px 11px;
+  }
+
+  .province-puzzle-piece svg {
+    width: 100px;
+    height: 72px;
+  }
+
+  .province-puzzle-piece span {
+    font-size: 12px;
+  }
+
+  .map-question-banner {
+    margin-bottom: -16px;
+  }
+
+  .map-question-banner strong {
+    font-size: 18px;
+  }
+
+  .map-question-banner small {
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .gauntlet-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gauntlet-option-grid.neighbor-text-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: min(244px, 32vh);
+    gap: 8px;
+  }
+
+  .gauntlet-option-grid button {
+    min-height: 58px;
+    font-size: 15px;
+  }
+
+  .gauntlet-option-grid.neighbor-text-options button {
+    min-height: 48px;
+    padding: 6px 4px;
+    font-size: 15px;
+  }
+
+  .city-question strong {
+    font-size: 36px;
+  }
+
+  .choice-question strong,
+  .university-question strong,
+  .mistake-question strong,
+  .confusable-question strong,
+  .capital-question strong,
+  .truth-question strong,
+  .mistake-empty-state strong {
+    font-size: 32px;
+  }
+
+  .city-question.is-plate-question strong {
+    min-width: 190px;
+    padding: 12px 18px 14px;
+    font-size: 38px;
+    letter-spacing: 0;
+  }
+
+  .gauntlet-passed {
+    min-height: 440px;
+    margin-top: 35px;
+    padding: 35px 20px;
+  }
+
+  .gauntlet-passed > div {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .province-picker-button {
+    grid-template-columns: auto 1fr auto;
+    min-height: 48px;
+  }
+
+  .province-picker-button > span {
+    grid-row: 1;
+  }
+
+  .province-picker-button b,
+  .province-picker-button i {
+    align-self: center;
+  }
+
+  .province-picker-dialog {
+    max-height: calc(100vh - 24px);
+    padding: 28px 18px 20px;
+    border-radius: 16px;
+  }
+
+  .province-picker-dialog h2 {
+    padding-right: 32px;
+    font-size: 25px;
+  }
+
+  .province-picker-overlay {
+    padding: 12px;
+  }
+
+  .province-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 45vh;
+  }
+
+  .province-picker-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .province-picker-footer > button {
+    width: 100%;
+  }
+
+  .neighbor-mode-button i,
+  .difficulty-button i {
+    display: none;
+  }
+
+  .national-progress > span {
+    display: none;
+  }
+
+  .national-progress strong {
+    grid-column: 1 / -1;
+  }
+
+  .legend-card {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .map-card,
+  .answer-dock,
+  .province-dock {
+    border-radius: 14px;
+  }
+
+  .map-stage {
+    min-height: 330px;
+  }
+
+  .reveal-cities-button {
+    max-width: 94px;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .map-overview-actions .map-total {
+    display: none;
+  }
+
+  .game-map {
+    min-height: 315px;
+  }
+
+  .region-label {
+    font-size: 10px;
+    stroke-width: 3px;
+  }
+
+  .region-label.is-national {
+    font-size: 11px;
+    stroke-width: 3.5px;
+  }
+
+  .dock-heading h2 {
+    font-size: 20px;
+  }
+
+  .dock-heading > p {
+    display: none;
+  }
+}

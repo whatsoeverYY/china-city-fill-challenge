@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveSupabaseConfig } from "../app/supabase-client.ts";
+import { resolveSupabaseConfig } from "../src/infrastructure/supabase/client.ts";
 
 test("local development does not silently use production Supabase", () => {
   const config = resolveSupabaseConfig({ allowProductionFallback: false });

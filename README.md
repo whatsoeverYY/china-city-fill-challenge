@@ -20,19 +20,12 @@
 
 需要 Node.js `>=22.13.0`。
 
-使用 pnpm：
+项目统一使用 pnpm：
 
 ```bash
 corepack enable
 pnpm install
 pnpm dev
-```
-
-或使用 npm：
-
-```bash
-npm install
-npm run dev
 ```
 
 启动后访问 [http://localhost:3000](http://localhost:3000)。
@@ -41,7 +34,7 @@ npm run dev
 
 正式构建已配置 Supabase publishable key。首次启用前还需要在 Supabase SQL Editor 执行数据库迁移，并创建首位管理员。完整步骤见 [supabase/SETUP.md](supabase/SETUP.md)。
 
-为避免开发数据误写入正式库，`npm run dev` 默认不连接仓库内置的 Supabase 项目。本地需要云存档时，复制 `.env.example` 为 `.env.local` 并填写独立项目配置：
+为避免开发数据误写入正式库，`pnpm dev` 默认不连接仓库内置的 Supabase 项目。本地需要云存档时，复制 `.env.example` 为 `.env.local` 并填写独立项目配置：
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -55,11 +48,14 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
 ## 校验
 
 ```bash
-npm run lint
-npm run typecheck
-npm test
-npm run test:pages
+pnpm check:architecture
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:pages
 ```
+
+代码目录、依赖方向、命名和单文件大小约定见 [docs/architecture.md](docs/architecture.md)。
 
 ## GitHub Pages 部署
 
@@ -72,13 +68,14 @@ npm run test:pages
 本地验证 Pages 构建：
 
 ```bash
-npm run test:pages
+pnpm test:pages
 ```
 
 ## 技术栈
 
 - React 19
 - TypeScript
+- Tailwind CSS 4
 - vinext / Vite
 - 原生 SVG 地图渲染
 - Cloudflare Workers 兼容构建

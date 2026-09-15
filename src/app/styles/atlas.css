@@ -1,0 +1,334 @@
+.city-atlas-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--ink);
+  background: #e9e3d6;
+}
+
+.city-atlas-header {
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 82px;
+  padding: 12px 22px;
+  align-items: center;
+  gap: 28px;
+  border-bottom: 1px solid rgba(38, 47, 41, 0.16);
+  background: rgba(251, 248, 240, 0.97);
+  box-shadow: 0 7px 25px rgba(57, 46, 31, 0.08);
+}
+
+.city-atlas-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.city-atlas-title > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: white;
+  border-radius: 13px 13px 13px 4px;
+  background: #356b8e;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.city-atlas-title p,
+.city-atlas-title h1 {
+  margin: 0;
+}
+
+.city-atlas-title p {
+  color: #718087;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.city-atlas-title h1 {
+  font-family: "Songti SC", STSong, serif;
+  font-size: clamp(20px, 2.2vw, 30px);
+  line-height: 1.15;
+}
+
+.city-atlas-summary {
+  display: flex;
+  justify-content: center;
+  gap: clamp(12px, 3vw, 42px);
+  color: #68736d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.city-atlas-summary span {
+  white-space: nowrap;
+}
+
+.city-atlas-summary strong {
+  margin-right: 3px;
+  color: var(--red);
+  font-family: Georgia, serif;
+  font-size: 18px;
+}
+
+.city-atlas-exit {
+  min-height: 42px;
+  padding: 9px 15px;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  background: var(--red-dark);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.city-atlas-exit:hover {
+  background: var(--red);
+}
+
+.city-atlas-workspace {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.city-atlas-help {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  z-index: 2;
+  display: flex;
+  max-width: min(690px, calc(100% - 150px));
+  min-height: 42px;
+  padding: 9px 13px;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(38, 47, 41, 0.13);
+  border-radius: 12px;
+  background: rgba(251, 248, 240, 0.92);
+  box-shadow: 0 8px 25px rgba(57, 46, 31, 0.09);
+  backdrop-filter: blur(8px);
+}
+
+.city-atlas-help p,
+.city-atlas-help small {
+  margin: 0;
+  color: #5e6962;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.city-atlas-help p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.city-atlas-help small {
+  padding-left: 14px;
+  border-left: 1px solid rgba(38, 47, 41, 0.15);
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.city-atlas-label-toggle {
+  display: inline-flex;
+  min-height: 30px;
+  padding: 5px 9px;
+  align-items: center;
+  gap: 5px;
+  color: #315b51;
+  border: 1px solid rgba(45, 125, 95, 0.24);
+  border-radius: 999px;
+  background: rgba(237, 244, 233, 0.92);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.city-atlas-label-toggle:hover,
+.city-atlas-label-toggle.is-active {
+  border-color: rgba(45, 125, 95, 0.48);
+  background: #dfece0;
+}
+
+.city-atlas-label-toggle > span {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--green);
+  font-family: "Songti SC", STSong, serif;
+  font-size: 9px;
+}
+
+.city-atlas-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(255, 255, 255, 0.88), transparent 32rem),
+    linear-gradient(rgba(53, 66, 56, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(53, 66, 56, 0.04) 1px, transparent 1px),
+    #e9e3d6;
+  background-size: auto, 24px 24px, 24px 24px, auto;
+}
+
+.city-atlas-map {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.city-atlas-map.is-dragging {
+  cursor: grabbing;
+}
+
+.city-atlas-region {
+  stroke: var(--green);
+  stroke-linejoin: round;
+  stroke-width: 0.72px;
+}
+
+.city-atlas-region:hover {
+  filter: brightness(0.96) saturate(1.08);
+}
+
+.city-atlas-province-outline {
+  stroke: var(--red);
+  stroke-linejoin: round;
+  stroke-width: 2.1px;
+  pointer-events: none;
+}
+
+.city-atlas-labels {
+  pointer-events: none;
+}
+
+.city-atlas-labels text {
+  fill: #27362f;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 3.7px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: rgba(255, 253, 247, 0.95);
+  stroke-linejoin: round;
+  stroke-width: 0.86px;
+}
+
+.city-atlas-labels text.is-long {
+  font-size: 2.95px;
+}
+
+.city-atlas-labels .city-atlas-plate {
+  fill: #9c2f28;
+  font-size: 0.9em;
+  stroke-width: 0.78px;
+}
+
+.city-atlas-hover-label {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  min-width: 112px;
+  padding: 8px 10px;
+  pointer-events: none;
+  border: 1px solid rgba(38, 47, 41, 0.18);
+  border-radius: 10px 10px 10px 3px;
+  background: rgba(251, 248, 240, 0.97);
+  box-shadow: 0 10px 26px rgba(57, 46, 31, 0.18);
+}
+
+.city-atlas-hover-label strong {
+  font-family: "Songti SC", STSong, serif;
+  font-size: 13px;
+}
+
+.city-atlas-hover-label span {
+  margin-top: 2px;
+  color: var(--red-dark);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.city-atlas-toolbar {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2;
+  display: grid;
+  width: 94px;
+  padding: 8px;
+  gap: 7px;
+  border: 1px solid rgba(38, 47, 41, 0.14);
+  border-radius: 15px;
+  background: rgba(251, 248, 240, 0.95);
+  box-shadow: 0 12px 32px rgba(57, 46, 31, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.city-atlas-toolbar button {
+  min-height: 38px;
+  padding: 6px;
+  color: #315b51;
+  border: 1px solid rgba(45, 125, 95, 0.22);
+  border-radius: 9px;
+  background: #edf4e9;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.city-atlas-toolbar button:hover:not(:disabled) {
+  border-color: var(--green);
+  background: #dfece0;
+}
+
+.city-atlas-toolbar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.city-atlas-toolbar button span {
+  display: inline-block;
+  min-width: 13px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.city-atlas-toolbar output {
+  color: #766b5b;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.city-atlas-canvas > .map-loading,
+.city-atlas-error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}

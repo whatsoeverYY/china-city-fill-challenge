@@ -4,8 +4,8 @@ import test from "node:test";
 import {
   normalizeMistakeList,
   upsertMistake,
-} from "../app/mistake-data.ts";
-import { MAX_MISTAKE_QUESTIONS } from "../app/progress-config.ts";
+} from "../src/domain/game/mistakes.ts";
+import { MAX_MISTAKE_QUESTIONS } from "../src/domain/game/gauntlet-rules.ts";
 
 function seed(id) {
   return {

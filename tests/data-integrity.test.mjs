@@ -1,34 +1,56 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { CITY_QUIZ_DATA, PLATE_QUIZ_DATA } from "../app/gauntlet-data.ts";
+import { CITY_QUIZ_DATA, PLATE_QUIZ_DATA } from "../src/domain/geography/data/city-plates.ts";
 import {
   MAP_REGION_NAMES_BY_PROVINCE,
   MAP_REGION_QUIZ_DATA,
-} from "../app/map-region-quiz-data.ts";
+} from "../src/features/gauntlet/data/map-region-quiz-data.ts";
 import {
   PROVINCES,
   PROVINCE_CAPITALS,
   PROVINCE_NEIGHBORS,
   PROVINCE_PLATE_PREFIXES,
-} from "../app/province-data.ts";
-import { PROVINCE_CITY_COUNT_DATA } from "../app/province-city-count-data.ts";
-import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "../app/province-administrative-profile-data.ts";
-import { UNIVERSITY_QUIZ_DATA } from "../app/university-data.ts";
-import { CONFUSABLE_CITY_PAIRS } from "../app/confusable-city-data.ts";
-import { fitRotatedPointsScale } from "../app/silhouette-utils.ts";
-import { normalizeMapRegionName } from "../app/map-data.ts";
+} from "../src/domain/geography/data/provinces.ts";
+import { PROVINCE_CITY_COUNT_DATA } from "../src/domain/geography/data/province-city-counts.ts";
+import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "../src/domain/geography/data/province-administrative-profiles.ts";
+import { UNIVERSITY_QUIZ_DATA } from "../src/domain/geography/data/universities.ts";
+import { CONFUSABLE_CITY_PAIRS } from "../src/domain/geography/data/confusable-cities.ts";
+import { fitRotatedPointsScale } from "../src/features/map/lib/silhouette.ts";
+import { normalizeMapRegionName } from "../src/features/map/model/map-data.ts";
 import {
   GAUNTLET_LEVEL_COUNT,
-  GAUNTLET_LEVEL_ID,
   GAUNTLET_LEVELS,
   activeGauntletCompletionCount,
   gauntletLevelNumber,
-  isStoredGauntletLevelId,
-} from "../app/gauntlet-levels.ts";
+} from "../src/domain/game/gauntlet-levels.ts";
+import {
+  GAUNTLET_LEVEL_ID,
+  isGauntletLevelId,
+} from "../src/domain/game/gauntlet-level-ids.ts";
 
 const mapsRoot = new URL("../public/data/maps/", import.meta.url);
-const cityGameUrl = new URL("../app/CityGame.tsx", import.meta.url);
+const gauntletGameUrl = new URL("../src/features/gauntlet/gauntlet-game.tsx", import.meta.url);
+const gauntletDerivedUrl = new URL(
+  "../src/features/gauntlet/model/gauntlet-derived-context.tsx",
+  import.meta.url,
+);
+const gauntletTextActionsUrl = new URL(
+  "../src/features/gauntlet/hooks/use-gauntlet-text-actions.ts",
+  import.meta.url,
+);
+const gauntletTypesUrl = new URL(
+  "../src/features/gauntlet/model/gauntlet-types.ts",
+  import.meta.url,
+);
+const bossStatsUrl = new URL(
+  "../src/features/gauntlet/model/boss-stats.ts",
+  import.meta.url,
+);
+const questionGeneratorsUrl = new URL(
+  "../src/features/gauntlet/model/question-generators.ts",
+  import.meta.url,
+);
 
 test("gauntlet levels use stable IDs while display numbers follow catalog order", () => {
   const ids = GAUNTLET_LEVELS.map((level) => level.id);
@@ -36,22 +58,20 @@ test("gauntlet levels use stable IDs while display numbers follow catalog order"
   assert.equal(GAUNTLET_LEVEL_COUNT, 22);
   assert.equal(new Set(ids).size, GAUNTLET_LEVEL_COUNT);
   assert.ok(ids.every((id) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id)));
-  assert.ok(ids.every(isStoredGauntletLevelId));
-  assert.equal(isStoredGauntletLevelId("1"), false);
+  assert.ok(ids.every(isGauntletLevelId));
+  assert.equal(isGauntletLevelId("1"), false);
+  assert.equal(isGauntletLevelId("unknown-level"), false);
   assert.deepEqual(
     GAUNTLET_LEVELS.map((level) => gauntletLevelNumber(level.id)),
     Array.from({ length: GAUNTLET_LEVEL_COUNT }, (_, index) => index + 1),
   );
   assert.equal(GAUNTLET_LEVELS.at(-2)?.id, GAUNTLET_LEVEL_ID.MISTAKE_REVENGE);
   assert.equal(GAUNTLET_LEVELS.at(-1)?.id, GAUNTLET_LEVEL_ID.FINAL_BOSS);
-  assert.equal(ids.includes(GAUNTLET_LEVEL_ID.ROTATED_SHAPE), false);
-  assert.equal(gauntletLevelNumber(GAUNTLET_LEVEL_ID.ROTATED_SHAPE), 0);
   assert.equal(
     activeGauntletCompletionCount([
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
-      GAUNTLET_LEVEL_ID.ROTATED_SHAPE,
-      "retired-level",
+      "unknown-level",
     ]),
     1,
   );
@@ -62,10 +82,16 @@ test("gauntlet levels use stable IDs while display numbers follow catalog order"
 });
 
 test("province silhouettes use two phases and the boss trains province adjacency", async () => {
-  const source = await readFile(cityGameUrl, "utf8");
-  const bossSection = source.match(
-    /type BossSkill[\s\S]*?function ProvinceShape/,
-  )?.[0] ?? "";
+  const source = [
+    await readFile(gauntletGameUrl, "utf8"),
+    await readFile(gauntletDerivedUrl, "utf8"),
+    await readFile(gauntletTextActionsUrl, "utf8"),
+  ].join("\n");
+  const bossSection = [
+    await readFile(gauntletTypesUrl, "utf8"),
+    await readFile(bossStatsUrl, "utf8"),
+    await readFile(questionGeneratorsUrl, "utf8"),
+  ].join("\n");
 
   assert.match(source, /isRotatedProvinceShapeStage/);
   assert.match(source, /普通轮廓已全部完成/);
@@ -181,7 +207,7 @@ test("plate quiz covers every concrete special plate region and only marks click
     for (const region of profile.plateRegions) {
       if (region.type === "省直辖号段") continue;
       const quizItem = PLATE_QUIZ_DATA.find(
-        (item) => item.province === PROVINCES.find((province) => province.code === profile.code)?.name &&
+        (item) => item.provinceCode === profile.code &&
           item.city === region.name,
       );
       assert.ok(quizItem, `${region.name}（${region.plate}）未进入车牌题库`);
@@ -191,7 +217,7 @@ test("plate quiz covers every concrete special plate region and only marks click
 
   for (const item of PLATE_QUIZ_DATA.filter((candidate) => candidate.mapRegion)) {
     const province = PROVINCES.find(
-      (candidate) => candidate.shortName === item.provinceShort,
+      (candidate) => candidate.code === item.provinceCode,
     );
     assert.ok(province, `${item.provinceShort}缺少省份配置`);
     assert.ok(
@@ -219,6 +245,7 @@ test("Jilin special plate regions include Ji K without treating it as a city", (
     PLATE_QUIZ_DATA.find((item) => item.plate === "吉K"),
     {
       city: "长白山保护开发区",
+      provinceCode: "220000",
       province: "吉林省",
       provinceShort: "吉林",
       plates: ["吉K"],

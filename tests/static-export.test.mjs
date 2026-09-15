@@ -20,6 +20,19 @@ test("exports the administrator dashboard route", async () => {
   assert.match(html, /玩家与进度中心|正在确认管理员身份/);
 });
 
+test("exports every feature as an independently addressable route", async () => {
+  const routes = [
+    ["atlas.html", "全国车牌图鉴"],
+    ["gauntlet.html", "过关斩将"],
+    ["knowledge.html", "中国地理知识馆"],
+  ];
+
+  for (const [file, title] of routes) {
+    const html = await readFile(new URL(file, exportRoot), "utf8");
+    assert.match(html, new RegExp(`<title>${title}｜中国城市填充挑战</title>`, "i"));
+  }
+});
+
 test("copies static maps and disables Jekyll processing", async () => {
   await Promise.all([
     access(new URL(".nojekyll", exportRoot)),

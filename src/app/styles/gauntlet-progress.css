@@ -1,0 +1,78 @@
+.gauntlet-timer.is-urgent {
+  color: var(--red-dark);
+  border-color: rgba(180, 59, 50, 0.38);
+  background: #f5dfd7;
+  animation: timer-pulse 900ms ease-in-out infinite alternate;
+}
+
+.boss-lives {
+  display: grid;
+  min-width: 116px;
+  padding: 12px 15px;
+  align-content: center;
+  border: 1px solid rgba(180, 59, 50, 0.24);
+  border-radius: 15px;
+  background: #f5e4dd;
+  text-align: center;
+}
+
+.boss-lives > span {
+  color: #8c7069;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.boss-lives i {
+  color: #cfc3b9;
+  font-size: 21px;
+  font-style: normal;
+  line-height: 1.15;
+}
+
+.boss-lives i.is-alive {
+  color: var(--red);
+  filter: drop-shadow(0 3px 3px rgba(180, 59, 50, 0.16));
+}
+
+@keyframes timer-pulse {
+  to { transform: scale(1.035); }
+}
+
+.gauntlet-progress-card > span {
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.gauntlet-progress-card > strong {
+  justify-self: end;
+  color: var(--red);
+  font-family: Georgia, serif;
+  font-size: 24px;
+}
+
+.gauntlet-progress-card > strong i {
+  color: #8b8c86;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.gauntlet-progress-card > div {
+  grid-column: 1 / -1;
+  height: 5px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ded5c4;
+}
+
+.gauntlet-progress-card > div > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  transition: width 300ms ease;
+}

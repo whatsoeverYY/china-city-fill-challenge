@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  CITY_MAP_MINIMUM_QUEUE_LENGTH,
   cityQuizKey,
   createCityMapQuestionQueue,
-} from "../app/city-map-question-queue.ts";
+} from "../src/features/gauntlet/model/city-map-question-queue.ts";
+import { CITY_MAP_MINIMUM_QUEUE_LENGTH } from "../src/domain/game/gauntlet-rules.ts";
 
 const identityShuffle = (items) => [...items];
 const reverseShuffle = (items) => [...items].reverse();
-const question = (city, provinceShort = "甲省") => ({ city, provinceShort });
+const question = (city, provinceCode = "100001") => ({ city, provinceCode });
 
 test("unseen map questions are always placed before recent questions", () => {
   const questions = [question("甲市"), question("乙市"), question("丙市"), question("丁市")];

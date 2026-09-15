@@ -1,0 +1,133 @@
+.map-loading,
+.map-error {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  min-height: 420px;
+  place-items: center;
+  align-content: center;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.map-error strong {
+  font-family: "Songti SC", STSong, serif;
+  font-size: 22px;
+}
+
+.loading-compass {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(180, 59, 50, 0.28);
+  border-radius: 50%;
+}
+
+.loading-compass::before {
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 15px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--red);
+  content: "";
+  animation: spin-compass 900ms linear infinite;
+}
+
+@keyframes spin-compass {
+  to { transform: rotate(360deg); }
+}
+
+.round-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  background: #f9f5eb;
+}
+
+.round-stats > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 13px;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+}
+
+.round-stats > div:last-child {
+  border-right: 0;
+}
+
+.round-stats span {
+  color: #777e78;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+}
+
+.round-stats strong {
+  font-family: Georgia, serif;
+  font-size: 21px;
+}
+
+.answer-dock,
+.province-dock {
+  margin-top: 22px;
+  padding: 27px;
+  border-radius: 18px;
+  box-shadow: 0 16px 46px rgba(57, 46, 31, 0.06);
+}
+
+.challenge-layout .answer-dock,
+.challenge-layout .province-dock {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  height: min(836px, calc(100vh - 32px));
+  min-height: 520px;
+  flex-direction: column;
+  align-self: start;
+  margin-top: 0;
+}
+
+.challenge-layout.is-national .province-dock {
+  height: min(782px, calc(100vh - 32px));
+}
+
+.challenge-layout .answer-dock .dock-heading {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 13px;
+  align-items: start;
+}
+
+.challenge-layout .answer-dock .dock-heading > p {
+  max-width: none;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.challenge-layout .answer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+  padding: 3px 5px 5px 3px;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-color: #c7bba7 transparent;
+  scrollbar-width: thin;
+}
+
+.challenge-layout .province-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+  padding: 3px 5px 5px 3px;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-color: #c7bba7 transparent;
+  scrollbar-width: thin;
+}
+
+.challenge-layout .province-chip {
+  min-width: 0;
+}

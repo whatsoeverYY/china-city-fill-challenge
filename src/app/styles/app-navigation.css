@@ -1,0 +1,119 @@
+.game-shell {
+  width: min(1460px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 62px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.gauntlet-mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 12px;
+  color: #72561b;
+  border: 1px solid rgba(180, 137, 40, 0.35);
+  border-radius: 999px;
+  background: #fff8df;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.gauntlet-mode-button:hover {
+  background: #ffefba;
+  transform: translateY(-1px);
+}
+
+.gauntlet-mode-button > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: #fff9e8;
+  border-radius: 50%;
+  background: #a77b21;
+  font-family: "Songti SC", STSong, serif;
+}
+
+.atlas-mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 12px;
+  color: #285c75;
+  border: 1px solid rgba(53, 107, 142, 0.3);
+  border-radius: 999px;
+  background: #edf6f8;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.atlas-mode-button:hover {
+  background: #dceef3;
+  transform: translateY(-1px);
+}
+
+.atlas-mode-button > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: white;
+  border-radius: 50%;
+  background: #356b8e;
+  font-family: "Songti SC", STSong, serif;
+}
+
+.knowledge-mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 12px;
+  color: #684d78;
+  border: 1px solid rgba(111, 74, 133, 0.28);
+  border-radius: 999px;
+  background: #f5eff7;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.knowledge-mode-button:hover {
+  background: #eadcf0;
+  transform: translateY(-1px);
+}
+
+.knowledge-mode-button > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: white;
+  border-radius: 50%;
+  background: #735285;
+  font-family: "Songti SC", STSong, serif;
+}

@@ -9,9 +9,9 @@ import {
   assertSupportedProgressVersion,
   createResetProgressSnapshot,
   mergeProgressSnapshots,
-} from "../app/progress-storage.ts";
-import { CITY_MAP_RECENT_QUESTION_LIMIT } from "../app/city-map-question-queue.ts";
-import { GAUNTLET_LEVEL_ID } from "../app/gauntlet-levels.ts";
+} from "../src/infrastructure/storage/progress-storage.ts";
+import { CITY_MAP_RECENT_QUESTION_LIMIT } from "../src/domain/game/gauntlet-rules.ts";
+import { GAUNTLET_LEVEL_ID } from "../src/domain/game/gauntlet-level-ids.ts";
 
 const BEFORE_RESET = "2026-08-27T00:00:00.000Z";
 const RESET_AT = "2026-08-27T01:00:00.000Z";
@@ -148,12 +148,12 @@ test("map question history merge keeps the newest unique questions within the sh
   assert.equal(new Set(history).size, history.length);
 });
 
-test("gauntlet progress merges stable IDs and preserves retired achievements", () => {
+test("gauntlet progress merges current stable IDs and rejects unknown IDs", () => {
   const local = staleSnapshot(BEFORE_RESET);
   const remote = staleSnapshot(AFTER_RESET);
   local.values[GAUNTLET_PROGRESS_KEY] = JSON.stringify([
     GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
-    "retired-level",
+    "unknown-level",
   ]);
   remote.values[GAUNTLET_PROGRESS_KEY] = JSON.stringify([
     GAUNTLET_LEVEL_ID.CITY_PROVINCE,
@@ -163,7 +163,7 @@ test("gauntlet progress merges stable IDs and preserves retired achievements", (
 
   assert.deepEqual(
     JSON.parse(merged.values[GAUNTLET_PROGRESS_KEY] ?? "[]"),
-    [GAUNTLET_LEVEL_ID.CITY_PROVINCE, GAUNTLET_LEVEL_ID.PROVINCE_SHAPE, "retired-level"].sort(),
+    [GAUNTLET_LEVEL_ID.CITY_PROVINCE, GAUNTLET_LEVEL_ID.PROVINCE_SHAPE].sort(),
   );
 });
 
