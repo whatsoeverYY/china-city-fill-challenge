@@ -28,11 +28,12 @@ import {
 } from "../app/gauntlet-levels.ts";
 
 const mapsRoot = new URL("../public/data/maps/", import.meta.url);
+const cityGameUrl = new URL("../app/CityGame.tsx", import.meta.url);
 
 test("gauntlet levels use stable IDs while display numbers follow catalog order", () => {
   const ids = GAUNTLET_LEVELS.map((level) => level.id);
 
-  assert.equal(GAUNTLET_LEVEL_COUNT, 23);
+  assert.equal(GAUNTLET_LEVEL_COUNT, 22);
   assert.equal(new Set(ids).size, GAUNTLET_LEVEL_COUNT);
   assert.ok(ids.every((id) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id)));
   assert.ok(ids.every(isStoredGauntletLevelId));
@@ -43,14 +44,34 @@ test("gauntlet levels use stable IDs while display numbers follow catalog order"
   );
   assert.equal(GAUNTLET_LEVELS.at(-2)?.id, GAUNTLET_LEVEL_ID.MISTAKE_REVENGE);
   assert.equal(GAUNTLET_LEVELS.at(-1)?.id, GAUNTLET_LEVEL_ID.FINAL_BOSS);
+  assert.equal(ids.includes(GAUNTLET_LEVEL_ID.ROTATED_SHAPE), false);
+  assert.equal(gauntletLevelNumber(GAUNTLET_LEVEL_ID.ROTATED_SHAPE), 0);
   assert.equal(
     activeGauntletCompletionCount([
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
+      GAUNTLET_LEVEL_ID.ROTATED_SHAPE,
       "retired-level",
     ]),
     1,
   );
+  const shapeLevel = GAUNTLET_LEVELS.find(
+    (level) => level.id === GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
+  );
+  assert.match(shapeLevel?.target ?? "", /普通轮廓全覆盖.*旋转轮廓 20 连胜/);
+});
+
+test("province silhouettes use two phases and the boss trains province adjacency", async () => {
+  const source = await readFile(cityGameUrl, "utf8");
+  const bossSection = source.match(
+    /type BossSkill[\s\S]*?function ProvinceShape/,
+  )?.[0] ?? "";
+
+  assert.match(source, /isRotatedProvinceShapeStage/);
+  assert.match(source, /普通轮廓已全部完成/);
+  assert.match(bossSection, /"省际接壤"/);
+  assert.match(bossSection, /任意一个陆地邻省/);
+  assert.doesNotMatch(bossSection, /skill:\s*"行政中心"/);
 });
 
 test("province configuration is complete, unique and symmetric", () => {

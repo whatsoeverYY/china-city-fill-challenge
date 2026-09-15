@@ -1028,7 +1028,6 @@ const MAP_REQUIRED_LEVELS = new Set<GauntletLevel>([
   GAUNTLET_LEVEL_ID.REGION_MAP,
   GAUNTLET_LEVEL_ID.TERRITORY_GROUPS,
   GAUNTLET_LEVEL_ID.PROVINCE_SHORTEST_ROUTE,
-  GAUNTLET_LEVEL_ID.ROTATED_SHAPE,
   GAUNTLET_LEVEL_ID.PLATE_CITY_MAP,
   GAUNTLET_LEVEL_ID.FINAL_BOSS,
 ]);
@@ -1061,7 +1060,6 @@ const STREAK_NOTE_LEVELS = new Set<GauntletLevel>([
   GAUNTLET_LEVEL_ID.REGION_MAP,
   GAUNTLET_LEVEL_ID.TERRITORY_GROUPS,
   GAUNTLET_LEVEL_ID.GEOGRAPHY_ELIMINATION,
-  GAUNTLET_LEVEL_ID.ROTATED_SHAPE,
   GAUNTLET_LEVEL_ID.PLATE_FAULT,
   GAUNTLET_LEVEL_ID.UNIVERSITY_CITY,
   GAUNTLET_LEVEL_ID.CONFUSABLE_CITIES,
@@ -1081,6 +1079,9 @@ const GAUNTLET_ROUND_HEADINGS = Object.fromEntries(
 ) as Record<GauntletLevel, string>;
 
 const GAUNTLET_TIME_LIMIT = 90;
+const ROTATED_SILHOUETTE_STREAK_TARGET = 20;
+const GAUNTLET_ROTATED_SILHOUETTE_FEEDBACK =
+  "第二阶段：忽略旋转方向，连续辨认省份轮廓";
 
 type ProvinceGroupQuestion = {
   title: string;
@@ -1160,7 +1161,7 @@ type CityRouteChallenge = {
   shortestPath: string[];
 };
 
-type BossSkill = "城市归属" | "车牌识别" | "行政中心" | "真假判断" | "地图落点" | "轮廓辨认";
+type BossSkill = "城市归属" | "车牌识别" | "省际接壤" | "真假判断" | "地图落点" | "轮廓辨认";
 
 type BossQuestion = {
   skill: BossSkill;
@@ -1218,7 +1219,7 @@ type AnswerReview = {
 };
 
 const BOSS_SKILLS: BossSkill[] = [
-  "城市归属", "车牌识别", "行政中心", "真假判断", "地图落点", "轮廓辨认",
+  "城市归属", "车牌识别", "省际接壤", "真假判断", "地图落点", "轮廓辨认",
 ];
 
 function createEmptyBossStats(): Record<BossSkill, BossSkillStat> {
@@ -1548,6 +1549,11 @@ function createRouteChallenge(): RouteChallenge {
 function createBossQuestions() {
   const cities = randomShuffle(CITY_QUIZ_DATA).slice(0, 30);
   const provinces = randomShuffle(PROVINCES);
+  const connectedProvinces = randomShuffle(
+    PROVINCES.filter(
+      (province) => (PROVINCE_NEIGHBORS[province.code]?.length ?? 0) > 0,
+    ),
+  );
   const questions = Array.from({ length: 30 }, (_, index): BossQuestion => {
     const city = cities[index];
     const province = provinces[index % provinces.length];
@@ -1577,14 +1583,18 @@ function createBossQuestions() {
       };
     }
     if (index % 6 === 2) {
+      const origin = connectedProvinces[index % connectedProvinces.length];
+      const neighborNames = (PROVINCE_NEIGHBORS[origin.code] ?? [])
+        .map((code) => PROVINCE_BY_CODE.get(code))
+        .filter((item): item is Province => Boolean(item));
       return {
-        skill: "行政中心",
+        skill: "省际接壤",
         kind: "text",
-        badge: "都",
-        prompt: "写出这个行政中心对应的省级行政区",
-        value: PROVINCE_CAPITALS[province.code],
-        targets: [province.name, province.shortName],
-        explanation: `${PROVINCE_CAPITALS[province.code]}对应${province.name}`,
+        badge: "邻",
+        prompt: "写出这个省级行政区的任意一个陆地邻省",
+        value: origin.name,
+        targets: neighborNames.map((item) => item.name),
+        explanation: `${origin.shortName}的陆地邻省包括：${neighborNames.map((item) => item.shortName).join("、")}`,
       };
     }
     if (index % 6 === 3) {
@@ -2310,10 +2320,16 @@ function GauntletGame({
     return () => window.clearInterval(timer);
   }, [answerReview, level, passedLevel, provincePickerOpen, timeLeft, timedMode]);
 
+  const provinceShapeNormalTarget = provinceOrder.length;
+  const isRotatedProvinceShapeStage = Boolean(
+    level === LEVEL.PROVINCE_SHAPE &&
+    provinceShapeNormalTarget > 0 &&
+    questionIndex >= provinceShapeNormalTarget,
+  );
   const currentProvinceFeature = provinceOrder.length
     ? provinceOrder[
-        level === LEVEL.ROTATED_SHAPE
-          ? questionIndex % provinceOrder.length
+        isRotatedProvinceShapeStage
+          ? (questionIndex - provinceShapeNormalTarget) % provinceOrder.length
           : questionIndex
       ] ?? null
     : null;
@@ -2483,8 +2499,10 @@ function GauntletGame({
     [selectedProvinceShortNames],
   );
   const regionMapTarget = Math.min(30, selectedMapRegionItems.length);
-  const target = level === LEVEL.PROVINCE_SHAPE || level === LEVEL.PROVINCE_PUZZLE
-    ? provinceOrder.length
+  const target = level === LEVEL.PROVINCE_SHAPE
+    ? provinceShapeNormalTarget + ROTATED_SILHOUETTE_STREAK_TARGET
+    : level === LEVEL.PROVINCE_PUZZLE
+      ? provinceOrder.length
     : level === LEVEL.MISTAKE_REVENGE
       ? mistakeSessionTotal
     : level === LEVEL.REGION_MAP
@@ -2501,7 +2519,9 @@ function GauntletGame({
           ? 30
         : 20;
   const progress = level === LEVEL.PROVINCE_SHAPE
-    ? questionIndex
+    ? isRotatedProvinceShapeStage
+      ? provinceShapeNormalTarget + streak
+      : questionIndex
     : level === LEVEL.PROVINCE_PUZZLE
       ? mapSelections.size
     : level === LEVEL.NEIGHBOR_CHAIN
@@ -2675,8 +2695,7 @@ function GauntletGame({
     if (
       (
         nextLevel === LEVEL.PROVINCE_SHAPE ||
-        nextLevel === LEVEL.PROVINCE_PUZZLE ||
-        nextLevel === LEVEL.ROTATED_SHAPE
+        nextLevel === LEVEL.PROVINCE_PUZZLE
       ) &&
       nationalMap
     ) {
@@ -2925,7 +2944,11 @@ function GauntletGame({
       setPlateAnswer("");
       setMapSelections(new Set());
       setQuestionIndex((value) => value + 1);
-      setFeedback(GAUNTLET_OPENING_FEEDBACK[challengeLevel]);
+      setFeedback(
+        challengeLevel === LEVEL.PROVINCE_SHAPE
+          ? GAUNTLET_ROTATED_SILHOUETTE_FEEDBACK
+          : GAUNTLET_OPENING_FEEDBACK[challengeLevel],
+      );
       focusProvinceInput();
       return;
     }
@@ -2965,8 +2988,8 @@ function GauntletGame({
         category:
           currentBossQuestion.skill === "车牌识别"
             ? "车牌"
-            : currentBossQuestion.skill === "行政中心"
-              ? "省会"
+            : currentBossQuestion.skill === "省际接壤"
+              ? "邻省"
               : currentBossQuestion.skill === "真假判断"
                 ? "判断"
                 : "城市",
@@ -3064,7 +3087,11 @@ function GauntletGame({
       setQuestionIndex((value) => value + 1);
     }
     setFeedbackType("idle");
-    setFeedback(GAUNTLET_OPENING_FEEDBACK[reviewedLevel]);
+    setFeedback(
+      reviewedLevel === LEVEL.PROVINCE_SHAPE
+        ? GAUNTLET_ROTATED_SILHOUETTE_FEEDBACK
+        : GAUNTLET_OPENING_FEEDBACK[reviewedLevel],
+    );
     focusProvinceInput();
   };
 
@@ -3208,6 +3235,16 @@ function GauntletGame({
         currentProvince.name,
         currentProvince.shortName,
       ]);
+      if (isRotatedProvinceShapeStage) {
+        advanceStreakChallenge(
+          LEVEL.PROVINCE_SHAPE,
+          correct,
+          ROTATED_SILHOUETTE_STREAK_TARGET,
+          currentProvince.name,
+          `这个旋转轮廓是${currentProvince.name}`,
+        );
+        return;
+      }
       if (!correct) {
         setFeedbackType("wrong");
         setFeedback("名称不对，再观察一下轮廓");
@@ -3217,7 +3254,14 @@ function GauntletGame({
 
       const nextIndex = questionIndex + 1;
       if (nextIndex === provinceOrder.length) {
-        finishLevel(LEVEL.PROVINCE_SHAPE);
+        setProvinceOrder((current) => randomShuffle(current));
+        setQuestionIndex(nextIndex);
+        setStreak(0);
+        setProvinceAnswer("");
+        setTimeLeft(timeLimit || GAUNTLET_TIME_LIMIT);
+        setFeedbackType("right");
+        setFeedback(`普通轮廓已全部完成，${GAUNTLET_ROTATED_SILHOUETTE_FEEDBACK}`);
+        focusProvinceInput();
         return;
       }
       setQuestionIndex(nextIndex);
@@ -3225,22 +3269,6 @@ function GauntletGame({
       setFeedbackType("right");
       setFeedback(`回答正确：${currentProvince.name}。继续下一题`);
       focusProvinceInput();
-      return;
-    }
-
-    if (level === LEVEL.ROTATED_SHAPE) {
-      if (!currentProvince) return;
-      const correct = answerMatches(provinceAnswer, [
-        currentProvince.name,
-        currentProvince.shortName,
-      ]);
-      advanceStreakChallenge(
-        LEVEL.ROTATED_SHAPE,
-        correct,
-        20,
-        currentProvince.name,
-        `这个轮廓是${currentProvince.name}`,
-      );
       return;
     }
 
@@ -3798,7 +3826,7 @@ function GauntletGame({
     : null;
   const activeDisplayNumber = level ? gauntletLevelNumber(level) : null;
   const completedTarget = passedLevel === LEVEL.PROVINCE_SHAPE
-    ? `已辨认本轮所选的 ${target} 个省级行政区`
+    ? `已完成 ${provinceShapeNormalTarget} 道普通轮廓，并连续答对 ${ROTATED_SILHOUETTE_STREAK_TARGET} 道旋转轮廓`
     : passedLevel === LEVEL.PROVINCE_PUZZLE
       ? `已完成本轮所选的 ${target} 块省份拼图`
     : passedLevel === LEVEL.REGION_MAP && target < 30
@@ -3873,7 +3901,9 @@ function GauntletGame({
             {GAUNTLET_LEVELS.map((item, index) => {
               const completed = completedLevels.has(item.id);
               const scopeIssue = provinceScopeIssue(item.id);
-              const levelTarget = item.id === LEVEL.REGION_MAP && selectedMapRegionItems.length < 30
+              const levelTarget = item.id === LEVEL.PROVINCE_SHAPE
+                ? `普通 ${selectedShapeProvinceCodes.size} 题＋旋转 ${ROTATED_SILHOUETTE_STREAK_TARGET} 连胜`
+                : item.id === LEVEL.REGION_MAP && selectedMapRegionItems.length < 30
                   ? `连续答对 ${selectedMapRegionItems.length} 题（完整一轮）`
                   : item.target;
               const mapUnavailable = MAP_REQUIRED_LEVELS.has(item.id) &&
@@ -4008,9 +4038,9 @@ function GauntletGame({
             <div className="gauntlet-question-stage">
               <span className="question-count">
                 {level === LEVEL.PROVINCE_SHAPE
-                  ? `${selectedShapeProvinceCodes.size} 省 · 第 ${questionIndex + 1} / ${target} 题`
-                  : level === LEVEL.ROTATED_SHAPE
-                    ? `${selectedShapeProvinceCodes.size} 省 · 第 ${questionIndex + 1} 题`
+                  ? isRotatedProvinceShapeStage
+                    ? `旋转阶段 · 当前连胜 ${streak} / ${ROTATED_SILHOUETTE_STREAK_TARGET}`
+                    : `普通阶段 · 第 ${questionIndex + 1} / ${provinceShapeNormalTarget} 题`
                   : level === LEVEL.PROVINCE_PUZZLE
                     ? `${selectedShapeProvinceCodes.size} 省 · 已放置 ${mapSelections.size} / ${target}`
                   : level === LEVEL.PROVINCE_NEIGHBORS
@@ -4041,13 +4071,11 @@ function GauntletGame({
               </span>
               {level === LEVEL.PROVINCE_SHAPE ? (
                 currentProvinceFeature ? (
-                  <ProvinceSilhouette feature={currentProvinceFeature} />
-                ) : <LoadingMap />
-              ) : level === LEVEL.ROTATED_SHAPE ? (
-                currentProvinceFeature ? (
                   <ProvinceSilhouette
                     feature={currentProvinceFeature}
-                    rotation={(questionIndex * 137 + 47) % 360}
+                    rotation={isRotatedProvinceShapeStage
+                      ? ((questionIndex - provinceShapeNormalTarget) * 137 + 47) % 360
+                      : 0}
                   />
                 ) : <LoadingMap />
               ) : level === LEVEL.PROVINCE_PUZZLE ? (
