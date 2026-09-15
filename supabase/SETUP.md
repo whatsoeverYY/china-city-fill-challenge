@@ -12,13 +12,17 @@
 
 `supabase/migrations/202608270002_clear_player_progress.sql`
 
-最后执行管理员分页、统计与存档版本保护迁移：
+接着执行管理员分页、统计与存档版本保护迁移：
 
 `supabase/migrations/202608270003_admin_pagination_and_stats.sql`
 
 然后执行清除存档的版本兼容补丁：
 
 `supabase/migrations/202608270004_clear_progress_schema_compatibility.sql`
+
+最后执行 23 关进度统计兼容迁移：
+
+`supabase/migrations/202609150001_update_gauntlet_level_summary.sql`
 
 迁移会创建：
 

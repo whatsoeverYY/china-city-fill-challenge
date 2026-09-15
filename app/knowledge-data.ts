@@ -26,7 +26,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "省份全景名片",
     subtitle: "城市、州盟、直辖单位与独立车牌，一张卡串起来",
     memoryStyle: "名片联想",
-    levelRefs: [1, 7, 11, 16, 17, 19],
+    levelRefs: [1, 9, 14, 15],
     tone: "red",
   },
   {
@@ -35,7 +35,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "城市与车牌密码",
     subtitle: "按省归组，特别标出双号牌、三号牌城市及全部前缀",
     memoryStyle: "分组对照",
-    levelRefs: [2, 3, 4, 6, 8, 9, 12, 13, 18, 23, 25],
+    levelRefs: [2, 3, 5, 6, 7, 10, 11, 16, 19, 21],
     tone: "blue",
   },
   {
@@ -44,7 +44,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "985 · 211 名校坐标",
     subtitle: "从省到城再到学校，建立清晰的名校坐标系",
     memoryStyle: "城市集群",
-    levelRefs: [20],
+    levelRefs: [17],
     tone: "purple",
   },
   {
@@ -53,7 +53,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "陆地邻省关系",
     subtitle: "点一个省，看它的邻省像星座一样围成一圈",
     memoryStyle: "星图联想",
-    levelRefs: [5, 10, 15],
+    levelRefs: [4, 8, 13],
     tone: "green",
   },
   {
@@ -62,7 +62,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "每省有几座城市",
     subtitle: "用排行榜和长度条，直观看出数量差异",
     memoryStyle: "长短比较",
-    levelRefs: [24],
+    levelRefs: [20],
     tone: "gold",
   },
   {
@@ -71,7 +71,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "长江 · 黄河路线",
     subtitle: "沿源头到入海口，像坐列车一样顺序记省份",
     memoryStyle: "路线记忆",
-    levelRefs: [14],
+    levelRefs: [12],
     tone: "blue",
   },
   {
@@ -80,7 +80,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "沿海、沿边与疆域集合",
     subtitle: "把散落省份收进几个有地理意义的集合",
     memoryStyle: "集合归纳",
-    levelRefs: [14],
+    levelRefs: [12],
     tone: "green",
   },
   {
@@ -89,7 +89,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "易混城市辨析",
     subtitle: "相似城市并排放，抓住那个最关键的不同字",
     memoryStyle: "双城对照",
-    levelRefs: [22],
+    levelRefs: [18],
     tone: "red",
   },
   {
@@ -98,7 +98,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     title: "地图落点与路线诀窍",
     subtitle: "轮廓、方位、邻接和最短路线的实战读图方法",
     memoryStyle: "操作口诀",
-    levelRefs: [8, 10, 11, 13, 15, 17, 19, 23, 25],
+    levelRefs: [6, 8, 9, 11, 13, 15, 19, 21],
     tone: "gold",
   },
 ];

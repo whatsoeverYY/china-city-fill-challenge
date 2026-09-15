@@ -2,13 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  GAUNTLET_LEVEL_13_HISTORY_KEY,
+  GAUNTLET_LEVEL_11_HISTORY_KEY,
   GAUNTLET_PROVINCE_SCOPE_KEY,
   GAUNTLET_PROGRESS_KEY,
+  LEGACY_GAUNTLET_PROGRESS_KEYS,
   STORAGE_KEY,
   assertSupportedProgressVersion,
   createResetProgressSnapshot,
   mergeProgressSnapshots,
+  migrateLegacyGauntletLevels,
 } from "../app/progress-storage.ts";
 import { CITY_MAP_RECENT_QUESTION_LIMIT } from "../app/city-map-question-queue.ts";
 
@@ -121,22 +123,49 @@ test("the newest saved gauntlet province scope wins across devices", () => {
 test("map question history merge keeps the newest unique questions within the shared limit", () => {
   const local = staleSnapshot(BEFORE_RESET);
   const remote = staleSnapshot(AFTER_RESET);
-  local.values[GAUNTLET_LEVEL_13_HISTORY_KEY] = JSON.stringify(
+  local.values[GAUNTLET_LEVEL_11_HISTORY_KEY] = JSON.stringify(
     Array.from({ length: 70 }, (_, index) => `question-${index}`),
   );
-  local.meta.keys[GAUNTLET_LEVEL_13_HISTORY_KEY] = BEFORE_RESET;
-  remote.values[GAUNTLET_LEVEL_13_HISTORY_KEY] = JSON.stringify(
+  local.meta.keys[GAUNTLET_LEVEL_11_HISTORY_KEY] = BEFORE_RESET;
+  remote.values[GAUNTLET_LEVEL_11_HISTORY_KEY] = JSON.stringify(
     Array.from({ length: 70 }, (_, index) => `question-${index + 50}`),
   );
-  remote.meta.keys[GAUNTLET_LEVEL_13_HISTORY_KEY] = AFTER_RESET;
+  remote.meta.keys[GAUNTLET_LEVEL_11_HISTORY_KEY] = AFTER_RESET;
 
   const merged = mergeProgressSnapshots(local, remote);
-  const history = JSON.parse(merged.values[GAUNTLET_LEVEL_13_HISTORY_KEY] ?? "[]");
+  const history = JSON.parse(merged.values[GAUNTLET_LEVEL_11_HISTORY_KEY] ?? "[]");
 
   assert.equal(history.length, CITY_MAP_RECENT_QUESTION_LIMIT);
   assert.equal(history[0], "question-30");
   assert.equal(history.at(-1), "question-119");
   assert.equal(new Set(history).size, history.length);
+});
+
+test("legacy gauntlet progress is compacted to the sequential 23-level order", () => {
+  assert.deepEqual(
+    migrateLegacyGauntletLevels(
+      [1, 2, 3, 4, 5, 6, 7, 8, 19, 20, 21, 22, 23, 24, 25, 26],
+      0,
+    ),
+    [1, 2, 3, 4, 5, 6, 17, 22, 18, 19, 20, 21, 23],
+  );
+  assert.deepEqual(migrateLegacyGauntletLevels([24], 2), [23]);
+});
+
+test("a legacy cloud snapshot is migrated before it merges on a new device", () => {
+  const legacyKey = LEGACY_GAUNTLET_PROGRESS_KEYS[0];
+  const remote = staleSnapshot();
+  delete remote.values[GAUNTLET_PROGRESS_KEY];
+  delete remote.meta.keys[GAUNTLET_PROGRESS_KEY];
+  remote.values[legacyKey] = JSON.stringify([3, 4, 21, 26]);
+  remote.meta.keys[legacyKey] = BEFORE_RESET;
+
+  const merged = mergeProgressSnapshots(null, remote);
+
+  assert.deepEqual(
+    JSON.parse(merged.values[GAUNTLET_PROGRESS_KEY] ?? "[]"),
+    [3, 22, 23],
+  );
 });
 
 test("a newer cloud schema is never accepted by an older client", () => {

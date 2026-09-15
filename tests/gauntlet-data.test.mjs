@@ -6,6 +6,7 @@ import {
   PLATE_QUIZ_DATA,
   plateAnswerMatches,
   plateCollectionsOverlap,
+  provinceCityAnswerMatches,
   uniqueReversePlateItems,
 } from "../app/gauntlet-data.ts";
 
@@ -73,6 +74,16 @@ test("multi-letter special plate codes require every letter", () => {
   assert.equal(plateAnswerMatches("CXS", ["琼CXS"], true), true);
   assert.equal(plateAnswerMatches("琼CXS", ["琼CXS"], true), true);
   assert.equal(plateAnswerMatches("S", ["琼CXS"], true), false);
+});
+
+test("reverse plate answers accept province and city in one field", () => {
+  const ningbo = city("宁波市");
+  assert.equal(provinceCityAnswerMatches("浙江宁波", ningbo), true);
+  assert.equal(provinceCityAnswerMatches("浙江省 宁波市", ningbo), true);
+  assert.equal(provinceCityAnswerMatches("浙江·宁波", ningbo), true);
+  assert.equal(provinceCityAnswerMatches("江苏宁波", ningbo), false);
+  assert.equal(provinceCityAnswerMatches("浙江杭州", ningbo), false);
+  assert.equal(provinceCityAnswerMatches("宁波", ningbo), false);
 });
 
 test("Qinghai plate questions cover its two cities and six autonomous prefectures", () => {

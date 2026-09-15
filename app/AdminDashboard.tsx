@@ -337,7 +337,7 @@ export default function AdminDashboard() {
                     <td data-label="玩家"><strong>{player.email}</strong><small>{player.id}</small></td>
                     <td data-label="角色"><span className={`admin-role admin-role--${player.role}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
                     <td data-label="全国地图"><strong>{summary?.completed_provinces ?? 0}<i>/34</i></strong><small>{summary?.placed_names ?? 0} 个名称已归位</small></td>
-                    <td data-label="闯关进度"><strong>{summary?.completed_levels ?? 0}<i>/26</i></strong><small>{summary?.mistakes ?? 0} 道待复习错题</small></td>
+                    <td data-label="闯关进度"><strong>{summary?.completed_levels ?? 0}<i>/23</i></strong><small>{summary?.mistakes ?? 0} 道待复习错题</small></td>
                     <td data-label="最近活跃"><strong>{formatDate(player.last_seen_at)}</strong><small>注册于 {formatDate(player.created_at)}</small></td>
                     <td data-label="云存档">
                       <button type="button" onClick={() => void openPlayerDetails(player)}>
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
               <div><span>完成省份</span><strong>{selectedPlayer.progress?.completed_provinces ?? 0}/34</strong></div>
               <div><span>进行中省份</span><strong>{selectedPlayer.progress?.partial_provinces ?? 0}</strong></div>
               <div><span>邻省连城</span><strong>{selectedPlayer.progress?.completed_neighbor_challenges ?? 0}/34</strong></div>
-              <div><span>已过关卡</span><strong>{selectedPlayer.progress?.completed_levels ?? 0}/26</strong></div>
+              <div><span>已过关卡</span><strong>{selectedPlayer.progress?.completed_levels ?? 0}/23</strong></div>
             </div>
             <dl className="admin-account-details">
               <div><dt>用户 ID</dt><dd>{selectedPlayer.id}</dd></div>

@@ -351,3 +351,47 @@ export function plateAnswerMatches(
     Array.from(expectedSet).every((plate) => actualSet.has(plate))
   );
 }
+
+function normalizePlaceAnswer(value: string) {
+  return value
+    .trim()
+    .replace(/[\s·,，、/|｜;；+和及.-]+/gu, "")
+    .replace(/臺/g, "台");
+}
+
+function stripPlaceSuffix(value: string) {
+  return value.replace(
+    /(特别行政区|维吾尔自治区|壮族自治区|回族自治区|自治区|自治州|地区|新区|林区|盟|省|市|区|县)$/u,
+    "",
+  );
+}
+
+/**
+ * Reverse plate questions accept the province and city in one field. Both full
+ * administrative names and their common short forms are valid, with optional
+ * separators, for example “浙江宁波” and “浙江省 宁波市”.
+ */
+export function provinceCityAnswerMatches(
+  answer: string,
+  item: Pick<CityQuizItem, "province" | "provinceShort" | "city">,
+) {
+  const candidate = normalizePlaceAnswer(answer);
+  if (!candidate) return false;
+
+  const provinceNames = new Set([
+    item.province,
+    item.provinceShort,
+    stripPlaceSuffix(item.province),
+    stripPlaceSuffix(item.provinceShort),
+  ]);
+  const cityNames = new Set([
+    item.city,
+    stripPlaceSuffix(item.city),
+  ]);
+
+  return Array.from(provinceNames).some((province) =>
+    Array.from(cityNames).some(
+      (city) => candidate === normalizePlaceAnswer(`${province}${city}`),
+    ),
+  );
+}

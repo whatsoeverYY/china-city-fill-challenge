@@ -20,6 +20,22 @@ import { fitRotatedPointsScale } from "../app/silhouette-utils.ts";
 import { normalizeMapRegionName } from "../app/map-data.ts";
 
 const mapsRoot = new URL("../public/data/maps/", import.meta.url);
+const cityGameUrl = new URL("../app/CityGame.tsx", import.meta.url);
+
+test("gauntlet levels use one continuous 1-23 sequence", async () => {
+  const source = await readFile(cityGameUrl, "utf8");
+  const config = source.match(
+    /const GAUNTLET_LEVELS:[\s\S]*?const MAP_REQUIRED_LEVELS/,
+  )?.[0] ?? "";
+  const levels = Array.from(
+    config.matchAll(/\blevel:\s*(\d+),/g),
+    (match) => Number(match[1]),
+  );
+
+  assert.deepEqual(levels, Array.from({ length: 23 }, (_, index) => index + 1));
+  assert.match(config, /level:\s*22,[\s\S]*?title:\s*"错题复仇赛"/);
+  assert.match(config, /level:\s*23,[\s\S]*?title:\s*"终极混战"/);
+});
 
 test("province configuration is complete, unique and symmetric", () => {
   assert.equal(PROVINCES.length, 34);
@@ -83,7 +99,7 @@ test("every configured province has valid map data", async () => {
         namedFeatures.map((feature) =>
           normalizeMapRegionName(feature.properties.name, code),
         ),
-        `${code} 的第13关名称索引与地图区块不一致`,
+        `${code} 的第11关名称索引与地图区块不一致`,
       );
     }
   }

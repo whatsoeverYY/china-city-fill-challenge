@@ -740,7 +740,7 @@ export default function KnowledgeBase({
             </div>
             <div className="knowledge-coverage-card">
               <span>关卡知识覆盖</span>
-              <strong>26<small>/26</small></strong>
+              <strong>23<small>/23</small></strong>
               <div><i /></div>
               <p>错题复仇赛与终极混战，会复用前面专题中的知识。</p>
             </div>
