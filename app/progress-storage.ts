@@ -2,6 +2,7 @@ import {
   CURRENT_PROGRESS_SCHEMA_VERSION,
 } from "./progress-config.ts";
 import { normalizeMistakeList } from "./mistake-data.ts";
+import { CITY_MAP_RECENT_QUESTION_LIMIT } from "./city-map-question-queue.ts";
 
 export const STORAGE_KEY = "china-city-fill-progress-v1";
 export const HARD_MODE_KEY = "china-city-fill-hard-mode-v1";
@@ -489,7 +490,9 @@ function mergeMapValue(
 }
 
 function uniqueRecent(values: string[]) {
-  return values.filter((value, index) => values.lastIndexOf(value) === index).slice(-90);
+  return values
+    .filter((value, index) => values.lastIndexOf(value) === index)
+    .slice(-CITY_MAP_RECENT_QUESTION_LIMIT);
 }
 
 export function mergeProgressSnapshots(

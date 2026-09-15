@@ -24,6 +24,12 @@ import {
   type MapRegionQuizItem,
 } from "./map-region-quiz-data";
 import {
+  CITY_MAP_RECENT_QUESTION_LIMIT,
+  cityQuizKey,
+  createCityMapQuestionQueue,
+  type NamedRegionQuizItem,
+} from "./city-map-question-queue";
+import {
   UNIVERSITY_QUIZ_DATA,
   type UniversityQuizItem,
 } from "./university-data";
@@ -89,9 +95,6 @@ const [
   LEGACY_GAUNTLET_PROGRESS_V2_KEY,
   LEGACY_GAUNTLET_PROGRESS_KEY,
 ] = LEGACY_GAUNTLET_PROGRESS_KEYS;
-const CITY_MAP_RECENT_QUESTION_LIMIT = 90;
-const CITY_MAP_MINIMUM_QUEUE_LENGTH = 90;
-
 const PROVINCE_FILL_COLORS = [
   "#f0beb8",
   "#f3c99b",
@@ -1449,95 +1452,6 @@ function parseGauntletProvinceScope(raw: string | null) {
   return new Set(ALL_GAUNTLET_SHAPE_PROVINCE_CODES);
 }
 
-type NamedRegionQuizItem = Pick<CityQuizItem, "city" | "provinceShort">;
-
-function cityQuizKey(item: NamedRegionQuizItem) {
-  return `${item.provinceShort}:${item.city}`;
-}
-
-function spreadCityQuestions<T extends NamedRegionQuizItem>(
-  questions: T[],
-  previousProvince: string | null = null,
-  shuffle = true,
-) {
-  const remaining = shuffle ? randomShuffle(questions) : [...questions];
-  const result: T[] = [];
-  let lastProvince = previousProvince;
-
-  while (remaining.length) {
-    const differentProvinceIndex = remaining.findIndex(
-      (item) => item.provinceShort !== lastProvince,
-    );
-    const nextIndex = differentProvinceIndex >= 0 ? differentProvinceIndex : 0;
-    const [next] = remaining.splice(nextIndex, 1);
-    result.push(next);
-    lastProvince = next.provinceShort;
-  }
-
-  return result;
-}
-
-function createCityMapQuestionQueue<T extends NamedRegionQuizItem>(
-  questions: T[],
-  recentQuestionKeys: string[],
-) {
-  const uniqueQuestions = Array.from(
-    new Map(questions.map((item) => [cityQuizKey(item), item])).values(),
-  );
-  if (!uniqueQuestions.length) return [];
-
-  const questionByKey = new Map(
-    uniqueQuestions.map((item) => [cityQuizKey(item), item]),
-  );
-  const normalizedRecentKeys = recentQuestionKeys.filter(
-    (key, index) =>
-      questionByKey.has(key) && recentQuestionKeys.lastIndexOf(key) === index,
-  );
-  const recentKeySet = new Set(normalizedRecentKeys);
-  const unseenQuestions = spreadCityQuestions(
-    uniqueQuestions.filter((item) => !recentKeySet.has(cityQuizKey(item))),
-  );
-  const recentQuestions = normalizedRecentKeys
-    .map((key) => questionByKey.get(key))
-    .filter((item): item is T => Boolean(item));
-  const queue = [
-    ...unseenQuestions,
-    ...spreadCityQuestions(
-      recentQuestions,
-      unseenQuestions.at(-1)?.provinceShort ?? null,
-      false,
-    ),
-  ];
-  const targetLength = Math.max(
-    uniqueQuestions.length,
-    CITY_MAP_MINIMUM_QUEUE_LENGTH,
-  );
-
-  while (queue.length < targetLength) {
-    const nextCycle = spreadCityQuestions(
-      uniqueQuestions,
-      queue.at(-1)?.provinceShort ?? null,
-    );
-    if (
-      nextCycle.length > 1 &&
-      cityQuizKey(queue.at(-1)!) === cityQuizKey(nextCycle[0])
-    ) {
-      const replacementIndex = nextCycle.findIndex(
-        (item) => cityQuizKey(item) !== cityQuizKey(nextCycle[0]),
-      );
-      if (replacementIndex > 0) {
-        [nextCycle[0], nextCycle[replacementIndex]] = [
-          nextCycle[replacementIndex],
-          nextCycle[0],
-        ];
-      }
-    }
-    queue.push(...nextCycle);
-  }
-
-  return queue.slice(0, targetLength);
-}
-
 function readRecentQuestionHistory(storage: ProgressStorage, storageKey: string) {
   try {
     const saved = JSON.parse(storage.getItem(storageKey) ?? "[]") as unknown[];
@@ -2616,7 +2530,7 @@ function GauntletGame({
     ? cityOrder[questionIndex % cityOrder.length]
     : null;
   const currentMapRegion = mapRegionOrder.length
-    ? mapRegionOrder[questionIndex % mapRegionOrder.length]
+    ? mapRegionOrder[questionIndex] ?? null
     : null;
   const cityPoolSize = useMemo(
     () => new Set(cityOrder.map(cityQuizKey)).size,
@@ -2749,32 +2663,6 @@ function GauntletGame({
   const capitalDirection = questionIndex % 2 === 0
     ? "province-to-capital"
     : "capital-to-province";
-  const target = level === 1 || level === 11
-    ? provinceOrder.length
-    : level === 21
-      ? mistakeSessionTotal
-    : level === 2 || level === 8 || level === 9 || level === 13 || level === 19 || level === 25
-      ? 30
-      : level === 14
-        ? PROVINCE_GROUP_QUESTIONS.length
-        : level === 16
-          ? 16
-          : level === 5 || level === 10 || level === 15 || level === 23
-        ? 10
-        : level === 26
-          ? 30
-        : 20;
-  const progress = level === 1
-    ? questionIndex
-    : level === 11
-      ? mapSelections.size
-    : level === 10
-      ? routeCodes.length
-      : level === 21
-        ? Math.max(0, mistakeSessionTotal - mistakeOrder.length)
-      : level === 26
-        ? questionIndex + (answerReview ? 1 : 0)
-      : streak;
   const selectedQuizItems = useMemo(
     () => CITY_QUIZ_DATA.filter((item) =>
       selectedProvinceShortNames.has(item.provinceShort),
@@ -2803,6 +2691,35 @@ function GauntletGame({
     ),
     [selectedProvinceShortNames],
   );
+  const level13Target = Math.min(30, selectedMapRegionItems.length);
+  const target = level === 1 || level === 11
+    ? provinceOrder.length
+    : level === 21
+      ? mistakeSessionTotal
+    : level === 13
+      ? level13Target
+    : level === 2 || level === 8 || level === 9 || level === 19 || level === 25
+      ? 30
+      : level === 14
+        ? PROVINCE_GROUP_QUESTIONS.length
+        : level === 16
+          ? 16
+          : level === 5 || level === 10 || level === 15 || level === 23
+        ? 10
+        : level === 26
+          ? 30
+        : 20;
+  const progress = level === 1
+    ? questionIndex
+    : level === 11
+      ? mapSelections.size
+    : level === 10
+      ? routeCodes.length
+      : level === 21
+        ? Math.max(0, mistakeSessionTotal - mistakeOrder.length)
+      : level === 26
+        ? questionIndex + (answerReview ? 1 : 0)
+      : streak;
   const provinceScopeIssue = (challengeLevel: GauntletLevel) => {
     if (!provinceScopeReady) return "正在读取已保存的省份范围";
     if (FIXED_SCOPE_LEVELS.has(challengeLevel)) return null;
@@ -2912,6 +2829,7 @@ function GauntletGame({
       ? createCityMapQuestionQueue(
           eligibleQuestions,
           level25HistoryRef.current,
+          randomShuffle,
         )
       : randomShuffle(eligibleQuestions);
     setCityOrder(shuffledQuestions);
@@ -3023,6 +2941,7 @@ function GauntletGame({
         createCityMapQuestionQueue(
           selectedMapRegionItems,
           level13HistoryRef.current,
+          randomShuffle,
         ),
       );
       setProvinceOrder([]);
@@ -3356,7 +3275,18 @@ function GauntletGame({
       return;
     }
     if (reviewedLevel === 23) setCityRouteAttempt(null);
-    setQuestionIndex((value) => value + 1);
+    if (reviewedLevel === 13) {
+      setMapRegionOrder(
+        createCityMapQuestionQueue(
+          selectedMapRegionItems,
+          level13HistoryRef.current,
+          randomShuffle,
+        ),
+      );
+      setQuestionIndex(0);
+    } else {
+      setQuestionIndex((value) => value + 1);
+    }
     setFeedbackType("idle");
     setFeedback(GAUNTLET_OPENING_FEEDBACK[reviewedLevel]);
     focusProvinceInput();
@@ -3893,7 +3823,7 @@ function GauntletGame({
       advanceStreakChallenge(
         13,
         correct,
-        30,
+        target,
         currentMapRegion.city,
         `${currentMapRegion.city}位于${currentMapRegion.province}，对应省内地图上的“${currentMapRegion.city}”区块`,
         {
@@ -4181,6 +4111,8 @@ function GauntletGame({
     ? `已辨认本轮所选的 ${target} 个省级行政区`
     : passedLevel === 11
       ? `已完成本轮所选的 ${target} 块省份拼图`
+    : passedLevel === 13 && target < 30
+      ? `已连续答对当前范围完整一轮（${target} 题）`
       : activeConfig
         ? `已完成目标：${activeConfig.target}`
         : "已完成本关目标";
@@ -4251,6 +4183,9 @@ function GauntletGame({
             {GAUNTLET_LEVELS.map((item) => {
               const completed = completedLevels.has(item.level);
               const scopeIssue = provinceScopeIssue(item.level);
+              const levelTarget = item.level === 13 && selectedMapRegionItems.length < 30
+                ? `连续答对 ${selectedMapRegionItems.length} 题（完整一轮）`
+                : item.target;
               const mapUnavailable = MAP_REQUIRED_LEVELS.has(item.level) &&
                 (!nationalMap || nationalError);
               return (
@@ -4271,7 +4206,7 @@ function GauntletGame({
                       ? mistakes.length
                         ? `当前 ${mistakes.length} 道历史错题`
                         : "暂无历史错题"
-                      : item.target}
+                      : levelTarget}
                   </b>
                   <span className={`level-state ${completed ? "is-complete" : ""}`}>
                     {mapUnavailable
@@ -4409,7 +4344,7 @@ function GauntletGame({
                           : level === 20
                             ? `${selectedUniversityProvinces.size} 省 · ${universityOrder.length} 校 · 第 ${questionIndex + 1} 题`
                           : level === 13
-                            ? `${selectedShapeProvinceCodes.size} 省 · ${mapRegionPoolSize} 区块 · 第 ${questionIndex + 1} 题`
+                            ? `${selectedShapeProvinceCodes.size} 省 · ${mapRegionPoolSize} 区块 · 第 ${streak + 1} / ${target} 题`
                           : level === 25
                             ? `${selectedQuizProvinces.size} 省 · ${cityPoolSize} 城市/地区 · 第 ${questionIndex + 1} 题`
                             : `${selectedQuizProvinces.size} 省 · ${cityOrder.length} ${PLATE_QUESTION_LEVELS.has(level) ? "城市/地区" : "城"} · 第 ${questionIndex + 1} 题`}
@@ -4815,7 +4750,7 @@ function GauntletGame({
                   <h2>在左侧省内地图落点</h2>
                   <p className="map-answer-summary">地图不显示名称；市、自治州、地区、盟、区县等区块都会出题，点击后立即判题。</p>
                   <p className="map-answer-summary">
-                    当前范围共 {mapRegionPoolSize} 个地图区块。系统会优先避开最近 90 道已出现题目；范围不足时，会先用完全部区块再重新打散。
+                    当前范围共 {mapRegionPoolSize} 个地图区块，本轮需连续答对 {target} 题。系统会优先避开最近 {CITY_MAP_RECENT_QUESTION_LIMIT} 道题；答错后会重新打散下一轮。
                   </p>
                 </>
               ) : level === 14 ? (
