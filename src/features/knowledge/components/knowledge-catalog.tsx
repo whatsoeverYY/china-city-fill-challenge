@@ -1,6 +1,7 @@
 import { CONFUSABLE_CITY_PAIRS } from "@/domain/geography/data/confusable-cities";
 import { UNIVERSITY_QUIZ_DATA } from "@/domain/geography/data/universities";
 import { CITY_PLATE_PREFIX_COUNT } from "@/domain/geography/data/city-plates";
+import { PROVINCES } from "@/domain/geography/data/provinces";
 import {
   GAUNTLET_LEVEL_COUNT,
   gauntletLevelNumber,
@@ -38,11 +39,18 @@ export default function KnowledgeCatalog({
         </div>
       </section>
 
-      <section className="knowledge-stat-strip mx-auto mb-16 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-4 overflow-hidden rounded-2xl border border-black/10 bg-card/80 max-sm:w-[calc(100%_-_24px)] max-sm:grid-cols-2 [&>div+div]:border-l [&>div+div]:border-black/10 [&>div]:p-4 [&>div]:text-center [&_span]:text-[10px] [&_span]:font-bold [&_span]:text-ink-soft [&_strong]:block [&_strong]:text-2xl [&_strong]:text-[#735285]" aria-label="知识库收录概况">
-        <div><strong>34</strong><span>省级行政区</span></div>
-        <div><strong>{CITY_PLATE_PREFIX_COUNT}</strong><span>车牌前缀</span></div>
-        <div><strong>{UNIVERSITY_QUIZ_DATA.length}</strong><span>985 · 211 高校</span></div>
-        <div><strong>{CONFUSABLE_CITY_PAIRS.length}</strong><span>易混城市组</span></div>
+      <section className="knowledge-stat-strip mx-auto mb-16 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-4 overflow-hidden rounded-2xl border border-black/10 bg-card/80 max-sm:w-[calc(100%_-_24px)] max-sm:grid-cols-2" aria-label="知识库收录概况">
+        {[
+          [String(PROVINCES.length), "省级行政区"],
+          [String(CITY_PLATE_PREFIX_COUNT), "车牌前缀"],
+          [String(UNIVERSITY_QUIZ_DATA.length), "985 · 211 高校"],
+          [String(CONFUSABLE_CITY_PAIRS.length), "易混城市组"],
+        ].map(([value, label], index) => (
+          <div className={`p-4 text-center ${index > 0 ? "border-l border-black/10" : ""}`} key={label}>
+            <strong className="block text-2xl text-[#735285]">{value}</strong>
+            <span className="text-[10px] font-bold text-ink-soft">{label}</span>
+          </div>
+        ))}
       </section>
 
       <section className="knowledge-catalog mx-auto w-[min(1380px,calc(100%_-_48px))] pb-20 max-sm:w-[calc(100%_-_24px)]" aria-labelledby="knowledge-catalog-title">
@@ -56,7 +64,7 @@ export default function KnowledgeCatalog({
         <div className="knowledge-category-grid grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
           {KNOWLEDGE_CATEGORIES.map((category, index) => (
             <button
-              className={`knowledge-category-card is-${category.tone} relative grid min-h-64 cursor-pointer grid-rows-[auto_1fr_auto] gap-3 rounded-[20px_20px_20px_6px] border border-black/10 bg-card/90 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl`}
+              className="knowledge-category-card relative grid min-h-64 cursor-pointer grid-rows-[auto_1fr_auto] gap-3 rounded-[20px_20px_20px_6px] border border-black/10 bg-card/90 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
               key={category.id}
               type="button"
               onClick={() => onOpenCategory(category.id)}

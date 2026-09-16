@@ -4,6 +4,10 @@ import { useState, type FormEvent } from "react";
 import { usePlayerData } from "@/features/player/player-data-context";
 import { adminPath } from "@/shared/lib/app-path";
 
+const ACCOUNT_ACTION_BUTTON_CLASS = "min-h-10 cursor-pointer rounded-xl border border-black/15 bg-white/70 text-[11px] font-extrabold disabled:cursor-wait disabled:opacity-60";
+const ACCOUNT_TAB_CLASS = "min-h-10 cursor-pointer rounded-lg border-0 bg-transparent text-xs font-extrabold";
+const ACCOUNT_INPUT_CLASS = "min-h-11 rounded-xl border border-black/20 bg-white px-3 py-2 outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/15";
+
 export default function AccountControl() {
   const {
     initialized,
@@ -77,7 +81,7 @@ export default function AccountControl() {
   return (
     <>
       <button
-        className={`account-fab account-fab--${syncStatus} fixed bottom-5 right-5 z-[1400] grid min-h-12 cursor-pointer grid-cols-[30px_auto_8px] items-center gap-2 rounded-full border border-white/30 bg-ink/95 py-2 pl-2 pr-3 text-white shadow-xl backdrop-blur-xl max-sm:bottom-3 max-sm:right-3 max-sm:grid-cols-[30px_8px]`}
+        className="account-fab fixed bottom-5 right-5 z-[1400] grid min-h-12 cursor-pointer grid-cols-[30px_auto_8px] items-center gap-2 rounded-full border border-white/30 bg-ink/95 py-2 pl-2 pr-3 text-white shadow-xl backdrop-blur-xl max-sm:bottom-3 max-sm:right-3 max-sm:grid-cols-[30px_8px]"
         type="button"
         onClick={() => setOpen(true)}
         aria-label={identity ? `账户：${identity.email}` : "登录并保存游戏进度"}
@@ -117,7 +121,7 @@ export default function AccountControl() {
                     <small className="mt-1 block overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-ink-soft">{isAdmin ? "管理员 · 同时拥有全部游戏能力" : "普通玩家"}</small>
                   </div>
                 </div>
-                <div className={`sync-state sync-state--${syncStatus} mt-3.5 grid grid-cols-[10px_1fr] items-center gap-2.5 rounded-xl bg-paper px-3.5 py-3`}>
+                <div className="sync-state mt-3.5 grid grid-cols-[10px_1fr] items-center gap-2.5 rounded-xl bg-paper px-3.5 py-3">
                   <i className={`block size-2 rounded-full ${syncStatus === "synced" ? "bg-[#67c693]" : syncStatus === "offline" ? "bg-[#81a5bb]" : syncStatus === "error" ? "bg-[#e07269]" : syncStatus === "pending" || syncStatus === "syncing" || syncStatus === "loading" ? "bg-brand-gold" : "bg-[#9aa39e]"}`} aria-hidden="true" />
                   <div>
                     <strong className="block text-[11px]">{syncMessage}</strong>
@@ -128,7 +132,7 @@ export default function AccountControl() {
                     </small>
                   </div>
                 </div>
-                <div className="account-actions mt-4 grid grid-cols-2 gap-2 [&_button]:min-h-10 [&_button]:cursor-pointer [&_button]:rounded-xl [&_button]:border [&_button]:border-black/15 [&_button]:bg-white/70 [&_button]:text-[11px] [&_button]:font-extrabold [&_button:disabled]:cursor-wait [&_button:disabled]:opacity-60">
+                <div className="account-actions mt-4 grid grid-cols-2 gap-2">
                   {isAdmin ? (
                     <a href={adminPath()} className="account-primary-link col-span-2 grid min-h-11 place-items-center rounded-xl bg-brand-green px-4 text-xs font-black text-white no-underline">
                       进入管理员后台
@@ -136,6 +140,7 @@ export default function AccountControl() {
                   ) : null}
                   <button
                     type="button"
+                    className={ACCOUNT_ACTION_BUTTON_CLASS}
                     onClick={() => void syncNow()}
                     disabled={syncStatus === "syncing" || offlineIdentity}
                   >
@@ -143,7 +148,7 @@ export default function AccountControl() {
                   </button>
                   <button
                     type="button"
-                    className="account-signout text-brand-red-dark"
+                    className={`${ACCOUNT_ACTION_BUTTON_CLASS} account-signout text-brand-red-dark`}
                     onClick={() => {
                       setBusy(true);
                       void signOut()
@@ -159,7 +164,7 @@ export default function AccountControl() {
                   </button>
                   <button
                     type="button"
-                    className="account-delete-progress col-span-2 !border-brand-red/25 !bg-brand-red/5 text-brand-red-dark"
+                    className={`${ACCOUNT_ACTION_BUTTON_CLASS} account-delete-progress col-span-2 !border-brand-red/25 !bg-brand-red/5 text-brand-red-dark`}
                     onClick={() => {
                       setDeleteConfirmOpen(true);
                       setFormError("");
@@ -192,7 +197,7 @@ export default function AccountControl() {
                       </button>
                       <button
                         type="button"
-                        className="is-danger min-h-10 cursor-pointer rounded-lg border border-brand-red-dark bg-brand-red-dark px-2.5 text-[10px] font-black text-white disabled:cursor-wait disabled:opacity-60"
+                        className="min-h-10 cursor-pointer rounded-lg border border-brand-red-dark bg-brand-red-dark px-2.5 text-[10px] font-black text-white disabled:cursor-wait disabled:opacity-60"
                         onClick={() => void confirmClearProgress()}
                         disabled={busy}
                       >
@@ -211,12 +216,12 @@ export default function AccountControl() {
                 <p className="account-dialog-lede text-[13px] leading-6 text-ink-soft">
                   游客可以完整试玩，但刷新页面后不会保留进度。登录后支持跨设备同步；曾在线登录过的设备，断网时也能继续玩。
                 </p>
-                <div className="account-tabs my-5 grid grid-cols-2 rounded-xl bg-paper-deep p-1 [&_button]:min-h-10 [&_button]:cursor-pointer [&_button]:rounded-lg [&_button]:border-0 [&_button]:bg-transparent [&_button]:text-xs [&_button]:font-extrabold [&_button.is-active]:bg-card [&_button.is-active]:text-brand-green-dark [&_button.is-active]:shadow-sm" role="tablist" aria-label="账户操作">
+                <div className="account-tabs my-5 grid grid-cols-2 rounded-xl bg-paper-deep p-1" role="tablist" aria-label="账户操作">
                   <button
                     type="button"
                     role="tab"
                     aria-selected={mode === "signin"}
-                    className={mode === "signin" ? "is-active" : ""}
+                    className={`${ACCOUNT_TAB_CLASS} ${mode === "signin" ? "bg-card text-brand-green-dark shadow-sm" : ""}`}
                     onClick={() => switchMode("signin")}
                   >
                     登录
@@ -225,15 +230,16 @@ export default function AccountControl() {
                     type="button"
                     role="tab"
                     aria-selected={mode === "signup"}
-                    className={mode === "signup" ? "is-active" : ""}
+                    className={`${ACCOUNT_TAB_CLASS} ${mode === "signup" ? "bg-card text-brand-green-dark shadow-sm" : ""}`}
                     onClick={() => switchMode("signup")}
                   >
                     注册
                   </button>
                 </div>
-                <form className="account-form grid gap-2 [&_input]:min-h-11 [&_input]:rounded-xl [&_input]:border [&_input]:border-black/20 [&_input]:bg-white [&_input]:px-3 [&_input]:py-2 [&_input]:outline-none [&_input:focus]:border-brand-green [&_input:focus]:ring-2 [&_input:focus]:ring-brand-green/15" onSubmit={submit}>
+                <form className="account-form grid gap-2" onSubmit={submit}>
                   <label className="mt-1.5 text-[11px] font-extrabold text-ink-soft" htmlFor="account-email">邮箱</label>
                   <input
+                    className={ACCOUNT_INPUT_CLASS}
                     id="account-email"
                     type="email"
                     value={email}
@@ -244,6 +250,7 @@ export default function AccountControl() {
                   />
                   <label className="mt-1.5 text-[11px] font-extrabold text-ink-soft" htmlFor="account-password">密码</label>
                   <input
+                    className={ACCOUNT_INPUT_CLASS}
                     id="account-password"
                     type="password"
                     value={password}

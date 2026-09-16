@@ -53,8 +53,8 @@ export default function GauntletQuestionStage({
           <GauntletDetailMap
             map={d.gauntletDetailMap}
             onRegion={actions.handleDetailRegion}
-            correctRegionName={s.answerReview?.highlightRegionName}
-            selectedRegionName={s.answerReview?.selectedRegionName}
+            correctRegionId={s.answerReview?.highlightRegionId}
+            selectedRegionId={s.answerReview?.selectedRegionId}
             showLabels={Boolean(s.answerReview)}
             readOnly={Boolean(s.answerReview)}
           />
@@ -82,7 +82,7 @@ export default function GauntletQuestionStage({
     }
     if (s.level === LEVEL.GEOGRAPHY_ELIMINATION) {
       return (
-        <ChoiceQuestion className="is-dual" badge="双" prompt={d.currentDualIntruderQuestion?.instruction} value={d.currentDualIntruderQuestion?.prompt ?? "载入中…"} hint="城市、省份与行政中心会交替出题" />
+        <ChoiceQuestion badge="双" prompt={d.currentDualIntruderQuestion?.instruction} value={d.currentDualIntruderQuestion?.prompt ?? "载入中…"} hint="城市、省份与行政中心会交替出题" />
       );
     }
     if (s.level === LEVEL.PLATE_FAULT) {
@@ -146,7 +146,7 @@ export default function GauntletQuestionStage({
                 map={d.gauntletDetailMap}
                 provinces={[d.plateCityMapFocusedProvince]}
                 onRegion={actions.handleDetailRegion}
-                correctRegionName={s.answerReview?.highlightRegionName}
+                correctRegionId={s.answerReview?.highlightRegionId}
                 readOnly={Boolean(s.answerReview)}
               />
             </div>
@@ -156,7 +156,7 @@ export default function GauntletQuestionStage({
               provinces={d.selectedCityMapProvinces}
               onRegion={actions.handleDetailRegion}
               onProvinceFocus={s.setPlateCityMapFocusedProvinceCode}
-              correctRegionName={s.answerReview?.highlightRegionName}
+              correctRegionId={s.answerReview?.highlightRegionId}
               readOnly={Boolean(s.answerReview)}
             />
           )}
@@ -273,7 +273,7 @@ export default function GauntletQuestionStage({
     }
     return (
       <ChoiceQuestion
-        className={`city-question ${s.level === LEVEL.PLATE_PLACE ? "is-plate-question" : ""}`}
+        className="city-question"
         badge={s.level === LEVEL.PLATE_PLACE ? "牌" : "城"}
         prompt={s.level === LEVEL.PLATE_PLACE ? "这组车牌属于哪里？" : "这个城市或地区属于哪里？"}
         value={(s.level === LEVEL.PLATE_PLACE ? d.currentCity?.plate : d.currentCity?.city) ?? "载入中…"}

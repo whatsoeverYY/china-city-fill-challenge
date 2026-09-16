@@ -11,10 +11,8 @@ import {
   MAP_REQUIRED_LEVELS,
   PLATE_QUESTION_LEVELS,
 } from "@/features/gauntlet/config/gauntlet-config";
-import {
-  uniqueReversePlateItems,
-  type CityQuizItem,
-} from "@/domain/geography/data/city-plates";
+import type { CityQuizItem } from "@/domain/geography/data/city-plates";
+import { uniqueReversePlateItems } from "@/domain/geography/lib/city-plate-answer";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
 import {
   createCityMapQuestionQueue,

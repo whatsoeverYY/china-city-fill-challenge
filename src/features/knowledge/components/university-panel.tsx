@@ -19,7 +19,7 @@ export default function UniversityPanel({
 
   return (
     <div className="knowledge-stack grid gap-5">
-      <div className="knowledge-memory-banner is-purple flex items-center gap-4 rounded-2xl bg-[#735285]/10 p-5 max-md:flex-wrap">
+      <div className="knowledge-memory-banner flex items-center gap-4 rounded-2xl bg-[#735285]/10 p-5 max-md:flex-wrap">
         <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#735285] font-black text-white">学</span>
         <div>
           <strong>不要逐所散记：先记“名校城市群”</strong>
@@ -46,8 +46,8 @@ export default function UniversityPanel({
             </header>
             <div className="grid gap-2">
               {items.map((item) => (
-                <article className="flex items-center gap-3 rounded-xl bg-paper p-3" key={`${item.provinceCode}-${item.name}`}>
-                  <span className={`university-tier is-${item.tier} rounded-full bg-[#735285]/10 px-2 py-1 text-[9px] font-black text-[#735285]`}>{item.tier}</span>
+                <article className="flex items-center gap-3 rounded-xl bg-paper p-3" key={item.id}>
+                  <span className="university-tier rounded-full bg-[#735285]/10 px-2 py-1 text-[9px] font-black text-[#735285]">{item.tier}</span>
                   <div>
                     <h4 className="m-0 text-sm">{item.name}</h4>
                     <p className="m-0 text-[10px] text-ink-soft">

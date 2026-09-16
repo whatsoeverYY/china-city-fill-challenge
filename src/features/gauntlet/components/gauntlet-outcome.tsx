@@ -55,7 +55,7 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
           <button className="min-h-11 cursor-pointer rounded-full border-0 bg-brand-red px-5 font-black text-white" type="button" onClick={() => actions.startLevel(s.level!)}>
             重新挑战
           </button>
-          <button type="button" className="is-text min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 font-black text-ink" onClick={actions.returnToLevels}>
+          <button type="button" className="min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 font-black text-ink" onClick={actions.returnToLevels}>
             返回选关
           </button>
         </div>
@@ -81,12 +81,12 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
         ) : null}
         <button
           type="button"
-          className="is-secondary min-h-11 cursor-pointer rounded-full border-0 bg-brand-green px-5 font-black text-white"
+          className="min-h-11 cursor-pointer rounded-full border-0 bg-brand-green px-5 font-black text-white"
           onClick={() => actions.startLevel(s.passedLevel!)}
         >
           再来一次
         </button>
-        <button type="button" className="is-text min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 font-black text-ink" onClick={actions.returnToLevels}>
+        <button type="button" className="min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 font-black text-ink" onClick={actions.returnToLevels}>
           返回选关
         </button>
       </div>

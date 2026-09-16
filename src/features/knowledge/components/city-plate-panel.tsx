@@ -59,8 +59,8 @@ export default function CityPlatePanel({
               <div className="knowledge-plate-grid grid grid-cols-4 gap-2 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1">
                 {items.map((item) => (
                   <article
-                    className={`rounded-xl border p-3 ${item.plates.length > 1 ? "is-multi-plate border-brand-gold/40 bg-brand-gold/10" : "border-black/10 bg-white/70"}`}
-                    key={`${item.provinceCode}-${item.city}`}
+                    className={`rounded-xl border p-3 ${item.plates.length > 1 ? "border-brand-gold/40 bg-brand-gold/10" : "border-black/10 bg-white/70"}`}
+                    key={item.id}
                   >
                     <span className="block text-xs">
                       {plainPlaceName(item.city)}

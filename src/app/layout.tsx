@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { PlayerDataProvider } from "@/features/player/player-data-provider";
+import AccountControl from "@/features/player/components/account-control";
 
 const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -40,7 +41,10 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="m-0 min-w-80 bg-paper font-sans text-ink antialiased">
-        <PlayerDataProvider>{children}</PlayerDataProvider>
+        <PlayerDataProvider>
+          {children}
+          <AccountControl />
+        </PlayerDataProvider>
       </body>
     </html>
   );

@@ -78,11 +78,11 @@ export function useCityProgress(
   }, [progressStorage, setMessage]);
 
   const saveProgress = useCallback(
-    (code: string, names: Set<string>, complete: boolean, joined: boolean) => {
+    (code: string, regionIds: Set<string>, complete: boolean, joined: boolean) => {
       const progress = joined ? neighborProgressRef.current : progressRef.current;
       progress[code] = complete
-        ? [MAP_COMPLETION_MARKER, ...Array.from(names)]
-        : Array.from(names);
+        ? [MAP_COMPLETION_MARKER, ...Array.from(regionIds)]
+        : Array.from(regionIds);
       progressStorage.setItem(
         joined ? NEIGHBOR_PROGRESS_KEY : STORAGE_KEY,
         JSON.stringify(progress),

@@ -16,9 +16,9 @@ import {
 import {
   CITY_QUIZ_DATA,
   PLATE_QUIZ_DATA,
-  plateCollectionsOverlap,
   type CityQuizItem,
 } from "@/domain/geography/data/city-plates";
+import { plateCollectionsOverlap } from "@/domain/geography/lib/city-plate-answer";
 import {
   type BossQuestion,
   ConfusableCityQuestion,
@@ -34,43 +34,51 @@ import { randomShuffle } from "@/shared/lib/random";
 const FALLBACK_PROVINCE_CODE = "110000";
 
 export function createConfusableCityQuestions() {
+  const cityOptions = (pair: ConfusableCityPair) => [
+    { id: `${pair.id}:left-city`, label: pair.left.city },
+    { id: `${pair.id}:right-city`, label: pair.right.city },
+  ];
+  const provinceOptions = (pair: ConfusableCityPair) => [
+    { id: pair.left.provinceCode, label: pair.left.provinceShort },
+    { id: pair.right.provinceCode, label: pair.right.provinceShort },
+  ];
   return randomShuffle(
     CONFUSABLE_CITY_PAIRS.flatMap(
-      (pair: ConfusableCityPair, pairIndex): ConfusableCityQuestion[] => [
+      (pair: ConfusableCityPair): ConfusableCityQuestion[] => [
         {
-          id: `${pairIndex}-left-city`,
+          id: `${pair.id}-left-city`,
           pair: [pair.left.city, pair.right.city],
           prompt: pair.left.province,
           instruction: "这对易混城市中，哪座属于这个省份？",
-          options: randomShuffle([pair.left.city, pair.right.city]),
-          answer: pair.left.city,
+          options: randomShuffle(cityOptions(pair)),
+          answerId: `${pair.id}:left-city`,
           explanation: pair.memoryTip,
         },
         {
-          id: `${pairIndex}-right-city`,
+          id: `${pair.id}-right-city`,
           pair: [pair.left.city, pair.right.city],
           prompt: pair.right.province,
           instruction: "这对易混城市中，哪座属于这个省份？",
-          options: randomShuffle([pair.left.city, pair.right.city]),
-          answer: pair.right.city,
+          options: randomShuffle(cityOptions(pair)),
+          answerId: `${pair.id}:right-city`,
           explanation: pair.memoryTip,
         },
         {
-          id: `${pairIndex}-left-province`,
+          id: `${pair.id}-left-province`,
           pair: [pair.left.city, pair.right.city],
           prompt: pair.left.city,
           instruction: "这座城市属于哪个省级行政区？",
-          options: randomShuffle([pair.left.provinceShort, pair.right.provinceShort]),
-          answer: pair.left.provinceShort,
+          options: randomShuffle(provinceOptions(pair)),
+          answerId: pair.left.provinceCode,
           explanation: pair.memoryTip,
         },
         {
-          id: `${pairIndex}-right-province`,
+          id: `${pair.id}-right-province`,
           pair: [pair.left.city, pair.right.city],
           prompt: pair.right.city,
           instruction: "这座城市属于哪个省级行政区？",
-          options: randomShuffle([pair.left.provinceShort, pair.right.provinceShort]),
-          answer: pair.right.provinceShort,
+          options: randomShuffle(provinceOptions(pair)),
+          answerId: pair.right.provinceCode,
           explanation: pair.memoryTip,
         },
       ],
@@ -118,9 +126,10 @@ export function createUndercoverQuestions(pool: CityQuizItem[]) {
       (item) => item.provinceCode !== provinceCode,
     )!;
     return {
+      id: `undercover:${[...homeCities, outsider].map((item) => item.id).sort().join(":")}`,
       province: items[0].provinceShort,
       options: randomShuffle([...homeCities, outsider]),
-      answerCity: outsider.city,
+      answerId: outsider.id,
       explanation: `${outsider.city}属于${outsider.province}，其余城市属于${homeCities[0].province}`,
     };
   });
@@ -138,10 +147,14 @@ export function createDualIntruderQuestions(pool: CityQuizItem[]) {
         (item) => item.provinceCode !== provinceCode,
       )!;
       questions.push({
+        id: `city-intruder:${[...homeCities, outsider].map((item) => item.id).sort().join(":")}`,
         prompt: province?.shortName ?? homeCities[0].provinceShort,
         instruction: "找出不属于这个省份的城市",
-        options: randomShuffle([...homeCities.map((item) => item.city), outsider.city]),
-        answer: outsider.city,
+        options: randomShuffle([...homeCities, outsider].map((item) => ({
+          id: item.id,
+          label: item.city,
+        }))),
+        answerId: outsider.id,
         explanation: `${outsider.city}属于${outsider.province}`,
       });
     } else if (index % 4 === 1) {
@@ -151,25 +164,36 @@ export function createDualIntruderQuestions(pool: CityQuizItem[]) {
           (item) =>
             ALL_GAUNTLET_PROVINCE_CODES.has(item.code) &&
             item.code !== city.provinceCode,
-        ).map((item) => item.shortName),
+        ),
       ).slice(0, 3);
       questions.push({
+        id: `province-choice:${city.id}`,
         prompt: city.city,
         instruction: "找出它真正所属的省份",
-        options: randomShuffle([city.provinceShort, ...otherProvinces]),
-        answer: city.provinceShort,
+        options: randomShuffle([
+          { id: city.provinceCode, label: city.provinceShort },
+          ...otherProvinces.map((item) => ({ id: item.code, label: item.shortName })),
+        ]),
+        answerId: city.provinceCode,
         explanation: `${city.city}属于${city.province}`,
       });
     } else if (index % 4 === 2 && province) {
       const capital = PROVINCE_CAPITALS[province.code];
-      const otherCapitals = randomShuffle(
+      const otherProvinces = randomShuffle(
         PROVINCES.filter((item) => item.code !== province.code),
-      ).slice(0, 3).map((item) => PROVINCE_CAPITALS[item.code]);
+      ).slice(0, 3);
       questions.push({
+        id: `capital-choice:${province.code}`,
         prompt: province.name,
         instruction: "找出它正确的行政中心",
-        options: randomShuffle([capital, ...otherCapitals]),
-        answer: capital,
+        options: randomShuffle([
+          { id: province.code, label: capital },
+          ...otherProvinces.map((item) => ({
+            id: item.code,
+            label: PROVINCE_CAPITALS[item.code],
+          })),
+        ]),
+        answerId: province.code,
         explanation: `${province.name}的行政中心是${capital}`,
       });
     } else {
@@ -193,14 +217,16 @@ export function createDualIntruderQuestions(pool: CityQuizItem[]) {
       const wrongCapital = replacementProvince
         ? PROVINCE_CAPITALS[replacementProvince.code]
         : PROVINCE_CAPITALS[FALLBACK_PROVINCE_CODE];
-      const options = pairProvinces.map((item, optionIndex) =>
-        `${item.shortName} · ${optionIndex === wrongIndex ? wrongCapital : PROVINCE_CAPITALS[item.code]}`,
-      );
+      const options = pairProvinces.map((item, optionIndex) => ({
+        id: item.code,
+        label: `${item.shortName} · ${optionIndex === wrongIndex ? wrongCapital : PROVINCE_CAPITALS[item.code]}`,
+      }));
       questions.push({
+        id: `capital-pair:${pairProvinces.map((item) => item.code).sort().join(":")}:${replacementProvince?.code ?? FALLBACK_PROVINCE_CODE}`,
         prompt: "省级行政区 · 行政中心",
         instruction: "找出对应错误的一组",
         options: randomShuffle(options),
-        answer: options[wrongIndex],
+        answerId: pairProvinces[wrongIndex].code,
         explanation: `${pairProvinces[wrongIndex].name}的行政中心是${PROVINCE_CAPITALS[pairProvinces[wrongIndex].code]}`,
       });
     }
@@ -213,16 +239,18 @@ export function createPlateFaultQuestions(pool: CityQuizItem[]) {
   return Array.from({ length: 80 }, (_, index): PlateFaultQuestion => {
     const items = randomShuffle(source).slice(0, 4);
     const wrongIndex = index % items.length;
-    const wrongPlate = randomShuffle(PLATE_QUIZ_DATA).find(
+    const wrongPlateItem = randomShuffle(PLATE_QUIZ_DATA).find(
       (item) => !plateCollectionsOverlap(item.plates, items[wrongIndex].plates),
-    )!.plate;
+    )!;
+    const wrongPlate = wrongPlateItem.plate;
     const options = items.map((item, optionIndex) => ({
-      id: `${index}-${optionIndex}`,
+      id: item.id,
       label: `${item.city} · ${optionIndex === wrongIndex ? wrongPlate : item.plate}`,
     }));
     return {
+      id: `plate-fault:${items.map((item) => item.id).sort().join(":")}:${items[wrongIndex].id}:${wrongPlateItem.id}`,
       options: randomShuffle(options),
-      answer: `${index}-${wrongIndex}`,
+      answerId: items[wrongIndex].id,
       explanation: `${items[wrongIndex].city}正确的车牌前缀是 ${items[wrongIndex].plate}`,
     };
   });
@@ -243,6 +271,7 @@ export function createBossQuestions() {
     const province = provinces[index % provinces.length];
     if (index % 6 === 0) {
       return {
+        id: `boss-city-province:${city.id}`,
         skill: BOSS_SKILL_ID.CITY_PROVINCE,
         kind: "text",
         badge: "城",
@@ -254,6 +283,7 @@ export function createBossQuestions() {
     }
     if (index % 6 === 1) {
       return {
+        id: `boss-plate:${city.id}`,
         skill: BOSS_SKILL_ID.PLATE,
         kind: "text",
         badge: "牌",
@@ -270,6 +300,7 @@ export function createBossQuestions() {
         .map((code) => PROVINCE_BY_CODE.get(code))
         .filter((item): item is Province => Boolean(item));
       return {
+        id: `boss-neighbor:${origin.code}`,
         skill: BOSS_SKILL_ID.PROVINCE_NEIGHBORS,
         kind: "text",
         badge: "邻",
@@ -285,6 +316,7 @@ export function createBossQuestions() {
         (item) => item.provinceCode !== city.provinceCode,
       )!;
       return {
+        id: `boss-truth:${city.id}:${alternative.id}`,
         skill: BOSS_SKILL_ID.TRUTH,
         kind: "truth",
         badge: "判",
@@ -296,6 +328,7 @@ export function createBossQuestions() {
     }
     if (index % 6 === 4) {
       return {
+        id: `boss-map:${city.id}`,
         skill: BOSS_SKILL_ID.MAP,
         kind: "map",
         badge: "点",
@@ -306,6 +339,7 @@ export function createBossQuestions() {
       };
     }
     return {
+      id: `boss-shape:${province.code}`,
       skill: BOSS_SKILL_ID.SHAPE,
       kind: "shape",
       badge: "形",
@@ -334,6 +368,7 @@ export function createTruthQuestions(pool: CityQuizItem[]) {
         ? item.province
         : alternative?.province ?? PROVINCES[0].name;
       return {
+        id: `truth-province:${item.id}:${isTrue ? item.provinceCode : alternative?.provinceCode ?? PROVINCES[0].code}`,
         statement: `${item.city}属于${shownProvince}`,
         isTrue,
         explanation: `${item.city}属于${item.province}`,
@@ -345,6 +380,7 @@ export function createTruthQuestions(pool: CityQuizItem[]) {
     );
     const shownPlate = isTrue ? item.plate : alternative?.plate ?? item.plate;
     return {
+      id: `truth-plate:${item.id}:${isTrue ? item.id : alternative?.id ?? item.id}`,
       statement: `${item.city}的车牌前缀是 ${shownPlate}`,
       isTrue,
       explanation: `${item.city}的车牌前缀是 ${item.plate}`,

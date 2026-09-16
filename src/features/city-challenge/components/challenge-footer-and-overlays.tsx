@@ -5,9 +5,8 @@ import type {
   SetStateAction,
 } from "react";
 import type { MapFeature } from "@/features/map/model/map-data";
-import type { SyncStatus } from "@/features/player/player-data-context";
-
-type DragGhost = { name: string; x: number; y: number };
+import type { SyncStatus } from "@/features/player/model/player-types";
+import type { CityDragGhost } from "@/features/city-challenge/model/city-challenge-types";
 
 export default function ChallengeFooterAndOverlays({
   signedIn,
@@ -30,7 +29,7 @@ export default function ChallengeFooterAndOverlays({
   manualAnswer: string;
   manualError: string;
   manualAnswerInputRef: RefObject<HTMLInputElement | null>;
-  dragGhost: DragGhost | null;
+  dragGhost: CityDragGhost | null;
   setPendingFeature: Dispatch<SetStateAction<MapFeature | null>>;
   setManualAnswer: Dispatch<SetStateAction<string>>;
   setManualError: Dispatch<SetStateAction<string>>;
@@ -38,15 +37,15 @@ export default function ChallengeFooterAndOverlays({
 }) {
   return (
     <>
-      <footer className="mt-6 flex flex-wrap justify-center gap-x-4 text-center text-xs leading-6 text-ink-soft [&_a]:font-bold [&_a]:text-brand-red">
+      <footer className="mt-6 flex flex-wrap justify-center gap-x-4 text-center text-xs leading-6 text-ink-soft">
         <span>一张地图，500 个待归位的名字</span>
         <span>
           边界数据：
-          <a href="https://geojson.cn/data/atlas/china" target="_blank" rel="noreferrer">
+          <a className="font-bold text-brand-red" href="https://geojson.cn/data/atlas/china" target="_blank" rel="noreferrer">
             GeoJSON.CN
           </a>
           {" · "}
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+          <a className="font-bold text-brand-red" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
             © OpenStreetMap contributors
           </a>
         </span>
@@ -66,7 +65,7 @@ export default function ChallengeFooterAndOverlays({
       {pendingFeature ? (
         <div className="answer-dialog-backdrop fixed inset-0 z-50 grid place-items-center bg-black/35 p-4 backdrop-blur-sm" role="presentation">
           <section
-            className={`answer-dialog relative w-full max-w-md rounded-3xl bg-card p-6 shadow-2xl ${manualError ? "has-error animate-[dialog-shake_300ms_ease]" : ""}`}
+            className={`answer-dialog relative w-full max-w-md rounded-3xl bg-card p-6 shadow-2xl ${manualError ? "animate-[dialog-shake_300ms_ease]" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="manual-answer-title"
@@ -127,7 +126,7 @@ export default function ChallengeFooterAndOverlays({
           }}
           aria-hidden="true"
         >
-          {dragGhost.name}
+          {dragGhost.answer.name}
         </div>
       ) : null}
     </>

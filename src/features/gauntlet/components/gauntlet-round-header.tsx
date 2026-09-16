@@ -42,17 +42,13 @@ export default function GauntletRoundHeader({
         <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">第 {displayNumber} 关 · {activeConfig?.title}</p>
         <h1 className="mb-0 mt-2 text-[clamp(30px,5vw,58px)] font-black leading-none">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
       </div>
-      <div
-        className={`gauntlet-round-actions flex gap-3 max-sm:grid max-sm:grid-cols-2 ${
-          !d.timedMode && s.level !== LEVEL.FINAL_BOSS ? "is-progress-only" : ""
-        }`}
-      >
+      <div className="gauntlet-round-actions flex gap-3 max-sm:grid max-sm:grid-cols-2">
         {s.level === LEVEL.FINAL_BOSS ? (
           <div className="boss-lives rounded-2xl bg-[#3b243d] p-3 text-white" aria-label={`剩余 ${s.bossLives} 条生命`}>
             <span className="text-[9px] font-black text-white/60">生命</span>
             <strong>
               {Array.from({ length: FINAL_BOSS_LIFE_COUNT }, (_, index) => (
-                <i key={index} className={`not-italic ${index < s.bossLives ? "is-alive text-brand-red" : "text-white/20"}`}>
+                <i key={index} className={`not-italic ${index < s.bossLives ? "text-brand-red" : "text-white/20"}`}>
                   ♥
                 </i>
               ))}
@@ -61,7 +57,7 @@ export default function GauntletRoundHeader({
         ) : null}
         {d.timedMode ? (
           <div className={`gauntlet-timer min-w-32 rounded-2xl p-3 text-white ${
-            s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "is-urgent animate-pulse bg-brand-red-dark" : "bg-ink"
+            s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "animate-pulse bg-brand-red-dark" : "bg-ink"
           }`}>
             <span className="text-[9px] font-black text-white/60">剩余时间</span>
             <strong className="block text-2xl">{s.timeLeft}<i className="text-xs not-italic"> 秒</i></strong>

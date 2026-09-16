@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
-import { type PlayerProfile } from "@/features/player/player-data-context";
+import type { PlayerProfile } from "@/features/player/model/player-types";
 import { saveOfflineAccount } from "@/features/player/model/player-auth";
 import { getSupabaseClient } from "@/infrastructure/supabase/client";
 

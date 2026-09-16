@@ -42,10 +42,10 @@ export default function GauntletAnswerPanel({
           <div className={OPTION_GRID_CLASS}>
             {d.currentUndercoverQuestion?.options.map((item) => (
               <button
-                key={item.city}
+                key={item.id}
                 className={OPTION_CLASS}
                 type="button"
-                onClick={() => actions.answerOptionQuestion(item.city)}
+                onClick={() => actions.answerOptionQuestion(item.id)}
               >
                 {item.city}
               </button>
@@ -92,12 +92,12 @@ export default function GauntletAnswerPanel({
           <div className={OPTION_GRID_CLASS}>
             {d.currentDualIntruderQuestion?.options.map((item) => (
               <button
-                key={item}
+                key={item.id}
                 className={OPTION_CLASS}
                 type="button"
-                onClick={() => actions.answerOptionQuestion(item)}
+                onClick={() => actions.answerOptionQuestion(item.id)}
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </div>
@@ -170,12 +170,12 @@ export default function GauntletAnswerPanel({
           <div className={`${OPTION_GRID_CLASS} confusable-options`}>
             {d.currentConfusableQuestion?.options.map((item) => (
               <button
-                key={item}
+                key={item.id}
                 className={OPTION_CLASS}
                 type="button"
-                onClick={() => actions.answerOptionQuestion(item)}
+                onClick={() => actions.answerOptionQuestion(item.id)}
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </div>
@@ -269,7 +269,7 @@ export default function GauntletAnswerPanel({
               return (
                 <button
                   key={item.code}
-                  className={`${OPTION_CLASS} ${selected ? "is-selected border-brand-red bg-brand-red/10" : ""}`}
+                  className={`${OPTION_CLASS} ${selected ? "border-brand-red bg-brand-red/10" : ""}`}
                   type="button"
                   aria-pressed={selected}
                   onClick={() => actions.handleGauntletProvince(item)}
@@ -383,7 +383,7 @@ export default function GauntletAnswerPanel({
       {answerContent}
       {!s.answerReview ? (
         <>
-          <p className={`gauntlet-feedback is-${s.feedbackType} mt-3 rounded-xl p-3 text-xs font-bold ${s.feedbackType === "right" ? "bg-brand-green/10 text-brand-green-dark" : s.feedbackType === "wrong" ? "bg-brand-red/10 text-brand-red-dark" : "bg-paper text-ink-soft"}`} aria-live="polite">
+          <p className={`gauntlet-feedback mt-3 rounded-xl p-3 text-xs font-bold ${s.feedbackType === "right" ? "bg-brand-green/10 text-brand-green-dark" : s.feedbackType === "wrong" ? "bg-brand-red/10 text-brand-red-dark" : "bg-paper text-ink-soft"}`} aria-live="polite">
             {s.feedback}
           </p>
           {STREAK_NOTE_LEVELS.has(s.level) &&

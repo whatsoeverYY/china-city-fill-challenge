@@ -9,10 +9,14 @@ import { CITY_MAP_MINIMUM_QUEUE_LENGTH } from "../src/domain/game/gauntlet-rules
 
 const identityShuffle = (items) => [...items];
 const reverseShuffle = (items) => [...items].reverse();
-const question = (city, provinceCode = "100001") => ({ city, provinceCode });
+const question = (id, provinceCode = "100001") => ({
+  id,
+  city: `城市${id}`,
+  provinceCode,
+});
 
 test("unseen map questions are always placed before recent questions", () => {
-  const questions = [question("甲市"), question("乙市"), question("丙市"), question("丁市")];
+  const questions = [question("100101"), question("100102"), question("100103"), question("100104")];
   const queue = createCityMapQuestionQueue(
     questions,
     [cityQuizKey(questions[1]), cityQuizKey(questions[2])],
@@ -26,7 +30,7 @@ test("unseen map questions are always placed before recent questions", () => {
 });
 
 test("recent questions retain age priority without replaying a fixed order", () => {
-  const questions = [question("甲市"), question("乙市"), question("丙市"), question("丁市")];
+  const questions = [question("100101"), question("100102"), question("100103"), question("100104")];
   const history = questions.map(cityQuizKey);
   const queue = createCityMapQuestionQueue(questions, history, reverseShuffle);
 
@@ -36,7 +40,7 @@ test("recent questions retain age priority without replaying a fixed order", () 
 });
 
 test("small pools exhaust every unique question before starting another cycle", () => {
-  const questions = [question("甲市"), question("乙市"), question("丙市")];
+  const questions = [question("100101"), question("100102"), question("100103")];
   const queue = createCityMapQuestionQueue(questions, [], reverseShuffle);
 
   assert.equal(queue.length, CITY_MAP_MINIMUM_QUEUE_LENGTH);
@@ -52,8 +56,8 @@ test("small pools exhaust every unique question before starting another cycle", 
 });
 
 test("duplicate inputs and stale history keys do not enter the queue", () => {
-  const first = question("甲市");
-  const second = question("乙市");
+  const first = question("100101");
+  const second = question("100102");
   const queue = createCityMapQuestionQueue(
     [first, first, second],
     ["已删除省:旧题", cityQuizKey(first), cityQuizKey(first)],

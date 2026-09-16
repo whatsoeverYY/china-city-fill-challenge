@@ -4,11 +4,13 @@ import test from "node:test";
 import {
   CITY_QUIZ_DATA,
   PLATE_QUIZ_DATA,
+} from "../src/domain/geography/data/city-plates.ts";
+import {
   plateAnswerMatches,
   plateCollectionsOverlap,
   provinceCityAnswerMatches,
   uniqueReversePlateItems,
-} from "../src/domain/geography/data/city-plates.ts";
+} from "../src/domain/geography/lib/city-plate-answer.ts";
 
 function city(name) {
   const item = CITY_QUIZ_DATA.find((candidate) => candidate.city === name);

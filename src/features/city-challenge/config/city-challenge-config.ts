@@ -1,0 +1,1 @@
+export const WRONG_REGION_FEEDBACK_MS = 560;

@@ -10,7 +10,7 @@ export function shuffleWithRandom<T>(
   return copy;
 }
 
-export function deterministicShuffle(values: readonly string[], seed: string) {
+export function deterministicShuffle<T>(values: readonly T[], seed: string) {
   let state = Number(seed) || 1;
   return shuffleWithRandom(values, () => {
     state = (state * 9301 + 49297) % 233280;

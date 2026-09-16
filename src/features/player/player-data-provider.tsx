@@ -8,50 +8,34 @@ import {
   useState,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
-import AccountControl from "@/features/player/components/account-control";
-import {
-  PlayerDataContext,
-  type PlayerDataContextValue,
-  type PlayerIdentity,
-  type PlayerProfile,
-  type SyncStatus,
-} from "@/features/player/player-data-context";
+import { PlayerDataContext } from "@/features/player/player-data-context";
+import type {
+  PlayerDataContextValue,
+  PlayerIdentity,
+  PlayerProfile,
+  SyncStatus,
+} from "@/features/player/model/player-types";
 import {
   authErrorMessage,
   OFFLINE_ACCOUNT_KEY,
   readOfflineAccount,
 } from "@/features/player/model/player-auth";
 import { loadPlayerProfile } from "@/features/player/services/player-profile-service";
+import {
+  clearStoredPlayerProgress,
+  syncPlayerProgress,
+} from "@/features/player/services/player-progress-service";
 import { appPath } from "@/shared/lib/app-path";
 import {
-  assertSupportedProgressVersion,
-  createResetProgressSnapshot,
   createTrialProgressStorage,
   createUserProgressStorage,
-  mergeProgressSnapshots,
-  normalizeProgressSnapshot,
   PROGRESS_STORAGE_EVENT,
-  progressPayloadByteLength,
-  readLocalProgressSnapshot,
-  writeLocalProgressSnapshot,
-  type ProgressSnapshot,
 } from "@/infrastructure/storage/progress-storage";
-import {
-  CURRENT_PROGRESS_SCHEMA_VERSION,
-  MAX_PROGRESS_PAYLOAD_BYTES,
-} from "@/infrastructure/storage/progress-config";
 import { operationErrorMessage } from "@/shared/lib/error";
 import { getSupabaseClient, isSupabaseConfigured } from "@/infrastructure/supabase/client";
 
-type ProgressRow = {
-  user_id: string;
-  schema_version: number;
-  revision: number;
-  payload: unknown;
-  updated_at: string;
-};
-
-const SYNC_DELAY_MS = 1200;
+const AUTH_EVENT_DEFER_MS = 0;
+const SYNC_DELAY_MS = 1_200;
 
 export function PlayerDataProvider({ children }: { children: React.ReactNode }) {
   const supabaseConfigured = isSupabaseConfigured();
@@ -91,86 +75,8 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     syncingRef.current = true;
     setSyncStatus("syncing");
     setSyncMessage("正在同步云存档…");
-    const supabase = getSupabaseClient();
-
     try {
-      let local = readLocalProgressSnapshot(userId);
-      let savedRow: ProgressRow | null = null;
-      let uploadedSnapshot: ProgressSnapshot | null = null;
-
-      for (let attempt = 0; attempt < 2; attempt += 1) {
-        const { data: remoteRow, error: readError } = await supabase
-          .from("user_progress")
-          .select("user_id,schema_version,revision,payload,updated_at")
-          .eq("user_id", userId)
-          .maybeSingle<ProgressRow>();
-        if (readError) throw readError;
-
-        assertSupportedProgressVersion(
-          remoteRow?.schema_version,
-          remoteRow?.payload,
-        );
-
-        const merged = mergeProgressSnapshots(
-          local,
-          remoteRow ? normalizeProgressSnapshot(remoteRow.payload) : null,
-        );
-        if (progressPayloadByteLength(merged) > MAX_PROGRESS_PAYLOAD_BYTES) {
-          throw new Error("游戏存档过大，请先清理部分错题后再同步");
-        }
-
-        if (remoteRow) {
-          const { data, error } = await supabase
-            .from("user_progress")
-            .update({
-              schema_version: CURRENT_PROGRESS_SCHEMA_VERSION,
-              revision: remoteRow.revision + 1,
-              payload: merged,
-            })
-            .eq("user_id", userId)
-            .eq("revision", remoteRow.revision)
-            .select("user_id,schema_version,revision,payload,updated_at")
-            .maybeSingle<ProgressRow>();
-          if (error) throw error;
-          if (!data) {
-            local = merged;
-            continue;
-          }
-          savedRow = data;
-        } else {
-          const { data, error } = await supabase
-            .from("user_progress")
-            .insert({
-              user_id: userId,
-              schema_version: CURRENT_PROGRESS_SCHEMA_VERSION,
-              revision: 1,
-              payload: merged,
-            })
-            .select("user_id,schema_version,revision,payload,updated_at")
-            .maybeSingle<ProgressRow>();
-          if (error?.code === "23505") {
-            local = merged;
-            continue;
-          }
-          if (error) throw error;
-          savedRow = data;
-        }
-
-        uploadedSnapshot = merged;
-        break;
-      }
-
-      if (!savedRow || !uploadedSnapshot) {
-        throw new Error("云存档发生并发更新，请稍后重试");
-      }
-      // 上传期间游戏仍可能继续产生新进度。再次合并当前本机状态，避免用
-      // 刚上传的旧快照覆盖网络请求期间的新答案，并安排一次后续同步。
-      const latestLocal = readLocalProgressSnapshot(userId);
-      const finalLocal = mergeProgressSnapshots(latestLocal, uploadedSnapshot);
-      writeLocalProgressSnapshot(userId, finalLocal);
-      const needsFollowUpSync =
-        JSON.stringify(finalLocal) !== JSON.stringify(uploadedSnapshot);
-      const syncedAt = savedRow.updated_at ?? new Date().toISOString();
+      const { needsFollowUpSync, syncedAt } = await syncPlayerProgress(userId);
       setLastSyncedAt(syncedAt);
       if (needsFollowUpSync) {
         setSyncStatus("pending");
@@ -182,7 +88,6 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
         setSyncStatus("synced");
         setSyncMessage("云存档已同步");
       }
-      void supabase.rpc("touch_player_profile");
     } catch (error) {
       const message = error instanceof Error ? error.message : "未知同步错误";
       setSyncStatus("error");
@@ -228,19 +133,12 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     syncingRef.current = true;
     setSyncStatus("syncing");
     setSyncMessage("正在清除本机与云端存档…");
-    const supabase = getSupabaseClient();
     try {
-      const { data, error } = await supabase.rpc("clear_player_progress", {
-        target_user_id: userId,
-      });
-      if (error) throw error;
-      const resetAt = typeof data === "string" ? data : new Date().toISOString();
-      writeLocalProgressSnapshot(userId, createResetProgressSnapshot(resetAt));
+      const resetAt = await clearStoredPlayerProgress(userId);
       setProgressEpoch((value) => value + 1);
       setLastSyncedAt(resetAt);
       setSyncStatus("synced");
       setSyncMessage("全部游戏记录已清除");
-      void supabase.rpc("touch_player_profile");
     } catch (error) {
       const message = operationErrorMessage(error, "未知删档错误");
       setSyncStatus("error");
@@ -372,7 +270,9 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
       if (!disposed) void activateSession(data.session);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!disposed) window.setTimeout(() => void activateSession(nextSession), 0);
+      if (!disposed) {
+        window.setTimeout(() => void activateSession(nextSession), AUTH_EVENT_DEFER_MS);
+      }
     });
 
     const handleOnline = () => {
@@ -486,7 +386,6 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
   return (
     <PlayerDataContext.Provider value={value}>
       {children}
-      <AccountControl />
     </PlayerDataContext.Provider>
   );
 }

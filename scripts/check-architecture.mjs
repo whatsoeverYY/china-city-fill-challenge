@@ -5,6 +5,7 @@ import process from "node:process";
 const root = process.cwd();
 const srcRoot = join(root, "src");
 const maxLines = 500;
+const warningLines = 400;
 const sourceExtensions = new Set([".ts", ".tsx", ".css"]);
 const allowedCssFiles = new Set(["src/app/globals.css"]);
 const kebabCaseFile = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:ts|tsx|css)$/;
@@ -24,6 +25,7 @@ const nonUiFeatureLayers = new Set([
   "services",
 ]);
 const errors = [];
+const warnings = [];
 
 function walk(directory) {
   return readdirSync(directory)
@@ -81,9 +83,14 @@ for (const path of walk(srcRoot)) {
   }
   if (lineCount > maxLines) {
     errors.push(`${projectPath} 有 ${lineCount} 行，超过 ${maxLines} 行上限。`);
+  } else if (lineCount > warningLines) {
+    warnings.push(`${projectPath} 有 ${lineCount} 行，超过 ${warningLines} 行预警线，请按职责拆分。`);
   }
   if (!kebabCaseFile.test(basename(path))) {
     errors.push(`${projectPath} 未使用 kebab-case 文件名。`);
+  }
+  if (extname(path) === ".tsx" && /\[&(?:_|>)/u.test(source)) {
+    errors.push(`${projectPath} 使用了任意后代选择器；请把 Tailwind utilities 直接写到目标元素。`);
   }
   if (
     projectPath.startsWith("src/domain/") &&
@@ -134,6 +141,19 @@ for (const path of walk(srcRoot)) {
       }
     }
   }
+  if (sourceFeature && reusableFeatures.has(sourceFeature)) {
+    for (const dependency of dependencies) {
+      const segments = dependency.split("/");
+      const targetFeature = segments[0] === "src" && segments[1] === "features"
+        ? segments[2]
+        : null;
+      if (targetFeature && businessFeatures.has(targetFeature)) {
+        errors.push(
+          `${projectPath} 的可复用能力不能反向依赖业务功能 ${targetFeature}。`,
+        );
+      }
+    }
+  }
 }
 
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -157,10 +177,15 @@ if (!globals.includes('@import "tailwindcss";')) {
   errors.push("src/app/globals.css 必须加载 Tailwind CSS。 ");
 }
 
+if (warnings.length) {
+  console.warn(`架构检查预警（${warnings.length} 项）：`);
+  for (const warning of warnings) console.warn(`- ${warning}`);
+}
+
 if (errors.length) {
   console.error(`架构检查失败（${errors.length} 项）：`);
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`架构检查通过：源码文件不超过 ${maxLines} 行，Tailwind、目录、命名、依赖方向和包管理器符合约定。`);
+  console.log(`架构检查通过：源码文件不超过 ${maxLines} 行（${warningLines} 行预警），Tailwind、目录、命名、依赖方向和包管理器符合约定。`);
 }

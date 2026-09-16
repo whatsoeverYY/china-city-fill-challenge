@@ -4,24 +4,32 @@ import type { BossSkill } from "@/features/gauntlet/model/boss-stats";
 
 export type GauntletLevel = GauntletLevelId;
 
+export type GauntletChoiceOption = {
+  id: string;
+  label: string;
+};
+
 export type UndercoverQuestion = {
+  id: string;
   province: string;
   options: CityQuizItem[];
-  answerCity: string;
+  answerId: string;
   explanation: string;
 };
 
 export type DualIntruderQuestion = {
+  id: string;
   prompt: string;
   instruction: string;
-  options: string[];
-  answer: string;
+  options: GauntletChoiceOption[];
+  answerId: string;
   explanation: string;
 };
 
 export type PlateFaultQuestion = {
-  options: Array<{ id: string; label: string }>;
-  answer: string;
+  id: string;
+  options: GauntletChoiceOption[];
+  answerId: string;
   explanation: string;
 };
 
@@ -30,12 +38,13 @@ export type ConfusableCityQuestion = {
   pair: [string, string];
   prompt: string;
   instruction: string;
-  options: string[];
-  answer: string;
+  options: GauntletChoiceOption[];
+  answerId: string;
   explanation: string;
 };
 
 export type BossQuestion = {
+  id: string;
   skill: BossSkill;
 } & (
   | {
@@ -80,12 +89,13 @@ export type AnswerReview = {
   level: GauntletLevel;
   nextAction: "next" | "finish" | "lose";
   highlightProvinceCodes?: string[];
-  highlightRegionName?: string;
-  selectedRegionName?: string;
+  highlightRegionId?: string;
+  selectedRegionId?: string;
   checkpoint?: string;
 };
 
 export type TruthQuestion = {
+  id: string;
   statement: string;
   isTrue: boolean;
   explanation: string;

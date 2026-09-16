@@ -7,53 +7,44 @@ import {
   GAUNTLET_LEVEL_COUNT,
   activeGauntletCompletionCount,
 } from "@/domain/game/gauntlet-levels";
+import { PROVINCES } from "@/domain/geography/data/provinces";
+import { usePlayerData } from "@/features/player/player-data-context";
 import {
-  usePlayerData,
-  type PlayerProfile,
-} from "@/features/player/player-data-context";
-import { getSupabaseClient } from "@/infrastructure/supabase/client";
-
-type AdminProgressSummary = {
-  user_id: string;
-  schema_version: number;
-  revision: number;
-  updated_at: string;
-  reset_at: string | null;
-  completed_provinces: number;
-  partial_provinces: number;
-  placed_names: number;
-  completed_neighbor_challenges: number;
-  completed_level_ids: unknown;
-  completed_levels: number;
-  mistakes: number;
-};
-
-type AdminProgressDetail = {
-  user_id: string;
-  schema_version: number;
-  revision: number;
-  payload: unknown;
-  updated_at: string;
-};
-
-type PlayerRow = PlayerProfile & {
-  progress: AdminProgressSummary | null;
-};
-
-type DashboardStats = {
-  total: number;
-  withSave: number;
-  activeSevenDays: number;
-  passedLevels: number;
-};
+  EMPTY_DASHBOARD_STATS,
+  type AdminPlayerRow,
+  type AdminProgressDetail,
+  type AdminProgressSummary,
+} from "@/features/admin/model/admin-types";
+import {
+  clearAdminPlayerProgress,
+  fetchAdminPlayerProgress,
+  fetchAdminPlayers,
+} from "@/features/admin/services/admin-player-service";
 
 const PAGE_SIZE = 30;
-const EMPTY_STATS: DashboardStats = {
-  total: 0,
-  withSave: 0,
-  activeSevenDays: 0,
-  passedLevels: 0,
-};
+const SEARCH_DEBOUNCE_MS = 300;
+const INITIAL_LOAD_DEFER_MS = 0;
+const TABLE_HEADER_CLASS = "border-b border-black/10 bg-paper-deep/40 px-4 py-3 text-[9px] font-black tracking-wider text-ink-soft";
+const TABLE_CELL_CLASS = "border-b border-black/10 p-4 align-middle text-[11px]";
+const STAT_CARD_CLASS = "min-h-36 rounded-[16px_16px_16px_5px] border border-black/10 bg-card/90 p-5 shadow-sm max-sm:min-h-28 max-sm:p-3.5";
+
+function AdminMetric({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-xl bg-paper p-3">
+      <span className="block text-[8px] text-ink-soft">{label}</span>
+      <strong className="mt-1 block text-xl text-brand-green-dark">{value}</strong>
+    </div>
+  );
+}
+
+function AdminDetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[90px_1fr] gap-3 border-b border-black/10 py-2 text-[10px]">
+      <dt className="font-extrabold text-ink-soft">{label}</dt>
+      <dd className="m-0 break-words">{value}</dd>
+    </div>
+  );
+}
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
@@ -64,25 +55,6 @@ function formatDate(value: string | null | undefined) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
-function normalizeStats(value: unknown): DashboardStats {
-  if (!value || typeof value !== "object") return EMPTY_STATS;
-  const record = value as Record<string, unknown>;
-  const numberValue = (key: string) => {
-    const parsed = Number(record[key]);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-  };
-  return {
-    total: numberValue("total"),
-    withSave: numberValue("withSave"),
-    activeSevenDays: numberValue("activeSevenDays"),
-    passedLevels: numberValue("passedLevels"),
-  };
 }
 
 function currentCompletedLevelCount(summary: AdminProgressSummary | null) {
@@ -96,7 +68,7 @@ function currentCompletedLevelCount(summary: AdminProgressSummary | null) {
 
 export default function AdminDashboard() {
   const { initialized, identity, isAdmin, offlineIdentity } = usePlayerData();
-  const [players, setPlayers] = useState<PlayerRow[]>([]);
+  const [players, setPlayers] = useState<AdminPlayerRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -105,17 +77,20 @@ export default function AdminDashboard() {
   const [roleFilter, setRoleFilter] = useState<"all" | "player" | "admin">("all");
   const [page, setPage] = useState(0);
   const [totalPlayers, setTotalPlayers] = useState(0);
-  const [dashboardStats, setDashboardStats] = useState(EMPTY_STATS);
-  const [selectedPlayer, setSelectedPlayer] = useState<PlayerRow | null>(null);
+  const [dashboardStats, setDashboardStats] = useState(EMPTY_DASHBOARD_STATS);
+  const [selectedPlayer, setSelectedPlayer] = useState<AdminPlayerRow | null>(null);
   const [selectedProgress, setSelectedProgress] = useState<AdminProgressDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<PlayerRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminPlayerRow | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const loadSequenceRef = useRef(0);
   const detailSequenceRef = useRef(0);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    const timer = window.setTimeout(
+      () => setDebouncedQuery(query.trim()),
+      SEARCH_DEBOUNCE_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [query]);
 
@@ -124,53 +99,17 @@ export default function AdminDashboard() {
     const sequence = ++loadSequenceRef.current;
     setLoading(true);
     setError("");
-    const supabase = getSupabaseClient();
     try {
-      let profilesQuery = supabase
-        .from("player_profiles")
-        .select("id,email,role,created_at,last_seen_at,updated_at", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-
-      if (roleFilter !== "all") profilesQuery = profilesQuery.eq("role", roleFilter);
-      if (debouncedQuery) {
-        profilesQuery = isUuid(debouncedQuery)
-          ? profilesQuery.eq("id", debouncedQuery)
-          : profilesQuery.ilike(
-              "email",
-              `%${debouncedQuery.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`,
-            );
-      }
-
-      const [profilesResult, statsResult] = await Promise.all([
-        profilesQuery,
-        supabase.rpc("get_admin_dashboard_stats"),
-      ]);
-      if (profilesResult.error) throw profilesResult.error;
-      if (statsResult.error) throw statsResult.error;
-
-      const profiles = (profilesResult.data ?? []) as PlayerProfile[];
-      const playerIds = profiles.map((profile) => profile.id);
-      const progressResult = playerIds.length
-        ? await supabase
-            .from("admin_progress_summaries")
-            .select("user_id,schema_version,revision,updated_at,reset_at,completed_provinces,partial_provinces,placed_names,completed_neighbor_challenges,completed_level_ids,completed_levels,mistakes")
-            .in("user_id", playerIds)
-        : { data: [], error: null };
-      if (progressResult.error) throw progressResult.error;
-
-      const progressByUser = new Map(
-        ((progressResult.data ?? []) as AdminProgressSummary[]).map((row) => [row.user_id, row]),
-      );
+      const result = await fetchAdminPlayers({
+        page,
+        pageSize: PAGE_SIZE,
+        query: debouncedQuery,
+        role: roleFilter,
+      });
       if (sequence !== loadSequenceRef.current) return;
-      setPlayers(
-        profiles.map((profile) => ({
-          ...profile,
-          progress: progressByUser.get(profile.id) ?? null,
-        })),
-      );
-      setTotalPlayers(profilesResult.count ?? 0);
-      setDashboardStats(normalizeStats(statsResult.data));
+      setPlayers(result.players);
+      setTotalPlayers(result.totalPlayers);
+      setDashboardStats(result.stats);
     } catch (caught) {
       if (sequence !== loadSequenceRef.current) return;
       const message = operationErrorMessage(caught, "无法读取玩家数据");
@@ -187,11 +126,11 @@ export default function AdminDashboard() {
   }, [debouncedQuery, isAdmin, offlineIdentity, page, roleFilter]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => void loadPlayers(), 0);
+    const timer = window.setTimeout(() => void loadPlayers(), INITIAL_LOAD_DEFER_MS);
     return () => window.clearTimeout(timer);
   }, [loadPlayers]);
 
-  const openPlayerDetails = async (player: PlayerRow) => {
+  const openPlayerDetails = async (player: AdminPlayerRow) => {
     const sequence = ++detailSequenceRef.current;
     setSelectedPlayer(player);
     setSelectedProgress(null);
@@ -200,12 +139,7 @@ export default function AdminDashboard() {
     if (!player.progress) return;
     setError("");
     try {
-      const { data, error: detailError } = await getSupabaseClient()
-        .from("user_progress")
-        .select("user_id,schema_version,revision,payload,updated_at")
-        .eq("user_id", player.id)
-        .maybeSingle<AdminProgressDetail>();
-      if (detailError) throw detailError;
+      const data = await fetchAdminPlayerProgress(player.id);
       if (sequence === detailSequenceRef.current) setSelectedProgress(data);
     } catch (caught) {
       if (sequence === detailSequenceRef.current) {
@@ -216,16 +150,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const clearPlayerProgress = async (player: PlayerRow) => {
+  const clearPlayerProgress = async (player: AdminPlayerRow) => {
     setDeletingUserId(player.id);
     setError("");
     setNotice("");
     try {
-      const { error: clearError } = await getSupabaseClient().rpc(
-        "clear_player_progress",
-        { target_user_id: player.id },
-      );
-      if (clearError) throw clearError;
+      await clearAdminPlayerProgress(player.id);
       setDeleteTarget(null);
       setSelectedPlayer(null);
       setSelectedProgress(null);
@@ -296,11 +226,19 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <section className="admin-stat-grid my-6 grid grid-cols-4 gap-3.5 max-lg:grid-cols-2 [&_article]:min-h-36 [&_article]:rounded-[16px_16px_16px_5px] [&_article]:border [&_article]:border-black/10 [&_article]:bg-card/90 [&_article]:p-5 [&_article]:shadow-sm max-sm:[&_article]:min-h-28 max-sm:[&_article]:p-3.5 [&_small]:block [&_small]:text-[9px] [&_small]:text-ink-soft [&_span]:block [&_span]:text-[10px] [&_span]:font-black [&_span]:tracking-[0.08em] [&_span]:text-ink-soft [&_strong]:my-2 [&_strong]:block [&_strong]:text-[42px] [&_strong]:text-brand-green-dark max-sm:[&_strong]:text-3xl" aria-label="玩家统计">
-        <article><span>全部玩家</span><strong>{dashboardStats.total}</strong><small>含管理员账号</small></article>
-        <article><span>已有云存档</span><strong>{dashboardStats.withSave}</strong><small>至少同步过一次</small></article>
-        <article><span>近 7 日活跃</span><strong>{dashboardStats.activeSevenDays}</strong><small>按最近访问时间</small></article>
-        <article><span>累计通关</span><strong>{dashboardStats.passedLevels}</strong><small>所有玩家历史通关记录</small></article>
+      <section className="admin-stat-grid my-6 grid grid-cols-4 gap-3.5 max-lg:grid-cols-2" aria-label="玩家统计">
+        {[
+          ["全部玩家", dashboardStats.total, "含管理员账号"],
+          ["已有云存档", dashboardStats.withSave, "至少同步过一次"],
+          ["近 7 日活跃", dashboardStats.activeSevenDays, "按最近访问时间"],
+          ["累计通关", dashboardStats.passedLevels, "所有玩家历史通关记录"],
+        ].map(([label, value, note]) => (
+          <article className={STAT_CARD_CLASS} key={label}>
+            <span className="block text-[10px] font-black tracking-[0.08em] text-ink-soft">{label}</span>
+            <strong className="my-2 block text-[42px] text-brand-green-dark max-sm:text-3xl">{value}</strong>
+            <small className="block text-[9px] text-ink-soft">{note}</small>
+          </article>
+        ))}
       </section>
 
       <section className="admin-player-panel overflow-hidden rounded-[20px_20px_20px_7px] border border-black/10 bg-card shadow-lg">
@@ -344,21 +282,21 @@ export default function AdminDashboard() {
         {notice ? <div className="admin-notice m-5 rounded-xl bg-brand-green/10 p-3.5 text-[11px] text-brand-green-dark" role="status">{notice}</div> : null}
         {error ? <div className="admin-error m-5 rounded-xl bg-brand-red/10 p-3.5 text-[11px] text-brand-red-dark" role="alert">{error}</div> : null}
         <div className="admin-table-wrap overflow-x-auto" aria-busy={loading}>
-          <table className="admin-player-table w-full min-w-[1040px] border-collapse text-left [&_td]:border-b [&_td]:border-black/10 [&_td]:p-4 [&_td]:align-middle [&_td]:text-[11px] [&_th]:border-b [&_th]:border-black/10 [&_th]:bg-paper-deep/40 [&_th]:px-4 [&_th]:py-3 [&_th]:text-[9px] [&_th]:font-black [&_th]:tracking-wider [&_th]:text-ink-soft">
+          <table className="admin-player-table w-full min-w-[1040px] border-collapse text-left">
             <thead>
-              <tr><th>玩家</th><th>角色</th><th>全国地图</th><th>闯关进度</th><th>最近活跃</th><th>云存档</th></tr>
+              <tr><th className={TABLE_HEADER_CLASS}>玩家</th><th className={TABLE_HEADER_CLASS}>角色</th><th className={TABLE_HEADER_CLASS}>全国地图</th><th className={TABLE_HEADER_CLASS}>闯关进度</th><th className={TABLE_HEADER_CLASS}>最近活跃</th><th className={TABLE_HEADER_CLASS}>云存档</th></tr>
             </thead>
             <tbody>
               {players.map((player) => {
                 const summary = player.progress;
                 return (
                   <tr key={player.id}>
-                    <td data-label="玩家"><strong className="block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">{player.email}</strong><small className="mt-1 block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap text-[8px] text-ink-soft">{player.id}</small></td>
-                    <td data-label="角色"><span className={`admin-role admin-role--${player.role} inline-flex rounded-full px-2 py-1 text-[9px] font-extrabold ${player.role === "admin" ? "bg-brand-gold/20 text-[#745719]" : "bg-brand-green/10 text-brand-green-dark"}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
-                    <td data-label="全国地图"><strong className="block">{summary?.completed_provinces ?? 0}<i className="text-[9px] not-italic text-ink-soft">/34</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.placed_names ?? 0} 个名称已归位</small></td>
-                    <td data-label="闯关进度"><strong className="block">{currentCompletedLevelCount(summary)}<i className="text-[9px] not-italic text-ink-soft">/{GAUNTLET_LEVEL_COUNT}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.mistakes ?? 0} 道待复习错题</small></td>
-                    <td data-label="最近活跃"><strong className="block">{formatDate(player.last_seen_at)}</strong><small className="mt-1 block text-[8px] text-ink-soft">注册于 {formatDate(player.created_at)}</small></td>
-                    <td data-label="云存档">
+                    <td className={TABLE_CELL_CLASS} data-label="玩家"><strong className="block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">{player.email}</strong><small className="mt-1 block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap text-[8px] text-ink-soft">{player.id}</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="角色"><span className={`admin-role inline-flex rounded-full px-2 py-1 text-[9px] font-extrabold ${player.role === "admin" ? "bg-brand-gold/20 text-[#745719]" : "bg-brand-green/10 text-brand-green-dark"}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
+                    <td className={TABLE_CELL_CLASS} data-label="全国地图"><strong className="block">{summary?.completed_provinces ?? 0}<i className="text-[9px] not-italic text-ink-soft">/{PROVINCES.length}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.placed_names ?? 0} 个名称已归位</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="闯关进度"><strong className="block">{currentCompletedLevelCount(summary)}<i className="text-[9px] not-italic text-ink-soft">/{GAUNTLET_LEVEL_COUNT}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.mistakes ?? 0} 道待复习错题</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="最近活跃"><strong className="block">{formatDate(player.last_seen_at)}</strong><small className="mt-1 block text-[8px] text-ink-soft">注册于 {formatDate(player.created_at)}</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="云存档">
                       <button className="min-h-9 cursor-pointer rounded-lg border border-brand-green/25 bg-brand-green/10 px-2.5 text-[10px] font-extrabold text-brand-green-dark" type="button" onClick={() => void openPlayerDetails(player)}>
                         {player.progress ? "查看 / 管理" : "管理存档"}
                       </button>
@@ -391,18 +329,18 @@ export default function AdminDashboard() {
             }}>×</button>
             <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-brand-red">PLAYER DETAIL</p>
             <h2 className="mb-5 mt-0 break-words text-3xl font-black" id="admin-detail-title">{selectedPlayer.email}</h2>
-            <div className="admin-detail-metrics grid grid-cols-4 gap-2 max-sm:grid-cols-2 [&>div]:rounded-xl [&>div]:bg-paper [&>div]:p-3 [&_span]:block [&_span]:text-[8px] [&_span]:text-ink-soft [&_strong]:mt-1 [&_strong]:block [&_strong]:text-xl [&_strong]:text-brand-green-dark">
-              <div><span>完成省份</span><strong>{selectedPlayer.progress?.completed_provinces ?? 0}/34</strong></div>
-              <div><span>进行中省份</span><strong>{selectedPlayer.progress?.partial_provinces ?? 0}</strong></div>
-              <div><span>邻省连城</span><strong>{selectedPlayer.progress?.completed_neighbor_challenges ?? 0}/34</strong></div>
-              <div><span>已过关卡</span><strong>{currentCompletedLevelCount(selectedPlayer.progress)}/{GAUNTLET_LEVEL_COUNT}</strong></div>
+            <div className="admin-detail-metrics grid grid-cols-4 gap-2 max-sm:grid-cols-2">
+              <AdminMetric label="完成省份" value={`${selectedPlayer.progress?.completed_provinces ?? 0}/${PROVINCES.length}`} />
+              <AdminMetric label="进行中省份" value={selectedPlayer.progress?.partial_provinces ?? 0} />
+              <AdminMetric label="邻省连城" value={`${selectedPlayer.progress?.completed_neighbor_challenges ?? 0}/${PROVINCES.length}`} />
+              <AdminMetric label="已过关卡" value={`${currentCompletedLevelCount(selectedPlayer.progress)}/${GAUNTLET_LEVEL_COUNT}`} />
             </div>
-            <dl className="admin-account-details my-4 grid gap-2 [&>div]:grid [&>div]:grid-cols-[90px_1fr] [&>div]:gap-3 [&>div]:border-b [&>div]:border-black/10 [&>div]:py-2 [&>div]:text-[10px] [&_dd]:m-0 [&_dd]:break-words [&_dt]:font-extrabold [&_dt]:text-ink-soft">
-              <div><dt>用户 ID</dt><dd>{selectedPlayer.id}</dd></div>
-              <div><dt>最近活跃</dt><dd>{formatDate(selectedPlayer.last_seen_at)}</dd></div>
-              <div><dt>存档版本</dt><dd>{selectedPlayer.progress ? `schema ${selectedPlayer.progress.schema_version} · revision ${selectedPlayer.progress.revision}` : "尚无云存档"}</dd></div>
-              <div><dt>最后同步</dt><dd>{formatDate(selectedPlayer.progress?.updated_at)}</dd></div>
-              <div><dt>最近删档</dt><dd>{formatDate(selectedPlayer.progress?.reset_at)}</dd></div>
+            <dl className="admin-account-details my-4 grid gap-2">
+              <AdminDetailRow label="用户 ID" value={selectedPlayer.id} />
+              <AdminDetailRow label="最近活跃" value={formatDate(selectedPlayer.last_seen_at)} />
+              <AdminDetailRow label="存档版本" value={selectedPlayer.progress ? `schema ${selectedPlayer.progress.schema_version} · revision ${selectedPlayer.progress.revision}` : "尚无云存档"} />
+              <AdminDetailRow label="最后同步" value={formatDate(selectedPlayer.progress?.updated_at)} />
+              <AdminDetailRow label="最近删档" value={formatDate(selectedPlayer.progress?.reset_at)} />
             </dl>
             {detailLoading ? <p className="admin-detail-loading text-[10px] text-ink-soft">正在按需载入完整存档…</p> : null}
             {selectedProgress ? (
@@ -420,7 +358,7 @@ export default function AdminDashboard() {
                 <p className="my-2 text-[10px] leading-4" id="admin-delete-confirm-description">全国地图、邻省挑战、全部关卡、错题、答题历史和云端备份都会被清除。账号不会删除，此操作不可恢复。</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button className="min-h-10 cursor-pointer rounded-lg border border-black/15 bg-white text-[10px] font-black disabled:cursor-wait disabled:opacity-60" type="button" onClick={() => setDeleteTarget(null)} disabled={deletingUserId !== null}>取消</button>
-                  <button type="button" className="is-danger min-h-10 cursor-pointer rounded-lg border border-brand-red-dark bg-brand-red-dark text-[10px] font-black text-white disabled:cursor-wait disabled:opacity-60" onClick={() => void clearPlayerProgress(selectedPlayer)} disabled={deletingUserId !== null}>
+                  <button type="button" className="min-h-10 cursor-pointer rounded-lg border border-brand-red-dark bg-brand-red-dark text-[10px] font-black text-white disabled:cursor-wait disabled:opacity-60" onClick={() => void clearPlayerProgress(selectedPlayer)} disabled={deletingUserId !== null}>
                     {deletingUserId === selectedPlayer.id ? "正在清除…" : "确认清除全部记录"}
                   </button>
                 </div>

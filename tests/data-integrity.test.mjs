@@ -244,6 +244,7 @@ test("Jilin special plate regions include Ji K without treating it as a city", (
   assert.deepEqual(
     PLATE_QUIZ_DATA.find((item) => item.plate === "吉K"),
     {
+      id: "plate-region:220000:吉K",
       city: "长白山保护开发区",
       provinceCode: "220000",
       province: "吉林省",
@@ -253,6 +254,7 @@ test("Jilin special plate regions include Ji K without treating it as a city", (
       plateNote: "长白山保护开发区使用独立号牌前缀，不计入《中国统计年鉴》的城市数量口径。",
       entityType: "保护开发区",
       mapRegion: false,
+      regionCode: null,
     },
   );
 });

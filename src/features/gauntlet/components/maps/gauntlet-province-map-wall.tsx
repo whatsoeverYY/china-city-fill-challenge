@@ -9,7 +9,12 @@ import {
   MAP_HEIGHT,
   MAP_WIDTH,
 } from "@/features/map/lib/map-geometry";
-import type { MapData, MapFeature, Position } from "@/features/map/model/map-data";
+import {
+  mapFeatureId,
+  type MapData,
+  type MapFeature,
+  type Position,
+} from "@/features/map/model/map-data";
 
 const HAINAN_PROVINCE_CODE = "460000";
 const SANSHA_REGION_CODE = "460300";
@@ -19,14 +24,14 @@ export default function GauntletProvinceMapWall({
   provinces,
   onRegion,
   onProvinceFocus,
-  correctRegionName,
+  correctRegionId,
   readOnly = false,
 }: {
   map: MapData;
   provinces: Province[];
-  onRegion: (name: string) => void;
+  onRegion: (regionId: string) => void;
   onProvinceFocus?: (provinceCode: string) => void;
-  correctRegionName?: string;
+  correctRegionId?: string;
   readOnly?: boolean;
 }) {
   const panels = useMemo(
@@ -82,17 +87,18 @@ export default function GauntletProvinceMapWall({
           <svg className="block size-full min-h-44" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} role="img" aria-label="无名称省内行政区地图">
             {features.map((feature) => {
               const name = feature.properties.name;
-              const isCorrectAnswer = correctRegionName === name;
+              const regionId = mapFeatureId(feature);
+              const isCorrectAnswer = correctRegionId === regionId;
               return (
                 <path
-                  key={`${province.code}-${String(feature.properties.adcode)}-${name}`}
+                  key={regionId}
                   d={geometryToPath(feature.geometry, project)}
                   className={`${readOnly ? "cursor-default" : "cursor-pointer"} [transition:fill_130ms_ease,stroke-width_130ms_ease,filter_130ms_ease] ${
                     !readOnly && !isCorrectAnswer
                       ? "hover:fill-[#b9d8c4] hover:[stroke-width:2.8px] focus-visible:fill-[#b9d8c4] focus-visible:[stroke-width:2.8px]"
                       : ""
                   } ${isCorrectAnswer ? "drop-shadow-[0_0_5px_rgba(241,199,91,0.68)]" : ""}`}
-                  data-region-name={name}
+                  data-region-id={regionId}
                   fill={isCorrectAnswer ? "#f1c75b" : "#eee4cf"}
                   fillRule="evenodd"
                   role="button"
@@ -103,12 +109,12 @@ export default function GauntletProvinceMapWall({
                   aria-disabled={readOnly || undefined}
                   aria-label={isCorrectAnswer ? `${name}，正确答案` : "待选择行政区块"}
                   onClick={() => {
-                    if (!readOnly) onRegion(name);
+                    if (!readOnly) onRegion(regionId);
                   }}
                   onKeyDown={(event) => handleKeyboardActivation(
                     event,
                     () => {
-                      if (!readOnly) onRegion(name);
+                      if (!readOnly) onRegion(regionId);
                     },
                   )}
                 />

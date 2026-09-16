@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CITY_PLATE_PREFIX_COUNT, PLATE_QUIZ_DATA } from "@/domain/geography/data/city-plates";
-import { PROVINCE_PLATE_PREFIXES, PROVINCES } from "@/domain/geography/data/provinces";
+import { CITY_PLATE_PREFIX_COUNT } from "@/domain/geography/data/city-plates";
+import { PROVINCES } from "@/domain/geography/data/provinces";
 import LoadingMap from "@/features/map/components/loading-map";
 import type { MapData, Position } from "@/features/map/model/map-data";
-import { featureLabelPosition, geometryToPath, makeProjection, MAP_HEIGHT, MAP_WIDTH, PROVINCE_FILL_COLORS } from "@/features/map/lib/map-geometry";
-import { normalizePlaceName } from "@/shared/lib/place-name";
+import { makeProjection, MAP_HEIGHT, MAP_WIDTH } from "@/features/map/lib/map-geometry";
 import {
   ATLAS_MAX_SCALE,
   ATLAS_MIN_SCALE,
@@ -14,15 +13,18 @@ import {
   AtlasProvinceOutlines,
   AtlasRegionShapes,
   atlasPointerPosition,
-  type AtlasHoverLabel,
-  type AtlasProvinceDrawing,
-  type AtlasRegionDrawing,
-  type AtlasView,
 } from "@/features/atlas/components/atlas-map-layers";
-
-const CITY_PLATE_BY_NAME = new Map(
-  PLATE_QUIZ_DATA.map((item) => [normalizePlaceName(item.city), item.plate]),
-);
+import type {
+  AtlasHoverLabel,
+  AtlasProvinceDrawing,
+  AtlasRegionDrawing,
+  AtlasView,
+} from "@/features/atlas/model/atlas-types";
+import {
+  createAtlasProvinceDrawings,
+  createAtlasRegions,
+  createProvinceFillColors,
+} from "@/features/atlas/model/atlas-drawings";
 
 export default function NationalCityAtlas({
   map,
@@ -57,43 +59,17 @@ export default function NationalCityAtlas({
     [map],
   );
   const provinceFillColors = useMemo(
-    () =>
-      Object.fromEntries(
-        PROVINCES.map((province, index) => [
-          province.code,
-          PROVINCE_FILL_COLORS[index % PROVINCE_FILL_COLORS.length],
-        ]),
-      ),
+    () => createProvinceFillColors(),
     [],
   );
-  const atlasRegions = useMemo<AtlasRegionDrawing[]>(() => {
-    if (!map || !project) return [];
-    return map.features.map((feature) => {
-      const provinceCode = feature.properties.provinceCode ?? "";
-      const name = feature.properties.name;
-      const [labelX, labelY] = featureLabelPosition(feature, project);
-      return {
-        key: `${provinceCode}-${String(feature.properties.adcode)}`,
-        path: geometryToPath(feature.geometry, project),
-        fill: provinceFillColors[provinceCode] ?? "#ece4d4",
-        name,
-        plate:
-          CITY_PLATE_BY_NAME.get(normalizePlaceName(name)) ??
-          PROVINCE_PLATE_PREFIXES[provinceCode] ??
-          "—",
-        labelX,
-        labelY,
-        longLabel: name.length > 6,
-      };
-    });
-  }, [map, project, provinceFillColors]);
-  const atlasProvinces = useMemo<AtlasProvinceDrawing[]>(() => {
-    if (!nationalMap || !project) return [];
-    return nationalMap.features.map((feature) => ({
-      key: String(feature.properties.adcode),
-      path: geometryToPath(feature.geometry, project),
-    }));
-  }, [nationalMap, project]);
+  const atlasRegions = useMemo<AtlasRegionDrawing[]>(
+    () => createAtlasRegions(map, project, provinceFillColors),
+    [map, project, provinceFillColors],
+  );
+  const atlasProvinces = useMemo<AtlasProvinceDrawing[]>(
+    () => createAtlasProvinceDrawings(nationalMap, project),
+    [nationalMap, project],
+  );
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -312,7 +288,7 @@ export default function NationalCityAtlas({
           </div>
         </div>
         <div className="city-atlas-summary flex justify-center gap-[clamp(12px,3vw,42px)] text-[10px] font-extrabold tracking-wide text-[#68736d] max-lg:gap-3 max-md:hidden" aria-label="图鉴数据范围">
-          <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">34</strong> 省级行政区</span>
+          <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{PROVINCES.length}</strong> 省级行政区</span>
           <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
           <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
         </div>
@@ -323,11 +299,11 @@ export default function NationalCityAtlas({
 
       <section className="city-atlas-workspace relative min-h-0 overflow-hidden">
         <div className="city-atlas-help absolute left-5 top-4 z-[2] flex max-w-[min(690px,calc(100%_-_150px))] items-center gap-4 rounded-xl border border-black/10 bg-card/90 px-3 py-2 shadow-md backdrop-blur-md max-md:left-3 max-md:max-w-[calc(100%_-_96px)] max-md:gap-2">
-          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden"><span className="legend-line legend-line--red block h-0.5 w-5 bg-brand-red" />红色省界</p>
-          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden"><span className="legend-line legend-line--green block h-0.5 w-5 bg-brand-green" />绿色市界 / 区县界</p>
+          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden"><span className="block h-0.5 w-5 bg-brand-red" />红色省界</p>
+          <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden"><span className="block h-0.5 w-5 bg-brand-green" />绿色市界 / 区县界</p>
           <p className="m-0 flex items-center gap-1.5 whitespace-nowrap text-[9px] font-extrabold text-ink-soft max-sm:hidden">滚轮或双指缩放 · 按住拖动</p>
           <button
-            className={`city-atlas-label-toggle inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/25 px-2.5 text-[9px] font-black text-brand-green-dark ${labelsVisible ? "is-active bg-[#dfece0]" : "bg-[#edf4e9]"}`}
+            className={`city-atlas-label-toggle inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/25 px-2.5 text-[9px] font-black text-brand-green-dark ${labelsVisible ? "bg-[#dfece0]" : "bg-[#edf4e9]"}`}
             type="button"
             aria-label={labelsVisible ? "隐藏全部文字" : "显示全部文字"}
             aria-pressed={labelsVisible}
@@ -349,7 +325,7 @@ export default function NationalCityAtlas({
           ) : (
             <svg
               ref={svgRef}
-              className={`city-atlas-map block size-full touch-none select-none ${dragging ? "is-dragging cursor-grabbing" : "cursor-grab"}`}
+              className={`city-atlas-map block size-full touch-none select-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
               viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
               role="img"
               aria-label="标注城市名称与车牌前缀的中国地图"

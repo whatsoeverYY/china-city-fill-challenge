@@ -47,7 +47,7 @@ export default function ProvincePickerDialog({
             return (
               <button
                 key={item.key}
-                className={`grid cursor-pointer grid-cols-[auto_1fr] items-center gap-2 rounded-xl border p-3 text-left ${selected ? "is-selected border-brand-green bg-brand-green/10" : "border-black/10 bg-white"}`}
+                className={`grid cursor-pointer grid-cols-[auto_1fr] items-center gap-2 rounded-xl border p-3 text-left ${selected ? "border-brand-green bg-brand-green/10" : "border-black/10 bg-white"}`}
                 type="button"
                 aria-pressed={selected}
                 onClick={() => actions.toggleDraftProvince(item.key)}

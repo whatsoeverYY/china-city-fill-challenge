@@ -14,6 +14,7 @@ import {
   FIXED_SCOPE_LEVELS,
   GAUNTLET_FIXED_TARGETS,
   GAUNTLET_REGION_MAP_MAX_TARGET,
+  GAUNTLET_TIMER_TICK_MS,
   parseGauntletProvinceScope,
   PLATE_QUESTION_LEVELS,
   readRecentQuestionHistory,
@@ -22,8 +23,8 @@ import {
 import {
   CITY_QUIZ_DATA,
   PLATE_QUIZ_DATA,
-  uniqueReversePlateItems,
 } from "@/domain/geography/data/city-plates";
+import { uniqueReversePlateItems } from "@/domain/geography/lib/city-plate-answer";
 import {
   GAUNTLET_LEVEL_ID,
   isGauntletLevelId,
@@ -45,6 +46,10 @@ import {
   GAUNTLET_REGION_MAP_HISTORY_KEY,
 } from "@/infrastructure/storage/progress-storage";
 import { hasCityGroupWithMinimum } from "./question-generators";
+import {
+  GAUNTLET_PROVINCE_PICKER_OPTIONS,
+  summarizeGauntletProvinceScope,
+} from "./gauntlet-province-scope";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -80,34 +85,7 @@ function useGauntletDerivedValue() {
     ),
     [selectedShapeProvinceCodes],
   );
-  const provincePickerOptions = useMemo(
-    () => PROVINCES.map((province) => ({
-      key: province.code,
-      shortName: province.shortName,
-      kind: province.kind,
-      cityCount: CITY_QUIZ_DATA.filter(
-        (city) => city.provinceCode === province.code,
-      ).length,
-      plateCount: PLATE_QUIZ_DATA.filter(
-        (region) => region.provinceCode === province.code,
-      ).length,
-      mapRegionCount: MAP_REGION_QUIZ_DATA.filter(
-        (region) => region.provinceCode === province.code,
-      ).length,
-    })),
-    [],
-  );
-  const selectedProvinceNames = useMemo(
-    () => PROVINCES
-      .filter((item) => selectedShapeProvinceCodes.has(item.code))
-      .map((item) => item.shortName),
-    [selectedShapeProvinceCodes],
-  );
-  const provinceScopeSummary = selectedShapeProvinceCodes.size === PROVINCES.length
-    ? "全国 34 个省级行政区"
-    : selectedProvinceNames.length <= 6
-      ? selectedProvinceNames.join("、")
-      : `${selectedProvinceNames.slice(0, 5).join("、")}等 ${selectedProvinceNames.length} 个`;
+  const provinceScopeSummary = summarizeGauntletProvinceScope(selectedShapeProvinceCodes);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,7 +152,7 @@ function useGauntletDerivedValue() {
     ) return;
     const timer = window.setInterval(() => {
       setTimeLeft((value) => Math.max(0, value - 1));
-    }, 1000);
+    }, GAUNTLET_TIMER_TICK_MS);
     return () => window.clearInterval(timer);
   }, [
     answerReview, level, passedLevel, provincePickerOpen, setTimeLeft,
@@ -390,7 +368,8 @@ function useGauntletDerivedValue() {
     draftSelectionValid: draftShapeProvinceCodes.size > 0, gauntletDetailError,
     gauntletDetailMap, gauntletDetailReady, hasLostBoss, hasTimedOut,
     isRotatedProvinceShapeStage, mapRegionPoolSize, plateCityMapFocusedProvince,
-    progress, provincePickerOptions, provinceScopeIssue, provinceScopeSummary,
+    progress, provincePickerOptions: GAUNTLET_PROVINCE_PICKER_OPTIONS,
+    provinceScopeIssue, provinceScopeSummary,
     provinceShapeNormalTarget,
     reviewProvinceCodes: new Set(answerReview?.highlightProvinceCodes ?? []),
     selectedCityMapProvinces, selectedMapRegionItems, selectedPlateCityMapItems,

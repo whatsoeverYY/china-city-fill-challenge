@@ -1,34 +1,21 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
 import { CONFUSABLE_CITY_PAIRS } from "@/domain/geography/data/confusable-cities";
 import {
   RIVER_KNOWLEDGE,
   YELLOW_RIVER_PROVINCE_GROUP,
 } from "@/domain/geography/data/geographic-groups";
 import {
-  CITY_QUIZ_DATA,
-  PLATE_QUIZ_DATA,
-} from "@/domain/geography/data/city-plates";
-import {
-  KNOWLEDGE_CATEGORIES,
   MAP_READING_TIPS,
-  type KnowledgeCategoryId,
 } from "@/features/knowledge/data/knowledge-data";
 import { gauntletLevelNumber } from "@/domain/game/gauntlet-levels";
-import { getProvinceAdministrativeProfile } from "@/domain/geography/data/province-administrative-profiles";
 import { PROVINCE_CITY_COUNT_DATA } from "@/domain/geography/data/province-city-counts";
-import { UNIVERSITY_QUIZ_DATA } from "@/domain/geography/data/universities";
 import CityPlatePanel from "@/features/knowledge/components/city-plate-panel";
 import KnowledgeCatalog from "@/features/knowledge/components/knowledge-catalog";
 import KnowledgeSearchEmpty from "@/features/knowledge/components/knowledge-search-empty";
-import ProvinceProfilePanel, { PROFILE_BATCH_SIZE } from "@/features/knowledge/components/province-profile-panel";
+import ProvinceProfilePanel from "@/features/knowledge/components/province-profile-panel";
 import UniversityPanel from "@/features/knowledge/components/university-panel";
-import {
-  compactSearch,
-  matchesSearch,
-  plainPlaceName,
-} from "@/features/knowledge/model/knowledge-format";
+import { matchesSearch, plainPlaceName } from "@/features/knowledge/model/knowledge-format";
 import type {
   KnowledgeBaseProps,
 } from "@/features/knowledge/model/knowledge-types";
@@ -36,6 +23,7 @@ import {
   CATEGORY_TOTAL_LABELS,
   SEARCHABLE_CATEGORIES,
 } from "@/features/knowledge/config/knowledge-catalog-config";
+import { useKnowledgeCatalog } from "@/features/knowledge/model/use-knowledge-catalog";
 
 
 export default function KnowledgeBase({
@@ -47,133 +35,14 @@ export default function KnowledgeBase({
   onExit,
   onOpenAtlas,
 }: KnowledgeBaseProps) {
-  const [activeCategoryId, setActiveCategoryId] =
-    useState<KnowledgeCategoryId | null>(null);
-  const [query, setQuery] = useState("");
-  const [selectedProvinceCodes, setSelectedProvinceCodes] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [visibleProfileCount, setVisibleProfileCount] = useState(PROFILE_BATCH_SIZE);
-  const [selectedNeighborCode, setSelectedNeighborCode] = useState("410000");
-  const provinceByCode = useMemo(
-    () => new Map(provinces.map((province) => [province.code, province])),
-    [provinces],
-  );
-  const cityCountByCode = useMemo(
-    () => new Map(PROVINCE_CITY_COUNT_DATA.map((item) => [item.code, item])),
-    [],
-  );
-  const administrativeProfileByCode = useMemo(
-    () => new Map(
-      PROVINCE_CITY_COUNT_DATA.map((item) => [
-        item.code,
-        getProvinceAdministrativeProfile(item.code, item.cityCount),
-      ]),
-    ),
-    [],
-  );
-  const quizCityCountByProvince = useMemo(() => {
-    const result = new Map<string, number>();
-    CITY_QUIZ_DATA.forEach((item) => {
-      result.set(item.provinceCode, (result.get(item.provinceCode) ?? 0) + 1);
-    });
-    return result;
-  }, []);
-  const universityCountByProvince = useMemo(() => {
-    const result = new Map<string, number>();
-    UNIVERSITY_QUIZ_DATA.forEach((item) => {
-      result.set(item.provinceCode, (result.get(item.provinceCode) ?? 0) + 1);
-    });
-    return result;
-  }, []);
-
-  const activeCategory = KNOWLEDGE_CATEGORIES.find(
-    (category) => category.id === activeCategoryId,
-  );
-  const normalizedQuery = compactSearch(query);
-
-  const clearProvinceFilters = () => {
-    setQuery("");
-    setSelectedProvinceCodes(new Set());
-    setVisibleProfileCount(PROFILE_BATCH_SIZE);
-  };
-
-  const openCategory = (categoryId: KnowledgeCategoryId) => {
-    setActiveCategoryId(categoryId);
-    clearProvinceFilters();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const backToCatalog = () => {
-    setActiveCategoryId(null);
-    clearProvinceFilters();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const filteredProvinces = provinces.filter(
-    (province) =>
-      matchesSearch(normalizedQuery, province.name, province.shortName) &&
-      (selectedProvinceCodes.size === 0 || selectedProvinceCodes.has(province.code)),
-  );
-  const hasActiveProvinceFilter = Boolean(
-    normalizedQuery || selectedProvinceCodes.size > 0,
-  );
-  const visibleProfileProvinces = hasActiveProvinceFilter
-    ? filteredProvinces
-    : filteredProvinces.slice(0, visibleProfileCount);
-
-  const toggleProvince = (provinceCode: string) => {
-    setVisibleProfileCount(PROFILE_BATCH_SIZE);
-    setSelectedProvinceCodes((current) => {
-      const next = new Set(current);
-      if (next.has(provinceCode)) {
-        next.delete(provinceCode);
-      } else {
-        next.add(provinceCode);
-      }
-      return next;
-    });
-  };
-
-  const filteredCities = PLATE_QUIZ_DATA.filter((item) =>
-    matchesSearch(
-      normalizedQuery,
-      item.city,
-      item.plate,
-      item.plateNote,
-      item.province,
-      item.provinceShort,
-    ),
-  );
-  const cityGroups = provinces
-    .map((province) => ({
-      province,
-      items: filteredCities.filter((item) => item.provinceCode === province.code),
-    }))
-    .filter((group) => group.items.length > 0);
-
-  const filteredUniversities = UNIVERSITY_QUIZ_DATA.filter((item) =>
-    matchesSearch(
-      normalizedQuery,
-      item.name,
-      item.tier,
-      item.city,
-      item.province,
-      item.provinceShort,
-    ),
-  );
-  const universityGroups = provinces
-    .map((province) => ({
-      province,
-      items: filteredUniversities.filter((item) => item.provinceCode === province.code),
-    }))
-    .filter((group) => group.items.length > 0);
-
-  const selectedNeighborProvince =
-    provinceByCode.get(selectedNeighborCode) ?? provinces[0];
-  const selectedNeighborCodes = selectedNeighborProvince
-    ? provinceNeighbors[selectedNeighborProvince.code] ?? []
-    : [];
+  const {
+    activeCategory, activeCategoryId, administrativeProfileByCode, backToCatalog,
+    cityCountByCode, cityGroups, clearProvinceFilters, filteredProvinces,
+    hasActiveProvinceFilter, normalizedQuery, openCategory, provinceByCode,
+    query, quizCityCountByProvince, selectedNeighborCodes, selectedNeighborProvince,
+    selectedProvinceCodes, setQuery, setSelectedNeighborCode, setVisibleProfileCount,
+    toggleProvince, universityCountByProvince, universityGroups, visibleProfileProvinces,
+  } = useKnowledgeCatalog({ provinces, provinceNeighbors });
 
   const renderDetailContent = () => {
     if (!activeCategoryId) return null;
@@ -228,7 +97,7 @@ export default function KnowledgeBase({
                 <button
                   key={province.code}
                   type="button"
-                  className={`cursor-pointer rounded-lg border border-black/10 p-2 text-xs ${province.code === selectedNeighborProvince?.code ? "is-active bg-[#735285] text-white" : "bg-white"}`}
+                  className={`cursor-pointer rounded-lg border border-black/10 p-2 text-xs ${province.code === selectedNeighborProvince?.code ? "bg-[#735285] text-white" : "bg-white"}`}
                   onClick={() => setSelectedNeighborCode(province.code)}
                 >
                   {province.shortName}
@@ -238,9 +107,9 @@ export default function KnowledgeBase({
           </aside>
           <section className="knowledge-neighbor-stage rounded-2xl bg-card p-6">
             <div className="neighbor-orbit" aria-label={`${selectedNeighborProvince?.name}的陆地邻省`}>
-              <article className="neighbor-center mx-auto grid size-40 place-items-center rounded-full bg-[#735285] text-center text-white [&_h3]:m-0">
+              <article className="neighbor-center mx-auto grid size-40 place-items-center rounded-full bg-[#735285] text-center text-white">
                 <span>{provincePlatePrefixes[selectedNeighborProvince?.code]}</span>
-                <h3>{selectedNeighborProvince?.shortName}</h3>
+                <h3 className="m-0">{selectedNeighborProvince?.shortName}</h3>
                 <p>{plainPlaceName(provinceCapitals[selectedNeighborProvince?.code])}</p>
               </article>
               <div className="neighbor-satellites mt-5 grid grid-cols-4 gap-2 max-sm:grid-cols-2">
@@ -283,7 +152,7 @@ export default function KnowledgeBase({
       const maxCount = Math.max(...sortedCounts.map((item) => item.cityCount));
       return (
         <div className="knowledge-count-layout">
-          <div className="knowledge-memory-banner is-gold mb-5 flex items-center gap-4 rounded-2xl bg-brand-gold/20 p-5">
+          <div className="knowledge-memory-banner mb-5 flex items-center gap-4 rounded-2xl bg-brand-gold/20 p-5">
             <span className="grid size-12 place-items-center rounded-full bg-brand-gold font-black">数</span>
             <div>
               <strong>先记两端，再记密集区</strong>
@@ -309,16 +178,16 @@ export default function KnowledgeBase({
       return (
         <div className="knowledge-river-list grid gap-5">
           {RIVER_KNOWLEDGE.map((river) => (
-            <article className={`knowledge-river-card is-${river.id} rounded-[20px_20px_20px_6px] bg-card p-6 shadow-sm`} key={river.id}>
+            <article className="knowledge-river-card rounded-[20px_20px_20px_6px] bg-card p-6 shadow-sm" key={river.id}>
               <header className="flex justify-between gap-5 max-md:block">
                 <div>
                   <p>{river.label}</p>
                   <h3 className="mt-1 text-3xl font-black">{river.name}</h3>
                 </div>
-                <dl className="flex gap-4 [&_dd]:m-0 [&_dd]:text-xs [&_dd]:font-bold [&_dt]:text-[9px] [&_dt]:text-ink-soft">
-                  <div><dt>源头</dt><dd>{river.source}</dd></div>
-                  <div><dt>入海</dt><dd>{river.mouth}</dd></div>
-                  <div><dt>长度</dt><dd>{river.length}</dd></div>
+                <dl className="flex gap-4">
+                  <div><dt className="text-[9px] text-ink-soft">源头</dt><dd className="m-0 text-xs font-bold">{river.source}</dd></div>
+                  <div><dt className="text-[9px] text-ink-soft">入海</dt><dd className="m-0 text-xs font-bold">{river.mouth}</dd></div>
+                  <div><dt className="text-[9px] text-ink-soft">长度</dt><dd className="m-0 text-xs font-bold">{river.length}</dd></div>
                 </dl>
               </header>
               <section className="river-mnemonic rounded-xl bg-[#735285]/10 p-4">
@@ -326,12 +195,11 @@ export default function KnowledgeBase({
                 <strong>{river.mnemonic}</strong>
               </section>
               <div
-                className="river-route my-5 flex flex-wrap gap-2 [&>div]:rounded-full [&>div]:bg-paper [&>div]:px-3 [&>div]:py-2"
+                className="river-route my-5 flex flex-wrap gap-2"
                 aria-label={`${river.name}干流流经省级行政区顺序`}
-                style={{ "--river-stop-count": river.provinceCodes.length } as CSSProperties}
               >
                 {river.provinceCodes.map((code, index) => (
-                  <div key={code}>
+                  <div className="rounded-full bg-paper px-3 py-2" key={code}>
                     <span>{index + 1}</span>
                     <strong>{provinceByCode.get(code)?.shortName}</strong>
                   </div>
@@ -395,11 +263,11 @@ export default function KnowledgeBase({
       return (
         <div className="knowledge-confusable-grid grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
           {filteredPairs.map((pair, index) => (
-            <article className="rounded-2xl bg-card p-5" key={`${pair.left.city}-${pair.right.city}`}>
+            <article className="rounded-2xl bg-card p-5" key={pair.id}>
               <header className="flex justify-between"><span>辨析 {String(index + 1).padStart(2, "0")}</span><b>VS</b></header>
               <div className="grid grid-cols-2 gap-2">
-                {[pair.left, pair.right].map((city) => (
-                  <section className="rounded-xl bg-paper p-3" key={`${city.province}-${city.city}`}>
+                {[pair.left, pair.right].map((city, sideIndex) => (
+                  <section className="rounded-xl bg-paper p-3" key={`${pair.id}:${sideIndex}`}>
                     <span>{plainPlaceName(city.city).slice(0, 1)}</span>
                     <h3 className="mb-1 text-xl">{plainPlaceName(city.city)}</h3>
                     <p className="text-xs text-ink-soft">{city.provinceShort}</p>
@@ -448,11 +316,11 @@ export default function KnowledgeBase({
             <h1 className="m-0 text-xl font-black max-sm:text-base">中国地理知识馆</h1>
           </div>
         </button>
-        <div className="knowledge-header-actions flex gap-2 [&>button]:min-h-10 [&>button]:cursor-pointer [&>button]:rounded-full [&>button]:border [&>button]:border-black/20 [&>button]:bg-white [&>button]:px-3.5 [&>button]:text-[10px] [&>button]:font-black">
+        <div className="knowledge-header-actions flex gap-2">
           {activeCategory ? (
-            <button type="button" onClick={backToCatalog}>← 返回分类</button>
+            <button className="min-h-10 cursor-pointer rounded-full border border-black/20 bg-white px-3.5 text-[10px] font-black" type="button" onClick={backToCatalog}>← 返回分类</button>
           ) : null}
-          <button className="knowledge-exit !border-brand-red-dark !bg-brand-red-dark !text-white" type="button" onClick={onExit}>返回游戏</button>
+          <button className="knowledge-exit min-h-10 cursor-pointer rounded-full border border-brand-red-dark bg-brand-red-dark px-3.5 text-[10px] font-black text-white" type="button" onClick={onExit}>返回游戏</button>
         </div>
       </header>
 
@@ -460,7 +328,7 @@ export default function KnowledgeBase({
         <KnowledgeCatalog onOpenCategory={openCategory} />
       ) : (
         <>
-          <section className={`knowledge-detail-hero is-${activeCategory.tone} mx-auto my-10 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[auto_1fr_auto] items-center gap-6 rounded-[24px_24px_24px_8px] bg-[#735285] p-8 text-white shadow-xl max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:p-5`}>
+          <section className="knowledge-detail-hero mx-auto my-10 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[auto_1fr_auto] items-center gap-6 rounded-[24px_24px_24px_8px] bg-[#735285] p-8 text-white shadow-xl max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:p-5">
             <span className="grid size-16 place-items-center rounded-2xl bg-white/15 text-3xl" aria-hidden="true">{activeCategory.icon}</span>
             <div>
               <p className="m-0 text-[10px] font-black">{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>

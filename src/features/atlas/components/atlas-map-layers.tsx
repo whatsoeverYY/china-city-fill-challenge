@@ -1,35 +1,7 @@
 import { memo } from "react";
 import type { Position } from "@/features/map/model/map-data";
 import { MAP_HEIGHT, MAP_WIDTH } from "@/features/map/lib/map-geometry";
-
-export type AtlasView = {
-  scale: number;
-  x: number;
-  y: number;
-};
-
-export type AtlasRegionDrawing = {
-  key: string;
-  path: string;
-  fill: string;
-  name: string;
-  plate: string;
-  labelX: number;
-  labelY: number;
-  longLabel: boolean;
-};
-
-export type AtlasProvinceDrawing = {
-  key: string;
-  path: string;
-};
-
-export type AtlasHoverLabel = {
-  name: string;
-  plate: string;
-  left: number;
-  top: number;
-};
+import type { AtlasProvinceDrawing, AtlasRegionDrawing } from "@/features/atlas/model/atlas-types";
 
 export const ATLAS_MIN_SCALE = 1;
 export const ATLAS_MAX_SCALE = 8;

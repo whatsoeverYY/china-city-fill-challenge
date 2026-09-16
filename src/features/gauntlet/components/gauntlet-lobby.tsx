@@ -33,7 +33,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
         </p>
         <div className="gauntlet-lobby-settings mt-7 grid grid-cols-2 gap-3 max-md:grid-cols-1" aria-label="挑战设置">
           <button
-            className={`timed-mode-toggle grid cursor-pointer grid-cols-[44px_1fr] items-center gap-x-3 rounded-2xl border p-3 text-left text-white ${d.timedMode ? "is-active border-brand-gold/50 bg-brand-gold/15" : "border-white/20 bg-white/10"}`}
+            className={`timed-mode-toggle grid cursor-pointer grid-cols-[44px_1fr] items-center gap-x-3 rounded-2xl border p-3 text-left text-white ${d.timedMode ? "border-brand-gold/50 bg-brand-gold/15" : "border-white/20 bg-white/10"}`}
             type="button"
             role="switch"
             aria-checked={d.timedMode}
@@ -76,7 +76,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
           </button>
         </div>
         <p
-          className={`gauntlet-scope-message mb-0 mt-3 min-h-5 text-xs ${s.provinceScopeMessage ? "is-visible text-brand-gold" : "text-white/60"}`}
+          className={`gauntlet-scope-message mb-0 mt-3 min-h-5 text-xs ${s.provinceScopeMessage ? "text-brand-gold" : "text-white/60"}`}
           role="status"
         >
           {s.provinceScopeMessage ||
@@ -115,7 +115,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
                     : "暂无历史错题"
                   : levelTarget}
               </b>
-              <span className={`level-state text-xs font-black ${completed ? "is-complete text-brand-green" : "text-brand-red"}`}>
+              <span className={`level-state text-xs font-black ${completed ? "text-brand-green" : "text-brand-red"}`}>
                 {mapUnavailable
                   ? "地图载入中…"
                   : scopeIssue

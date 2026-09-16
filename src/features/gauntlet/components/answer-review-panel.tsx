@@ -9,7 +9,7 @@ export default function AnswerReviewPanel({
 }) {
   return (
     <div
-      className={`answer-review grid gap-3 rounded-2xl p-5 ${review.correct ? "is-correct bg-brand-green/10" : "is-wrong bg-brand-red/10"}`}
+      className={`answer-review grid gap-3 rounded-2xl p-5 ${review.correct ? "bg-brand-green/10" : "bg-brand-red/10"}`}
       role="status"
       aria-live="polite"
     >

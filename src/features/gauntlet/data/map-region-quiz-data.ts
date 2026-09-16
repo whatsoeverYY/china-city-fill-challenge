@@ -1,6 +1,8 @@
 import { PROVINCE_BY_CODE } from "../../../domain/geography/data/provinces.ts";
+import { mapRegionCode } from "../../../domain/geography/data/map-region-codes.ts";
 
 export type MapRegionQuizItem = {
+  id: string;
   city: string;
   province: string;
   provinceShort: string;
@@ -57,10 +59,15 @@ export const MAP_REGION_QUIZ_DATA: MapRegionQuizItem[] = Object.entries(
 ).flatMap(([provinceCode, regionNames]) => {
   const province = PROVINCE_BY_CODE.get(provinceCode);
   if (!province) return [];
-  return regionNames.map((city) => ({
-    city,
-    province: province.name,
-    provinceShort: province.shortName,
-    provinceCode,
-  }));
+  return regionNames.map((city) => {
+    const id = mapRegionCode(provinceCode, city);
+    if (!id) throw new Error(`缺少地图题行政区划代码：${provinceCode} ${city}`);
+    return {
+      id,
+      city,
+      province: province.name,
+      provinceShort: province.shortName,
+      provinceCode,
+    };
+  });
 });

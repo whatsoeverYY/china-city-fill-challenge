@@ -1,17 +1,9 @@
 import { PROVINCE_ADMINISTRATIVE_PROFILE_DATA } from "./province-administrative-profiles.ts";
 import { PROVINCE_BY_CODE } from "./provinces.ts";
+import { mapRegionCode } from "./map-region-codes.ts";
+import type { CityQuizItem } from "./city-plate-types.ts";
 
-export type CityQuizItem = {
-  city: string;
-  provinceCode: string;
-  province: string;
-  provinceShort: string;
-  plates: string[];
-  plate: string;
-  plateNote?: string;
-  entityType: string;
-  mapRegion: boolean;
-};
+export type { CityQuizItem } from "./city-plate-types.ts";
 
 type CityQuizGroup = [
   provinceCode: string,
@@ -219,7 +211,10 @@ export const CITY_QUIZ_DATA: CityQuizItem[] = CITY_QUIZ_GROUPS.flatMap(
     if (!province) return [];
     return cities.map(([city, plateValue, plateNote]) => {
       const plates = typeof plateValue === "string" ? [plateValue] : plateValue;
+      const regionCode = mapRegionCode(provinceCode, city);
+      if (!regionCode) throw new Error(`缺少城市行政区划代码：${provinceCode} ${city}`);
       return {
+        id: regionCode,
         city,
         provinceCode,
         province: province.name,
@@ -229,6 +224,7 @@ export const CITY_QUIZ_DATA: CityQuizItem[] = CITY_QUIZ_GROUPS.flatMap(
         plateNote,
         entityType: "城市",
         mapRegion: true,
+        regionCode,
       };
     });
   },
@@ -259,18 +255,29 @@ export const SPECIAL_PLATE_QUIZ_DATA: CityQuizItem[] =
           !CITY_QUIZ_NAMES.has(item.name) &&
           !NON_ENTITY_PLATE_REGION_TYPES.has(item.type),
       )
-      .map((item) => ({
-        city: item.name,
-        provinceCode: province.code,
-        province: province.name,
-        provinceShort: province.shortName,
-        plates: [item.plate],
-        plate: item.plate,
-        plateNote:
-          item.note ?? `${item.name}是${item.type}，使用 ${item.plate} 号牌前缀。`,
-        entityType: item.type,
-        mapRegion: !NON_MAP_PLATE_REGION_TYPES.has(item.type),
-      }));
+      .map((item) => {
+        const requestedMapRegion = !NON_MAP_PLATE_REGION_TYPES.has(item.type);
+        const regionCode = requestedMapRegion
+          ? mapRegionCode(province.code, item.name)
+          : null;
+        if (requestedMapRegion && !regionCode) {
+          throw new Error(`缺少特殊号牌区域行政区划代码：${province.code} ${item.name}`);
+        }
+        return {
+          id: regionCode ?? `plate-region:${province.code}:${item.plate}`,
+          city: item.name,
+          provinceCode: province.code,
+          province: province.name,
+          provinceShort: province.shortName,
+          plates: [item.plate],
+          plate: item.plate,
+          plateNote:
+            item.note ?? `${item.name}是${item.type}，使用 ${item.plate} 号牌前缀。`,
+          entityType: item.type,
+          mapRegion: requestedMapRegion,
+          regionCode,
+        };
+      });
   });
 
 export const PLATE_QUIZ_DATA: CityQuizItem[] = [
@@ -286,117 +293,3 @@ export const CITY_PLATE_PREFIX_COUNT = PLATE_QUIZ_DATA.reduce(
 export const MULTI_PLATE_CITY_COUNT = PLATE_QUIZ_DATA.filter(
   (item) => item.plates.length > 1,
 ).length;
-
-function normalizePlateToken(value: string) {
-  return value.trim().replace(/[·.-]/g, "").toUpperCase();
-}
-
-function plateLetterCode(value: string) {
-  return normalizePlateToken(value).replace(/^\p{Script=Han}/u, "");
-}
-
-export function plateCollectionsOverlap(
-  left: readonly string[],
-  right: readonly string[],
-) {
-  const normalizedLeft = new Set(left.map(normalizePlateToken));
-  return right.some((plate) => normalizedLeft.has(normalizePlateToken(plate)));
-}
-
-/**
- * Reverse plate questions must identify exactly one city. Shared plate prefixes,
- * such as 琼C and 琼D, remain valid for forward city-to-plate questions but are
- * excluded when several cities in the current pool have the same complete set.
- */
-export function uniqueReversePlateItems(items: readonly CityQuizItem[]) {
-  const collectionKey = (item: CityQuizItem) =>
-    item.plates.map(normalizePlateToken).sort().join("|");
-  const counts = new Map<string, number>();
-
-  for (const item of items) {
-    const key = collectionKey(item);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-
-  return items.filter((item) => counts.get(collectionKey(item)) === 1);
-}
-
-function splitPlateAnswer(value: string) {
-  return value
-    .trim()
-    .toUpperCase()
-    .split(/[\s,，、/|｜;；+和及]+/u)
-    .flatMap((part) => {
-      const normalized = normalizePlateToken(part);
-      if (!normalized) return [];
-      const completePlates = normalized.match(/[\p{Script=Han}][A-Z]/gu);
-      if (completePlates?.join("") === normalized) return completePlates;
-      if (/^[A-Z]+$/.test(normalized)) return normalized.split("");
-      return [normalized];
-    });
-}
-
-export function plateAnswerMatches(
-  answer: string,
-  expectedPlates: string[],
-  lettersOnly = false,
-) {
-  const expected = expectedPlates.map((plate) => lettersOnly
-    ? plateLetterCode(plate)
-    : normalizePlateToken(plate));
-  const actual = expectedPlates.length === 1 && lettersOnly
-    ? [plateLetterCode(answer)]
-    : splitPlateAnswer(answer).map((plate) => lettersOnly
-      ? plateLetterCode(plate)
-      : plate);
-  const expectedSet = new Set(expected);
-  const actualSet = new Set(actual);
-  return (
-    expectedSet.size === actualSet.size &&
-    Array.from(expectedSet).every((plate) => actualSet.has(plate))
-  );
-}
-
-function normalizePlaceAnswer(value: string) {
-  return value
-    .trim()
-    .replace(/[\s·,，、/|｜;；+和及.-]+/gu, "")
-    .replace(/臺/g, "台");
-}
-
-function stripPlaceSuffix(value: string) {
-  return value.replace(
-    /(特别行政区|维吾尔自治区|壮族自治区|回族自治区|自治区|自治州|地区|新区|林区|盟|省|市|区|县)$/u,
-    "",
-  );
-}
-
-/**
- * Reverse plate questions accept the province and city in one field. Both full
- * administrative names and their common short forms are valid, with optional
- * separators, for example “浙江宁波” and “浙江省 宁波市”.
- */
-export function provinceCityAnswerMatches(
-  answer: string,
-  item: Pick<CityQuizItem, "province" | "provinceShort" | "city">,
-) {
-  const candidate = normalizePlaceAnswer(answer);
-  if (!candidate) return false;
-
-  const provinceNames = new Set([
-    item.province,
-    item.provinceShort,
-    stripPlaceSuffix(item.province),
-    stripPlaceSuffix(item.provinceShort),
-  ]);
-  const cityNames = new Set([
-    item.city,
-    stripPlaceSuffix(item.city),
-  ]);
-
-  return Array.from(provinceNames).some((province) =>
-    Array.from(cityNames).some(
-      (city) => candidate === normalizePlaceAnswer(`${province}${city}`),
-    ),
-  );
-}

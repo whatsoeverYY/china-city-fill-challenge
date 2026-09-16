@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import type { MapData, MapFeature } from "@/features/map/model/map-data";
+import {
+  mapFeatureId,
+  type MapData,
+  type MapFeature,
+} from "@/features/map/model/map-data";
 import {
   featureLabelPosition,
   geometryToPath,
@@ -12,12 +16,14 @@ import {
   provinceForFeature,
 } from "@/features/map/lib/map-geometry";
 
+const WRONG_REGION_ANIMATION_CLASS = "animate-[wrong-region_520ms_ease]";
+
 export default function MapCanvas({
   map,
   mode,
-  completedNames,
+  completedRegionIds,
   completedProvinceCodes,
-  wrongRegion,
+  wrongRegionId,
   provinceOutlines,
   provinceFillColors,
   onRegion,
@@ -30,13 +36,13 @@ export default function MapCanvas({
 }: {
   map: MapData;
   mode: "national" | "detail";
-  completedNames: Set<string>;
+  completedRegionIds: Set<string>;
   completedProvinceCodes: Set<string>;
-  wrongRegion: string | null;
+  wrongRegionId: string | null;
   provinceOutlines: MapFeature[];
   provinceFillColors: Record<string, string>;
   onRegion: (feature: MapFeature, answer?: string) => void;
-  onHover: (name: string | null) => void;
+  onHover: (feature: MapFeature | null) => void;
   hideProvinceNames: boolean;
   showAllLabels: boolean;
   joined: boolean;
@@ -86,10 +92,10 @@ export default function MapCanvas({
         <g className="map-touch-hit-layer" aria-hidden="true">
           {visibleFeatures.map((feature) => (
             <path
-              key={`hit-${feature.properties.name}-${String(feature.properties.adcode)}`}
+              key={`hit-${mapFeatureId(feature)}`}
               d={geometryToPath(feature.geometry, project)}
               className="[@media(hover:none)]:[pointer-events:stroke] [@media(hover:none)]:[stroke-width:44] [@media(pointer:coarse)]:[pointer-events:stroke] [@media(pointer:coarse)]:[stroke-width:44]"
-              data-region-name={feature.properties.name}
+              data-region-id={mapFeatureId(feature)}
               fill="none"
               fillRule="evenodd"
               pointerEvents="none"
@@ -108,11 +114,12 @@ export default function MapCanvas({
       ) : null}
       <g className="[transform-origin:center]" filter="url(#map-shadow)">
         {visibleFeatures.map((feature) => {
+          const regionId = mapFeatureId(feature);
           const province = provinceForFeature(feature);
           const isComplete =
             mode === "national"
               ? Boolean(province && completedProvinceCodes.has(province.code))
-              : completedNames.has(feature.properties.name);
+              : completedRegionIds.has(regionId);
           const path = geometryToPath(feature.geometry, project);
           const provinceFill =
             joined && showAllLabels
@@ -137,12 +144,12 @@ export default function MapCanvas({
                 : "hover:fill-[#eadcb5]";
           return (
             <path
-              key={`${feature.properties.name}-${String(feature.properties.adcode)}`}
+              key={regionId}
               d={path}
               className={`${cursorClass} ${hoverClass} transition-[fill,filter,opacity] duration-[180ms] ${
-                wrongRegion === feature.properties.name ? "animate-[wrong-region_520ms_ease]" : ""
+                wrongRegionId === regionId ? WRONG_REGION_ANIMATION_CLASS : ""
               }`}
-              data-region-name={feature.properties.name}
+              data-region-id={regionId}
               fill={fill}
               fillRule="evenodd"
               role="button"
@@ -163,7 +170,7 @@ export default function MapCanvas({
               }
               onClick={() => onRegion(feature)}
               onKeyDown={(event) => handleKeyDown(event, feature)}
-              onMouseEnter={() => onHover(feature.properties.name)}
+              onMouseEnter={() => onHover(feature)}
               onMouseLeave={() => onHover(null)}
               onDragOver={(event) => {
                 if (mode === "detail") event.preventDefault();
@@ -207,7 +214,7 @@ export default function MapCanvas({
         .filter((feature) =>
           mode === "national"
             ? showAllLabels && !hideProvinceNames
-            : showAllLabels || completedNames.has(feature.properties.name),
+            : showAllLabels || completedRegionIds.has(mapFeatureId(feature)),
         )
         .map((feature) => {
           const [x, y] = featureLabelPosition(feature, project);
@@ -215,7 +222,7 @@ export default function MapCanvas({
           const name = mode === "national"
             ? provinceForFeature(feature)?.shortName ?? fullName
             : fullName;
-          const isHint = mode === "detail" && !completedNames.has(fullName);
+          const isHint = mode === "detail" && !completedRegionIds.has(mapFeatureId(feature));
           const labelClass = mode === "national"
             ? "text-[15px] [stroke-width:4.5px] max-[620px]:text-[11px] max-[620px]:[stroke-width:3.5px]"
             : joined

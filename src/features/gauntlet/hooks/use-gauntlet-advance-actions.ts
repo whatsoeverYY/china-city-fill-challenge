@@ -70,7 +70,7 @@ export function useGauntletAdvanceActions(round: GauntletRoundActions) {
     explanation: string,
     highlight?: Pick<
       AnswerReview,
-      "highlightProvinceCodes" | "highlightRegionName" | "selectedRegionName"
+      "highlightProvinceCodes" | "highlightRegionId" | "selectedRegionId"
     >,
     mistake?: MistakeSeed,
   ) => {
@@ -129,7 +129,7 @@ export function useGauntletAdvanceActions(round: GauntletRoundActions) {
             ? [correctProvince.name, correctProvince.shortName]
             : [correctAnswer];
       round.recordMistake({
-        id: `boss-${question.kind}-${question.prompt}-${question.value}`,
+        id: question.id,
         category: BOSS_SKILL_CATALOG.find(({ id }) => id === question.skill)
           ?.mistakeCategory ?? "城市",
         prompt: `${question.prompt}${"value" in question ? `：${question.value}` : ""}`,

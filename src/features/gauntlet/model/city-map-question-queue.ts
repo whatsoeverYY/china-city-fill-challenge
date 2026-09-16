@@ -3,14 +3,14 @@ import {
 } from "../../../domain/game/gauntlet-rules.ts";
 
 export type NamedRegionQuizItem = {
-  city: string;
+  id: string;
   provinceCode: string;
 };
 
 type ShuffleItems = <T>(items: T[]) => T[];
 
 export function cityQuizKey(item: NamedRegionQuizItem) {
-  return `${item.provinceCode}:${item.city}`;
+  return item.id;
 }
 
 function spreadCityQuestions<T extends NamedRegionQuizItem>(

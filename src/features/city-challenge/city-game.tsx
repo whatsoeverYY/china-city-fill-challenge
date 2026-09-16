@@ -1,21 +1,30 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PROVINCE_BY_CODE, PROVINCE_NEIGHBORS, PROVINCES, type Province } from "@/domain/geography/data/provinces";
+import { NATIONAL_MAP_CODE, PROVINCE_BY_CODE, PROVINCE_NEIGHBORS, PROVINCES, type Province } from "@/domain/geography/data/provinces";
 import ChallengeAnswerDock from "@/features/city-challenge/components/challenge-answer-dock";
 import ChallengeFooterAndOverlays from "@/features/city-challenge/components/challenge-footer-and-overlays";
 import ChallengeHeader from "@/features/city-challenge/components/challenge-header";
 import ChallengeMapPanel from "@/features/city-challenge/components/challenge-map-panel";
 import { provinceForFeature } from "@/features/map/lib/map-geometry";
-import { useMapCollection, useMapData, type MapFeature } from "@/features/map/model/map-data";
-import { usePlayerData } from "@/features/player/player-data-context";
 import {
-  nationalChallengeMessage,
-  useCityProgress,
-} from "@/features/city-challenge/model/use-city-progress";
+  mapFeatureId,
+  useMapCollection,
+  useMapData,
+  type MapFeature,
+} from "@/features/map/model/map-data";
+import { usePlayerData } from "@/features/player/player-data-context";
+import { useCityProgress } from "@/features/city-challenge/model/use-city-progress";
 import { useCityMapView } from "@/features/city-challenge/model/use-city-map-view";
-import { HARD_MODE_KEY, MAP_COMPLETION_MARKER, NEIGHBOR_MODE_KEY, NEIGHBOR_PROGRESS_KEY, STORAGE_KEY } from "@/infrastructure/storage/progress-storage";
+import { MAP_COMPLETION_MARKER } from "@/infrastructure/storage/progress-storage";
 import { placeNameMatches } from "@/shared/lib/place-name";
 import { deterministicShuffle } from "@/shared/lib/random";
+import { WRONG_REGION_FEEDBACK_MS } from "@/features/city-challenge/config/city-challenge-config";
+import type {
+  CityDragGhost,
+  CityTouchDrag,
+} from "@/features/city-challenge/model/city-challenge-types";
+import { useCityChallengeControls } from "@/features/city-challenge/model/use-city-challenge-controls";
+import { createCityAnswers, normalizeStoredRegionIds } from "@/features/city-challenge/model/city-answer-model";
 export default function CityGame() {
   const { identity, progressStorage, syncStatus } = usePlayerData();
   const [province, setProvince] = useState<Province | null>(null);
@@ -24,10 +33,10 @@ export default function CityGame() {
   const [hiddenProvinceCodes, setHiddenProvinceCodes] = useState<Set<string>>(
     new Set(),
   );
-  const [completedNames, setCompletedNames] = useState<Set<string>>(new Set());
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [hoveredName, setHoveredName] = useState<string | null>(null);
-  const [wrongRegion, setWrongRegion] = useState<string | null>(null);
+  const [completedRegionIds, setCompletedRegionIds] = useState<Set<string>>(new Set());
+  const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
+  const [hoveredFeature, setHoveredFeature] = useState<MapFeature | null>(null);
+  const [wrongRegionId, setWrongRegionId] = useState<string | null>(null);
   const [message, setMessage] = useState("请选择一个省级行政区开始挑战");
   const {
     completedNeighborCodes,
@@ -48,18 +57,10 @@ export default function CityGame() {
   const [pendingFeature, setPendingFeature] = useState<MapFeature | null>(null);
   const [manualAnswer, setManualAnswer] = useState("");
   const [manualError, setManualError] = useState("");
-  const [dragGhost, setDragGhost] = useState<{
-    name: string;
-    x: number;
-    y: number;
-  } | null>(null);
+  const [dragGhost, setDragGhost] = useState<CityDragGhost | null>(null);
   const manualAnswerInputRef = useRef<HTMLInputElement>(null);
-  const touchDragRef = useRef<{
-    name: string;
-    startX: number;
-    startY: number;
-  } | null>(null);
-  const { data: nationalMap, error: nationalError } = useMapData("100000");
+  const touchDragRef = useRef<CityTouchDrag | null>(null);
+  const { data: nationalMap, error: nationalError } = useMapData(NATIONAL_MAP_CODE);
   const challengeProvinces = useMemo(() => {
     if (!province) return [];
     const codes = neighborMode
@@ -79,39 +80,30 @@ export default function CityGame() {
     const frame = window.requestAnimationFrame(() => manualAnswerInputRef.current?.focus());
     return () => window.cancelAnimationFrame(frame);
   }, [pendingFeature]);
-  const answerNames = useMemo(
-    () => detailMap?.features.map((feature) => feature.properties.name) ?? [],
-    [detailMap],
-  );
+  const answers = useMemo(() => createCityAnswers(detailMap), [detailMap]);
   const shuffledAnswers = useMemo(
     () =>
       deterministicShuffle(
-        answerNames,
+        answers,
         `${province?.code ?? "1"}${neighborMode ? "7" : ""}`,
       ),
-    [answerNames, neighborMode, province?.code],
+    [answers, neighborMode, province?.code],
   );
-  const answerProvinceCodes = useMemo(
-    () =>
-      new Map(
-        detailMap?.features.map((feature) => [
-          feature.properties.name,
-          feature.properties.provinceCode ?? "",
-        ]) ?? [],
-      ),
-    [detailMap],
+  const answerById = useMemo(
+    () => new Map(answers.map((answer) => [answer.id, answer])),
+    [answers],
   );
   const visibleShuffledAnswers = useMemo(
     () =>
       shuffledAnswers.filter(
-        (name) => !hiddenProvinceCodes.has(answerProvinceCodes.get(name) ?? ""),
+        (answer) => !hiddenProvinceCodes.has(answer.provinceCode),
       ),
-    [answerProvinceCodes, hiddenProvinceCodes, shuffledAnswers],
+    [hiddenProvinceCodes, shuffledAnswers],
   );
   const isChallengeComplete =
     Boolean(province) &&
-    answerNames.length > 0 &&
-    completedNames.size === answerNames.length;
+    answers.length > 0 &&
+    completedRegionIds.size === answers.length;
   const activeCompletedProvinceCodes = neighborMode
     ? completedNeighborCodes
     : completedProvinceCodes;
@@ -122,12 +114,12 @@ export default function CityGame() {
       const saved = (
         neighborMode ? neighborProgressRef.current : progressRef.current
       )[nextProvince.code] ?? [];
-      setCompletedNames(
-        new Set(saved.filter((name) => name !== MAP_COMPLETION_MARKER)),
+      setCompletedRegionIds(
+        new Set(saved.filter((regionId) => regionId !== MAP_COMPLETION_MARKER)),
       );
-      setSelectedAnswer(null);
-      setHoveredName(null);
-      setWrongRegion(null);
+      setSelectedAnswerId(null);
+      setHoveredFeature(null);
+      setWrongRegionId(null);
       setShowAllCityNames(false);
       setHiddenProvinceCodes(new Set());
       setAttempts(0);
@@ -150,52 +142,52 @@ export default function CityGame() {
 
   useEffect(() => {
     if (!province || !detailMap) return;
-    const validNames = new Set(answerNames);
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
-      setCompletedNames((current) =>
-        new Set(Array.from(current).filter((name) => validNames.has(name))),
-      );
+      setCompletedRegionIds((current) => normalizeStoredRegionIds(current, answers));
     });
     return () => {
       cancelled = true;
     };
-  }, [answerNames, detailMap, province]);
+  }, [answers, detailMap, province]);
 
   const handleGuess = useCallback(
-    (regionName: string, answer: string | null | undefined) => {
+    (regionId: string, answerId: string | null | undefined) => {
       if (!province || !detailMap) return;
-      const guess = answer || selectedAnswer;
-      if (!guess) {
+      const guessId = answerId || selectedAnswerId;
+      if (!guessId) {
         setMessage("先选择下方名称，再点击地图区块；也可以直接拖拽");
         return;
       }
-      if (completedNames.has(regionName)) {
-        setMessage(`${regionName}已经填好啦，试试其他区块`);
+      const region = answerById.get(regionId);
+      const guess = answerById.get(guessId);
+      if (!region || !guess) return;
+      if (completedRegionIds.has(regionId)) {
+        setMessage(`${region.name}已经填好啦，试试其他区块`);
         return;
       }
 
       setAttempts((value) => value + 1);
-      if (guess !== regionName) {
+      if (guessId !== regionId) {
         setMistakes((value) => value + 1);
-        setWrongRegion(regionName);
-        setMessage(`“${guess}”不在这里，再观察一下边界形状`);
-        window.setTimeout(() => setWrongRegion(null), 560);
+        setWrongRegionId(regionId);
+        setMessage(`“${guess.name}”不在这里，再观察一下边界形状`);
+        window.setTimeout(() => setWrongRegionId(null), WRONG_REGION_FEEDBACK_MS);
         return;
       }
 
-      const next = new Set(completedNames);
-      next.add(regionName);
+      const next = new Set(completedRegionIds);
+      next.add(regionId);
       const complete = next.size === detailMap.features.length;
-      setCompletedNames(next);
-      setSelectedAnswer(null);
+      setCompletedRegionIds(next);
+      setSelectedAnswerId(null);
       setMessage(
         complete
           ? neighborMode
             ? `${province.shortName}邻省连城挑战全部完成！`
             : `${province.name}全部完成！`
-          : `正确！${regionName}已填入地图`,
+          : `正确！${region.name}已填入地图`,
       );
       saveProgress(province.code, next, complete, neighborMode);
       if (complete) {
@@ -207,20 +199,22 @@ export default function CityGame() {
       }
     },
     [
-      completedNames,
+      answerById,
+      completedRegionIds,
       detailMap,
       neighborMode,
       province,
       saveProgress,
-      selectedAnswer,
+      selectedAnswerId,
       setCompletedNeighborCodes,
       setCompletedProvinceCodes,
     ],
   );
 
   const handleMapRegion = (feature: MapFeature, draggedAnswer?: string) => {
+    const regionId = mapFeatureId(feature);
     if (hardMode) {
-      if (province && completedNames.has(feature.properties.name)) {
+      if (province && completedRegionIds.has(regionId)) {
         setMessage(`${feature.properties.name}已经填好啦，试试其他区块`);
         return;
       }
@@ -239,7 +233,7 @@ export default function CityGame() {
       if (selectedProvince) enterProvince(selectedProvince);
       return;
     }
-    handleGuess(feature.properties.name, draggedAnswer);
+    handleGuess(regionId, draggedAnswer);
   };
 
   const submitManualAnswer = (event: React.FormEvent<HTMLFormElement>) => {
@@ -263,133 +257,37 @@ export default function CityGame() {
     }
 
     const regionName = pendingFeature.properties.name;
+    const regionId = mapFeatureId(pendingFeature);
     if (placeNameMatches(manualAnswer, [regionName])) {
       setPendingFeature(null);
       setManualAnswer("");
       setManualError("");
-      handleGuess(regionName, regionName);
+      handleGuess(regionId, regionId);
       return;
     }
 
     setAttempts((value) => value + 1);
     setMistakes((value) => value + 1);
-    setWrongRegion(regionName);
+    setWrongRegionId(regionId);
     setManualError("名称不正确，再观察一下这个区块的形状和位置");
-    window.setTimeout(() => setWrongRegion(null), 560);
+    window.setTimeout(() => setWrongRegionId(null), WRONG_REGION_FEEDBACK_MS);
   };
 
-  const toggleHardMode = () => {
-    const next = !hardMode;
-    setHardMode(next);
-    if (next) setShowAllProvinceNames(false);
-    progressStorage.setItem(HARD_MODE_KEY, String(next));
-    setPendingFeature(null);
-    setManualAnswer("");
-    setManualError("");
-    setSelectedAnswer(null);
-    setHoveredName(null);
-    setMessage(
-      next
-        ? province
-          ? neighborMode
-            ? "邻省连城：点击联合地图区块并输入名称"
-            : "难度提升：点击地图区块并输入名称"
-          : "难度提升：点击省级行政区并输入名称解锁"
-        : province
-          ? neighborMode
-            ? "名称卡片已恢复，完成整片联合区域吧"
-            : "名称提示已恢复，可以拖拽或点选作答"
-          : neighborMode
-            ? "邻省连城：选择一个省份，联动它的所有接壤省份"
-            : "省份名称已恢复，选择一个省级行政区开始挑战",
-    );
-  };
-
-  const clearProvinceView = () => {
-    setProvince(null);
-    setSelectedAnswer(null);
-    setHoveredName(null);
-    setPendingFeature(null);
-    setManualAnswer("");
-    setManualError("");
-    setShowAllCityNames(false);
-    setHiddenProvinceCodes(new Set());
-  };
-
-  const toggleNeighborMode = () => {
-    const next = !neighborMode;
-    setNeighborMode(next);
-    progressStorage.setItem(NEIGHBOR_MODE_KEY, String(next));
-    clearProvinceView();
-    setCompletedNames(new Set());
-    setAttempts(0);
-    setMistakes(0);
-    setMessage(nationalChallengeMessage(hardMode, next));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const resetProvince = () => {
-    if (!province) return;
-    setCompletedNames(new Set());
-    if (neighborMode) {
-      setCompletedNeighborCodes((current) => {
-        const next = new Set(current);
-        next.delete(province.code);
-        return next;
-      });
-      neighborProgressRef.current[province.code] = [];
-      progressStorage.setItem(
-        NEIGHBOR_PROGRESS_KEY,
-        JSON.stringify(neighborProgressRef.current),
-      );
-    } else {
-      setCompletedProvinceCodes((current) => {
-        const next = new Set(current);
-        next.delete(province.code);
-        return next;
-      });
-      progressRef.current[province.code] = [];
-      progressStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
-    }
-    setSelectedAnswer(null);
-    setShowAllCityNames(false);
-    setHiddenProvinceCodes(new Set());
-    setAttempts(0);
-    setMistakes(0);
-    setMessage(
-      neighborMode
-        ? `已重置以${province.shortName}为起点的联合挑战`
-        : `已重置${province.shortName}，重新开始吧`,
-    );
-  };
-
-  const backToNational = () => {
-    clearProvinceView();
-    setMessage(nationalChallengeMessage(hardMode, neighborMode));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const toggleProvinceVisibility = (item: Province) => {
-    const isHidden = hiddenProvinceCodes.has(item.code);
-    if (!isHidden && challengeCodes.length - hiddenProvinceCodes.size <= 1) {
-      setMessage("至少保留一个省份显示在联合地图中");
-      return;
-    }
-
-    const next = new Set(hiddenProvinceCodes);
-    if (isHidden) {
-      next.delete(item.code);
-      setMessage(`已重新显示${item.shortName}`);
-    } else {
-      next.add(item.code);
-      if (selectedAnswer && answerProvinceCodes.get(selectedAnswer) === item.code) {
-        setSelectedAnswer(null);
-      }
-      setMessage(`已隐藏${item.shortName}，再次点击名称可恢复`);
-    }
-    setHoveredName(null);
-    setHiddenProvinceCodes(next);
-  };
+  const {
+    backToNational,
+    resetProvince,
+    toggleHardMode,
+    toggleNeighborMode,
+    toggleProvinceVisibility,
+  } = useCityChallengeControls({
+    answerById, challengeCodes, hardMode, hiddenProvinceCodes, neighborMode,
+    neighborProgressRef, progressRef, progressStorage, province, selectedAnswerId,
+    setAttempts, setCompletedNeighborCodes, setCompletedProvinceCodes,
+    setCompletedRegionIds, setHardMode, setHiddenProvinceCodes, setHoveredFeature,
+    setManualAnswer, setManualError, setMessage, setMistakes, setNeighborMode,
+    setPendingFeature, setProvince, setSelectedAnswerId, setShowAllCityNames,
+    setShowAllProvinceNames,
+  });
 
   const visibleProvinceList = showAllProvinces
     ? PROVINCES
@@ -406,14 +304,14 @@ export default function CityGame() {
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
 
   return (
-    <main className={`game-shell mx-auto min-h-dvh w-full max-w-[1540px] px-6 pb-10 pt-5 text-ink max-md:px-3 max-md:pb-24 max-md:pt-3 ${hardMode ? "is-hard-mode" : ""} ${neighborMode ? "is-neighbor-mode" : ""}`}>
+    <main className="game-shell mx-auto min-h-dvh w-full max-w-[1540px] px-6 pb-10 pt-5 text-ink max-md:px-3 max-md:pb-24 max-md:pt-3">
       <ChallengeHeader
         province={province}
         neighborMode={neighborMode}
         hardMode={hardMode}
         completedProvinceCodes={activeCompletedProvinceCodes}
         challengeProvinces={challengeProvinces}
-        answerCount={answerNames.length}
+        answerCount={answers.length}
         onBack={backToNational}
         onToggleNeighborMode={toggleNeighborMode}
         onToggleHardMode={toggleHardMode}
@@ -428,7 +326,7 @@ export default function CityGame() {
         </section>
       ) : null}
 
-      <div className={`challenge-layout grid grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] items-start gap-5 max-lg:grid-cols-1 ${province ? "" : "is-national"} ${neighborMode ? "is-joined" : ""}`}>
+      <div className="challenge-layout grid grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] items-start gap-5 max-lg:grid-cols-1">
       <ChallengeMapPanel
         province={province}
         neighborMode={neighborMode}
@@ -441,19 +339,19 @@ export default function CityGame() {
         mapError={mapError}
         activeMap={activeMap}
         isChallengeComplete={isChallengeComplete}
-        hoveredName={hoveredName}
-        completedNames={completedNames}
+        hoveredFeature={hoveredFeature}
+        completedRegionIds={completedRegionIds}
         completedProvinceCodes={activeCompletedProvinceCodes}
-        wrongRegion={wrongRegion}
+        wrongRegionId={wrongRegionId}
         outlineFeatures={outlineFeatures}
-        answerCount={answerNames.length}
+        answerCount={answers.length}
         accuracy={accuracy}
         message={message}
         onBack={backToNational}
         onReset={resetProvince}
         onToggleProvinceVisibility={toggleProvinceVisibility}
         onMapRegion={handleMapRegion}
-        setHoveredName={setHoveredName}
+        setHoveredFeature={setHoveredFeature}
         setShowAllCityNames={setShowAllCityNames}
         setShowAllProvinceNames={setShowAllProvinceNames}
       />
@@ -463,15 +361,15 @@ export default function CityGame() {
         hardMode={hardMode}
         neighborMode={neighborMode}
         challengeProvinces={challengeProvinces}
-        completedNames={completedNames}
-        answerCount={answerNames.length}
+        completedRegionIds={completedRegionIds}
+        answerCount={answers.length}
         visibleAnswers={visibleShuffledAnswers}
-        selectedAnswer={selectedAnswer}
+        selectedAnswerId={selectedAnswerId}
         completedProvinceCodes={activeCompletedProvinceCodes}
         visibleProvinceList={visibleProvinceList}
         showAllProvinces={showAllProvinces}
         touchDragRef={touchDragRef}
-        setSelectedAnswer={setSelectedAnswer}
+        setSelectedAnswerId={setSelectedAnswerId}
         setMessage={setMessage}
         setDragGhost={setDragGhost}
         setShowAllProvinces={setShowAllProvinces}

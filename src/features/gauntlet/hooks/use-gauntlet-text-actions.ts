@@ -5,7 +5,7 @@ import { PROVINCE_BY_CODE } from "@/domain/geography/data/provinces";
 import {
   plateAnswerMatches,
   provinceCityAnswerMatches,
-} from "@/domain/geography/data/city-plates";
+} from "@/domain/geography/lib/city-plate-answer";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
 import {
   GAUNTLET_ROTATED_SILHOUETTE_FEEDBACK,
@@ -157,7 +157,7 @@ export function useGauntletTextActions(
         explanation,
         undefined,
         {
-          id: `university-city-${item.name}`,
+          id: `university-city-${item.id}`,
           category: "高校",
           prompt: `${item.name}主要位于哪座城市？`,
           answers: item.answers,
@@ -223,7 +223,7 @@ export function useGauntletTextActions(
         `${city.city}的车牌前缀是 ${city.plate}`,
         undefined,
         {
-          id: `plate-${city.city}`,
+          id: `plate-${city.id}`,
           category: "车牌",
           prompt: `${city.city}的车牌前缀是什么？`,
           answers: city.plates,
@@ -251,7 +251,7 @@ export function useGauntletTextActions(
     if (!isCityProvince && !correct) {
       const cityShort = stripAdministrativeSuffix(city.city);
       round.recordMistake({
-        id: `plate-place-${city.plate}`,
+        id: `plate-place-${city.id}`,
         category: "车牌",
         prompt: `${city.plate}对应哪个省份和城市或地区？`,
         answers: [
@@ -273,7 +273,7 @@ export function useGauntletTextActions(
       undefined,
       isCityProvince
         ? {
-            id: `city-province-${city.city}`,
+            id: `city-province-${city.id}`,
             category: "城市",
             prompt: `${city.city}属于哪个省级行政区？`,
             answers: [city.province, city.provinceShort],

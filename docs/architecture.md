@@ -37,7 +37,7 @@ src/
 ## 编码约定
 
 - 文件名统一使用 `kebab-case`；React 组件和 TypeScript 类型使用 `PascalCase`，变量与函数使用 `camelCase`。
-- `.ts`、`.tsx`、`.css` 单文件最多 500 行。达到上限前按职责拆分，不通过压缩排版规避限制。
+- `.ts`、`.tsx`、`.css` 单文件超过 400 行时架构检查发出预警，超过 500 行时检查失败。达到预警线前按职责拆分，不通过压缩排版规避限制。
 - 页面组件只负责编排；状态放入 model/context，交互动作放入 hooks，持久化放入 infrastructure/services。
 - `model`、`hooks`、`data`、`config`、`services` 不得依赖 `components`；展示层可以消费模型，模型不能反向消费展示层。
 - 业务 feature 不得直接引用另一个业务 feature；需要共享的内容先下沉到 `domain` 或 `shared`。
@@ -48,4 +48,4 @@ src/
 - 常量放入 feature config 或领域数据，禁止在组件中复制关卡 ID、存储 key 等魔法字符串。
 - 项目只使用 pnpm，并只提交 `pnpm-lock.yaml`。
 
-运行 `pnpm check:architecture` 可检查文件大小、CSS 白名单、命名、关键目录、依赖方向、业务模块边界、UI 反向依赖、路由和包管理器约束。
+运行 `pnpm check:architecture` 可检查文件大小（400 行预警、500 行失败）、CSS 白名单、任意后代选择器、命名、关键目录、依赖方向（含可复用能力层反向依赖）、业务模块边界、UI 反向依赖、路由和包管理器约束。

@@ -7,8 +7,11 @@ import type { ProvinceCityCountItem } from "@/domain/geography/data/province-cit
 import KnowledgeSearchEmpty from "@/features/knowledge/components/knowledge-search-empty";
 import type { KnowledgeProvince } from "@/features/knowledge/model/knowledge-types";
 import { plainPlaceName } from "@/features/knowledge/model/knowledge-format";
+import { PROFILE_BATCH_SIZE } from "@/features/knowledge/config/knowledge-catalog-config";
 
-export const PROFILE_BATCH_SIZE = 8;
+const PROFILE_METRIC_CLASS = "rounded-lg bg-paper p-2";
+const PROFILE_TERM_CLASS = "text-[9px] text-ink-soft";
+const PROFILE_VALUE_CLASS = "m-0 mt-1 font-black";
 
 type ProvinceProfilePanelProps = {
   provinces: KnowledgeProvince[];
@@ -85,7 +88,7 @@ export default function ProvinceProfilePanel({
               <button
                 key={province.code}
                 type="button"
-                className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-bold ${isSelected ? "is-selected border-[#735285] bg-[#735285] text-white" : "border-black/15 bg-white"}`}
+                className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-bold ${isSelected ? "border-[#735285] bg-[#735285] text-white" : "border-black/15 bg-white"}`}
                 aria-pressed={isSelected}
                 title={province.name}
                 onClick={() => toggleProvince(province.code)}
@@ -132,13 +135,13 @@ export default function ProvinceProfilePanel({
                     </div>
                     <b className="rounded-lg bg-[#735285] px-2 py-1 text-white">{provincePlatePrefixes[province.code]}</b>
                   </div>
-                  <dl className="my-4 grid grid-cols-3 gap-2 [&>div]:rounded-lg [&>div]:bg-paper [&>div]:p-2 [&_dd]:m-0 [&_dd]:mt-1 [&_dd]:font-black [&_dt]:text-[9px] [&_dt]:text-ink-soft">
-                    <div><dt>行政中心</dt><dd>{plainPlaceName(provinceCapitals[province.code])}</dd></div>
-                    <div><dt>城市数量</dt><dd>{cityCount?.cityCount ?? "—"}</dd></div>
-                    <div><dt>特殊单位</dt><dd>{specialUnitCount || 0}</dd></div>
-                    <div className="is-total"><dt>综合总量</dt><dd>{profile.totalUnitCount}</dd></div>
-                    <div><dt>陆地邻省</dt><dd>{provinceNeighbors[province.code]?.length ?? 0}</dd></div>
-                    <div><dt>号牌分组</dt><dd>{profile.plateRegions.length || "—"}</dd></div>
+                  <dl className="my-4 grid grid-cols-3 gap-2">
+                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>行政中心</dt><dd className={PROFILE_VALUE_CLASS}>{plainPlaceName(provinceCapitals[province.code])}</dd></div>
+                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>城市数量</dt><dd className={PROFILE_VALUE_CLASS}>{cityCount?.cityCount ?? "—"}</dd></div>
+                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>特殊单位</dt><dd className={PROFILE_VALUE_CLASS}>{specialUnitCount || 0}</dd></div>
+                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>综合总量</dt><dd className={PROFILE_VALUE_CLASS}>{profile.totalUnitCount}</dd></div>
+                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>陆地邻省</dt><dd className={PROFILE_VALUE_CLASS}>{provinceNeighbors[province.code]?.length ?? 0}</dd></div>
+                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>号牌分组</dt><dd className={PROFILE_VALUE_CLASS}>{profile.plateRegions.length || "—"}</dd></div>
                   </dl>
                   <div className="knowledge-region-categories flex flex-wrap gap-1.5 text-[10px] text-ink-soft" aria-label={`${province.name}行政区域分类`}>
                     <span className="rounded-full bg-[#735285]/10 px-2 py-1"><b>{cityTotal}</b> 地级及以上城市</span>
@@ -199,7 +202,7 @@ export default function ProvinceProfilePanel({
                   )} 个
                 </button>
                 <button
-                  className="is-text cursor-pointer rounded-full border border-black/15 bg-white px-4 py-2 font-black"
+                  className="cursor-pointer rounded-full border border-black/15 bg-white px-4 py-2 font-black"
                   type="button"
                   onClick={() => setVisibleCount(filteredProvinces.length)}
                 >

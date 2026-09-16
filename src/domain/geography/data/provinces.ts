@@ -5,6 +5,8 @@ export type Province = {
   kind: "省" | "自治区" | "直辖市" | "特别行政区";
 };
 
+export const NATIONAL_MAP_CODE = "100000";
+
 export const PROVINCES: Province[] = [
   { code: "110000", name: "北京市", shortName: "北京", kind: "直辖市" },
   { code: "120000", name: "天津市", shortName: "天津", kind: "直辖市" },

@@ -1,23 +1,25 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import { PROVINCES, type Province } from "@/domain/geography/data/provinces";
-
-type TouchDrag = { name: string; startX: number; startY: number };
-type DragGhost = { name: string; x: number; y: number };
+import type {
+  CityAnswer,
+  CityDragGhost,
+  CityTouchDrag,
+} from "@/features/city-challenge/model/city-challenge-types";
 
 export default function ChallengeAnswerDock({
   province,
   hardMode,
   neighborMode,
   challengeProvinces,
-  completedNames,
+  completedRegionIds,
   answerCount,
   visibleAnswers,
-  selectedAnswer,
+  selectedAnswerId,
   completedProvinceCodes,
   visibleProvinceList,
   showAllProvinces,
   touchDragRef,
-  setSelectedAnswer,
+  setSelectedAnswerId,
   setMessage,
   setDragGhost,
   setShowAllProvinces,
@@ -28,19 +30,19 @@ export default function ChallengeAnswerDock({
   hardMode: boolean;
   neighborMode: boolean;
   challengeProvinces: Province[];
-  completedNames: Set<string>;
+  completedRegionIds: Set<string>;
   answerCount: number;
-  visibleAnswers: string[];
-  selectedAnswer: string | null;
+  visibleAnswers: CityAnswer[];
+  selectedAnswerId: string | null;
   completedProvinceCodes: Set<string>;
   visibleProvinceList: Province[];
   showAllProvinces: boolean;
-  touchDragRef: RefObject<TouchDrag | null>;
-  setSelectedAnswer: Dispatch<SetStateAction<string | null>>;
+  touchDragRef: RefObject<CityTouchDrag | null>;
+  setSelectedAnswerId: Dispatch<SetStateAction<string | null>>;
   setMessage: Dispatch<SetStateAction<string>>;
-  setDragGhost: Dispatch<SetStateAction<DragGhost | null>>;
+  setDragGhost: Dispatch<SetStateAction<CityDragGhost | null>>;
   setShowAllProvinces: Dispatch<SetStateAction<boolean>>;
-  onGuess: (regionName: string, answer?: string) => void;
+  onGuess: (regionId: string, answerId?: string) => void;
   onEnterProvince: (province: Province) => void;
 }) {
   if (province && hardMode) {
@@ -68,7 +70,7 @@ export default function ChallengeAnswerDock({
         </div>
         <div className="hard-mode-summary mt-4 flex items-end justify-between rounded-2xl bg-ink p-4 text-white">
           <span className="text-xs">已识别</span>
-          <strong className="text-2xl">{completedNames.size}<i className="text-sm not-italic text-white/60"> / {answerCount}</i></strong>
+          <strong className="text-2xl">{completedRegionIds.size}<i className="text-sm not-italic text-white/60"> / {answerCount}</i></strong>
         </div>
       </section>
     );
@@ -89,45 +91,45 @@ export default function ChallengeAnswerDock({
           <p className="m-0 text-xs text-ink-soft"><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
         </div>
         <div className="answer-grid grid max-h-[620px] grid-cols-2 gap-2 overflow-y-auto pr-1 max-sm:grid-cols-1">
-          {visibleAnswers.map((name) => {
-            const isPlaced = completedNames.has(name);
-            const isSelected = selectedAnswer === name;
+          {visibleAnswers.map((answer) => {
+            const isPlaced = completedRegionIds.has(answer.id);
+            const isSelected = selectedAnswerId === answer.id;
             return (
               <button
-                key={name}
+                key={answer.id}
                 type="button"
-                className={`answer-chip flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${isPlaced ? "is-placed cursor-default border-brand-green/20 bg-brand-green/10 text-brand-green-dark opacity-60" : "cursor-grab border-black/10 bg-white/65 hover:-translate-y-0.5 hover:border-brand-red/30 hover:shadow-sm"} ${isSelected ? "is-selected border-brand-red bg-brand-red/10" : ""}`}
+                className={`answer-chip flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${isPlaced ? "cursor-default border-brand-green/20 bg-brand-green/10 text-brand-green-dark opacity-60" : "cursor-grab border-black/10 bg-white/65 hover:-translate-y-0.5 hover:border-brand-red/30 hover:shadow-sm"} ${isSelected ? "border-brand-red bg-brand-red/10" : ""}`}
                 draggable={!isPlaced}
                 disabled={isPlaced}
                 aria-pressed={isSelected}
                 onClick={() => {
                   if (isPlaced) return;
-                  setSelectedAnswer(isSelected ? null : name);
+                  setSelectedAnswerId(isSelected ? null : answer.id);
                   setMessage(
                     isSelected
                       ? "已取消选择"
-                      : `已选择“${name}”，请点击地图中的位置`,
+                      : `已选择“${answer.name}”，请点击地图中的位置`,
                   );
                 }}
                 onDragStart={(event) => {
-                  event.dataTransfer.setData("text/plain", name);
+                  event.dataTransfer.setData("text/plain", answer.id);
                   event.dataTransfer.effectAllowed = "move";
-                  setSelectedAnswer(name);
+                  setSelectedAnswerId(answer.id);
                 }}
                 onDragEnd={() => setDragGhost(null)}
                 onPointerDown={(event) => {
                   if (isPlaced || event.pointerType !== "touch") return;
                   event.currentTarget.setPointerCapture(event.pointerId);
                   touchDragRef.current = {
-                    name,
+                    answer,
                     startX: event.clientX,
                     startY: event.clientY,
                   };
-                  setDragGhost({ name, x: event.clientX, y: event.clientY });
+                  setDragGhost({ answer, x: event.clientX, y: event.clientY });
                 }}
                 onPointerMove={(event) => {
                   if (!touchDragRef.current || event.pointerType !== "touch") return;
-                  setDragGhost({ name, x: event.clientX, y: event.clientY });
+                  setDragGhost({ answer, x: event.clientX, y: event.clientY });
                 }}
                 onPointerUp={(event) => {
                   const drag = touchDragRef.current;
@@ -141,16 +143,16 @@ export default function ChallengeAnswerDock({
                   if (distance < 12) return;
                   const target = document
                     .elementFromPoint(event.clientX, event.clientY)
-                    ?.closest<SVGPathElement>("[data-region-name]");
-                  if (target?.dataset.regionName) {
-                    onGuess(target.dataset.regionName, drag.name);
+                    ?.closest<SVGPathElement>("[data-region-id]");
+                  if (target?.dataset.regionId) {
+                    onGuess(target.dataset.regionId, drag.answer.id);
                   } else {
-                    setMessage(`“${drag.name}”没有落在地图区块上，已回到名称区`);
+                    setMessage(`“${drag.answer.name}”没有落在地图区块上，已回到名称区`);
                   }
                 }}
               >
                 <span className="chip-grip text-ink-soft/50" aria-hidden="true">⠿</span>
-                <span>{name}</span>
+                <span>{answer.name}</span>
                 {isPlaced ? <b className="ml-auto text-brand-green" aria-label="已完成">✓</b> : null}
               </button>
             );
@@ -166,7 +168,7 @@ export default function ChallengeAnswerDock({
         <div className="dock-heading mb-4 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">无提示模式</p>
-            <h2 className="m-0 text-xl font-black" id="hard-province-title">辨认 34 个省份</h2>
+            <h2 className="m-0 text-xl font-black" id="hard-province-title">辨认 {PROVINCES.length} 个省份</h2>
           </div>
         </div>
         <div className="hard-mode-card grid gap-3 rounded-2xl border border-dashed border-brand-red/30 bg-brand-red/5 p-5">
@@ -183,7 +185,7 @@ export default function ChallengeAnswerDock({
             return (
               <span
                 key={item.code}
-                className={`grid aspect-square place-items-center rounded-lg text-[10px] font-bold ${complete ? "is-complete bg-brand-green text-white" : "bg-black/5"}`}
+                className={`grid aspect-square place-items-center rounded-lg text-[10px] font-bold ${complete ? "bg-brand-green text-white" : "bg-black/5"}`}
                 aria-label={`进度位 ${index + 1}${complete ? "，已完成" : "，未完成"}`}
               >
                 {complete ? "✓" : index + 1}
@@ -199,7 +201,7 @@ export default function ChallengeAnswerDock({
     <section className="province-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5" aria-labelledby="province-title">
       <div className="dock-heading mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">34 个省级行政区</p>
+          <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">{PROVINCES.length} 个省级行政区</p>
           <h2 className="m-0 text-xl font-black" id="province-title">
             {neighborMode ? "选择连城起点" : "也可以从名称进入"}
           </h2>
@@ -219,7 +221,7 @@ export default function ChallengeAnswerDock({
             <button
               key={item.code}
               type="button"
-              className={`province-chip grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 rounded-xl border border-black/10 px-3 py-2 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${complete ? "is-complete bg-brand-green/10 text-brand-green-dark" : "bg-white/65"}`}
+              className={`province-chip grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 rounded-xl border border-black/10 px-3 py-2 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${complete ? "bg-brand-green/10 text-brand-green-dark" : "bg-white/65"}`}
               onClick={() => onEnterProvince(item)}
             >
               <span className="text-[10px] font-black text-ink-soft">{String(index + 1).padStart(2, "0")}</span>
@@ -232,8 +234,8 @@ export default function ChallengeAnswerDock({
       {visibleProvinceList.length === 0 ? (
         <div className="all-complete-note rounded-2xl bg-brand-green/10 p-5 text-center font-black text-brand-green-dark">
           {neighborMode
-            ? "34 个邻省连城起点已全部完成，太厉害了！"
-            : "全国 34 个省级行政区已全部点亮，太厉害了！"}
+            ? `${PROVINCES.length} 个邻省连城起点已全部完成，太厉害了！`
+            : `全国 ${PROVINCES.length} 个省级行政区已全部点亮，太厉害了！`}
         </div>
       ) : null}
     </section>

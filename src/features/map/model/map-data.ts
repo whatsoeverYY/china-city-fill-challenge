@@ -24,6 +24,16 @@ export type MapData = {
   features: MapFeature[];
 };
 
+const TAIWAN_PROVINCE_CODE = "710000";
+
+export function mapFeatureId(feature: MapFeature) {
+  const { adcode } = feature.properties;
+  if (adcode === undefined || adcode === null || String(adcode).length === 0) {
+    throw new Error(`地图区块缺少行政区划代码：${feature.properties.name}`);
+  }
+  return String(adcode);
+}
+
 const TAIWAN_NAME_MAP: Record<string, string> = {
   連江縣: "连江县", 宜蘭縣: "宜兰县", 彰化縣: "彰化县", 南投縣: "南投县",
   雲林縣: "云林县", 基隆市: "基隆市", 臺北市: "台北市", 新北市: "新北市",
@@ -34,7 +44,7 @@ const TAIWAN_NAME_MAP: Record<string, string> = {
 };
 
 export function normalizeMapRegionName(name: string, code: string) {
-  return code === "710000" ? TAIWAN_NAME_MAP[name] ?? name : name;
+  return code === TAIWAN_PROVINCE_CODE ? TAIWAN_NAME_MAP[name] ?? name : name;
 }
 
 const mapPromiseCache = new Map<string, Promise<MapData>>();
@@ -47,6 +57,8 @@ function isMapData(value: unknown): value is MapData {
     candidate.features.every((feature) =>
       feature?.type === "Feature" &&
       typeof feature.properties?.name === "string" &&
+      (typeof feature.properties?.adcode === "string" ||
+        typeof feature.properties?.adcode === "number") &&
       (feature.geometry?.type === "Polygon" || feature.geometry?.type === "MultiPolygon") &&
       Array.isArray(feature.geometry.coordinates)
     );

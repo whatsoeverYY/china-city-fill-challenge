@@ -9,21 +9,21 @@ import {
   MAP_HEIGHT,
   MAP_WIDTH,
 } from "@/features/map/lib/map-geometry";
-import type { MapData } from "@/features/map/model/map-data";
+import { mapFeatureId, type MapData } from "@/features/map/model/map-data";
 import { stripAdministrativeSuffix } from "@/shared/lib/place-name";
 
 export default function GauntletDetailMap({
   map,
   onRegion,
-  correctRegionName,
-  selectedRegionName,
+  correctRegionId,
+  selectedRegionId,
   showLabels = false,
   readOnly = false,
 }: {
   map: MapData;
-  onRegion: (name: string) => void;
-  correctRegionName?: string;
-  selectedRegionName?: string;
+  onRegion: (regionId: string) => void;
+  correctRegionId?: string;
+  selectedRegionId?: string;
   showLabels?: boolean;
   readOnly?: boolean;
 }) {
@@ -42,15 +42,16 @@ export default function GauntletDetailMap({
     >
       {map.features.map((feature) => {
         const name = feature.properties.name;
-        const isCorrectAnswer = correctRegionName === name;
-        const isWrongSelection = selectedRegionName === name;
+        const regionId = mapFeatureId(feature);
+        const isCorrectAnswer = correctRegionId === regionId;
+        const isWrongSelection = selectedRegionId === regionId;
         const isHighlighted = isCorrectAnswer || isWrongSelection;
         const fill = isCorrectAnswer ? "#f1c75b" : isWrongSelection ? "#e7a09a" : "#eee4cf";
         const stroke = isCorrectAnswer ? "#8b4a16" : isWrongSelection ? "#8f302a" : "var(--green)";
         const strokeWidth = isHighlighted ? 3 : 1.8;
         return (
           <path
-            key={`${feature.properties.adcode}-${name}`}
+            key={regionId}
             d={geometryToPath(feature.geometry, project)}
             className={`${readOnly ? "cursor-default" : "cursor-pointer"} [transition:fill_130ms_ease,stroke-width_130ms_ease,filter_130ms_ease] ${
               !readOnly && !isHighlighted
@@ -73,12 +74,12 @@ export default function GauntletDetailMap({
                   ? name
                   : "待选择行政区块"}
             onClick={() => {
-              if (!readOnly) onRegion(name);
+              if (!readOnly) onRegion(regionId);
             }}
             onKeyDown={(event) => handleKeyboardActivation(
               event,
               () => {
-                if (!readOnly) onRegion(name);
+                if (!readOnly) onRegion(regionId);
               },
             )}
           />
@@ -88,15 +89,16 @@ export default function GauntletDetailMap({
         ? map.features.map((feature) => {
             const [x, y] = featureLabelPosition(feature, project);
             const name = feature.properties.name;
-            const isCorrectAnswer = correctRegionName === name;
-            const isWrongSelection = selectedRegionName === name;
+            const regionId = mapFeatureId(feature);
+            const isCorrectAnswer = correctRegionId === regionId;
+            const isWrongSelection = selectedRegionId === regionId;
             const fill = isCorrectAnswer ? "#71430f" : isWrongSelection ? "#8f302a" : "#3f4d47";
             const stroke = isCorrectAnswer ? "#fff7d3" : isWrongSelection ? "#fff0ed" : "rgba(255, 253, 247, 0.92)";
             const fontSize = isCorrectAnswer || isWrongSelection ? 15 : readOnly ? 12 : 10;
             const strokeWidth = isCorrectAnswer || isWrongSelection ? 4 : readOnly ? 3 : 2.6;
             return (
               <text
-                key={`detail-map-label-${name}`}
+                key={`detail-map-label-${regionId}`}
                 x={x}
                 y={y}
                 className="pointer-events-none font-sans font-black [paint-order:stroke]"

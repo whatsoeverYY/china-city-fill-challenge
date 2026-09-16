@@ -1,7 +1,7 @@
 import {
   type PlayerIdentity,
   type PlayerRole,
-} from "@/features/player/player-data-context";
+} from "@/features/player/model/player-types";
 
 export type OfflineAccount = PlayerIdentity & { role: PlayerRole };
 

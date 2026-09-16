@@ -71,7 +71,7 @@ export function useGauntletSelectionActions(
       question.explanation,
       undefined,
       {
-        id: `truth-${question.statement}`,
+        id: question.id,
         category: "判断",
         prompt: `判断正误：${question.statement}`,
         answers: question.isTrue ? ["正确", "对"] : ["错误", "错", "不正确"],
@@ -85,19 +85,21 @@ export function useGauntletSelectionActions(
     if (s.answerReview) return;
     if (s.level === LEVEL.CITY_UNDERCOVER && d.currentUndercoverQuestion) {
       const question = d.currentUndercoverQuestion;
+      const correctOption = question.options.find((item) => item.id === question.answerId);
+      if (!correctOption) return;
       advance.advanceStreakChallenge(
         LEVEL.CITY_UNDERCOVER,
-        answer === question.answerCity,
+        answer === question.answerId,
         d.target,
-        question.answerCity,
+        correctOption.city,
         question.explanation,
         undefined,
         {
-          id: `undercover-${question.options.map((item) => item.city).sort().join("-")}`,
+          id: question.id,
           category: "城市",
           prompt: `找出不属于同一省份的城市：${question.options.map((item) => item.city).join("、")}`,
-          answers: [question.answerCity],
-          correctAnswer: question.answerCity,
+          answers: [correctOption.city],
+          correctAnswer: correctOption.city,
           explanation: question.explanation,
         },
       );
@@ -105,19 +107,21 @@ export function useGauntletSelectionActions(
     }
     if (s.level === LEVEL.GEOGRAPHY_ELIMINATION && d.currentDualIntruderQuestion) {
       const question = d.currentDualIntruderQuestion;
+      const correctOption = question.options.find((item) => item.id === question.answerId);
+      if (!correctOption) return;
       advance.advanceStreakChallenge(
         LEVEL.GEOGRAPHY_ELIMINATION,
-        answer === question.answer,
+        answer === question.answerId,
         d.target,
-        question.answer,
+        correctOption.label,
         question.explanation,
         undefined,
         {
-          id: `exclude-${question.instruction}-${question.prompt}-${question.answer}`,
+          id: question.id,
           category: "城市",
-          prompt: `${question.instruction}：${question.prompt}；选项：${question.options.join("、")}`,
-          answers: [question.answer],
-          correctAnswer: question.answer,
+          prompt: `${question.instruction}：${question.prompt}；选项：${question.options.map((item) => item.label).join("、")}`,
+          answers: [correctOption.label],
+          correctAnswer: correctOption.label,
           explanation: question.explanation,
         },
       );
@@ -125,17 +129,17 @@ export function useGauntletSelectionActions(
     }
     if (s.level === LEVEL.PLATE_FAULT && d.currentPlateFaultQuestion) {
       const question = d.currentPlateFaultQuestion;
-      const correctOption = question.options.find((item) => item.id === question.answer);
+      const correctOption = question.options.find((item) => item.id === question.answerId);
       advance.advanceStreakChallenge(
         LEVEL.PLATE_FAULT,
-        answer === question.answer,
+        answer === question.answerId,
         d.target,
-        correctOption?.label ?? question.answer,
+        correctOption?.label ?? question.answerId,
         question.explanation,
         undefined,
         correctOption
           ? {
-              id: `plate-fault-${correctOption.label}`,
+              id: question.id,
               category: "车牌",
               prompt: `找出车牌对应错误的一组：${question.options.map((item) => item.label).join("、")}`,
               answers: [correctOption.label],
@@ -148,30 +152,32 @@ export function useGauntletSelectionActions(
     }
     if (s.level === LEVEL.CONFUSABLE_CITIES && d.currentConfusableQuestion) {
       const question = d.currentConfusableQuestion;
+      const correctOption = question.options.find((item) => item.id === question.answerId);
+      if (!correctOption) return;
       advance.advanceStreakChallenge(
         LEVEL.CONFUSABLE_CITIES,
-        answer === question.answer,
+        answer === question.answerId,
         d.target,
-        question.answer,
+        correctOption.label,
         question.explanation,
         undefined,
         {
           id: `confusable-${question.id}`,
           category: "城市",
-          prompt: `${question.instruction} ${question.prompt}；候选：${question.options.join(" / ")}`,
-          answers: [question.answer],
-          correctAnswer: question.answer,
+          prompt: `${question.instruction} ${question.prompt}；候选：${question.options.map((item) => item.label).join(" / ")}`,
+          answers: [correctOption.label],
+          correctAnswer: correctOption.label,
           explanation: question.explanation,
         },
       );
     }
   };
 
-  const handleDetailRegion = (regionName: string) => {
+  const handleDetailRegion = (regionId: string) => {
     if (s.level === LEVEL.REGION_MAP) {
       const region = d.currentMapRegion;
       if (!region || s.answerReview) return;
-      const correct = placeNameMatches(regionName, [region.city]);
+      const correct = regionId === region.id;
       advance.rememberCityMapQuestion(LEVEL.REGION_MAP, region);
       advance.advanceStreakChallenge(
         LEVEL.REGION_MAP,
@@ -180,8 +186,8 @@ export function useGauntletSelectionActions(
         region.city,
         `${region.city}位于${region.province}，对应省内地图上的“${region.city}”区块`,
         {
-          highlightRegionName: region.city,
-          selectedRegionName: !correct ? regionName : undefined,
+          highlightRegionId: region.id,
+          selectedRegionId: !correct ? regionId : undefined,
         },
       );
       return;
@@ -189,7 +195,7 @@ export function useGauntletSelectionActions(
     const city = d.currentCity;
     if (s.level !== LEVEL.PLATE_CITY_MAP || !city || s.answerReview) return;
     s.setPlateCityMapFocusedProvinceCode(null);
-    const correct = placeNameMatches(regionName, [city.city]);
+    const correct = regionId === city.regionCode;
     advance.rememberCityMapQuestion(LEVEL.PLATE_CITY_MAP, city);
     advance.advanceStreakChallenge(
       LEVEL.PLATE_CITY_MAP,
@@ -197,9 +203,9 @@ export function useGauntletSelectionActions(
       d.target,
       `${city.plate} · ${city.city}`,
       `${city.plate}对应${city.province}的${city.city}`,
-      { highlightRegionName: city.city },
+      { highlightRegionId: city.regionCode ?? undefined },
       {
-        id: `plate-city-map-${city.plate}`,
+        id: `plate-city-map-${city.id}`,
         category: "车牌",
         prompt: `${city.plate}对应哪个城市或地区？`,
         answers: [city.city],
@@ -293,7 +299,7 @@ export function useGauntletSelectionActions(
         `${city.city}属于${city.province}`,
         { highlightProvinceCodes: [city.provinceCode] },
         {
-          id: `city-province-${city.city}`,
+          id: `city-province-${city.id}`,
           category: "城市",
           prompt: `${city.city}属于哪个省级行政区？`,
           answers: [city.province, city.provinceShort],

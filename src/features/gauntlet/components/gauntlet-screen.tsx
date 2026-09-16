@@ -19,7 +19,7 @@ export default function GauntletScreen() {
   const roundEnded = d.hasTimedOut || d.hasLostBoss || Boolean(s.passedLevel);
 
   return (
-    <main className={`game-shell gauntlet-shell mx-auto min-h-dvh w-full max-w-[1540px] px-6 pb-10 pt-5 text-ink max-md:px-3 max-md:pb-24 max-md:pt-3 ${s.level ? "is-round-active" : ""}`}>
+    <main className="game-shell gauntlet-shell mx-auto min-h-dvh w-full max-w-[1540px] px-6 pb-10 pt-5 text-ink max-md:px-3 max-md:pb-24 max-md:pt-3">
       <header className="site-header gauntlet-header mb-7 flex items-center justify-between gap-5 max-md:mb-5">
         <button className="brand inline-flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left" type="button" onClick={s.onExit}>
           <span className="brand-seal gauntlet-brand-seal grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-red to-[#7c2d68] text-xl font-black text-white" aria-hidden="true">关</span>
@@ -53,8 +53,8 @@ export default function GauntletScreen() {
           <GauntletRoundHeader actions={actions} />
           <section
             className={`gauntlet-play-card grid grid-cols-[minmax(0,1.5fr)_minmax(290px,.7fr)] overflow-hidden rounded-[28px_28px_28px_8px] border border-black/10 bg-card shadow-xl max-lg:grid-cols-1 ${
-              s.feedbackType === "wrong" ? "has-error animate-[dialog-shake_300ms_ease]" : ""
-            } ${s.answerReview ? "is-reviewing" : ""}`}
+              s.feedbackType === "wrong" ? "animate-[dialog-shake_300ms_ease]" : ""
+            }`}
           >
             <GauntletQuestionStage actions={actions} />
             <GauntletAnswerPanel actions={actions} />
