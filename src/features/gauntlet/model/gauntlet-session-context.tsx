@@ -80,6 +80,8 @@ function useGauntletSessionValue({
   const [provinceAnswer, setProvinceAnswer] = useState("");
   const [plateAnswer, setPlateAnswer] = useState("");
   const [mapSelections, setMapSelections] = useState<Set<string>>(new Set());
+  const [cityNeighborHintVisible, setCityNeighborHintVisible] = useState(false);
+  const [cityNeighborRetry, setCityNeighborRetry] = useState(false);
   const [plateCityMapFocusedProvinceCode, setPlateCityMapFocusedProvinceCode] =
     useState<string | null>(null);
   const [routeCodes, setRouteCodes] = useState<string[]>([]);
@@ -113,7 +115,8 @@ function useGauntletSessionValue({
   };
 
   return {
-    answerReview, bossLives, bossOrder, bossStats, cityOrder, completedLevels,
+    answerReview, bossLives, bossOrder, bossStats, cityNeighborHintVisible,
+    cityNeighborRetry, cityOrder, completedLevels,
     confusableOrder, draftShapeProvinceCodes,
     dualIntruderOrder, feedback, feedbackType, groupOrder, identity, level,
     mapRegionOrder, mapSelections, mistakeOrder, mistakes, mistakeSessionTotal,
@@ -124,7 +127,8 @@ function useGauntletSessionValue({
     provinceScopeReady, questionIndex, regionMapHistoryRef, routeCodes,
     selectedShapeProvinceCodes, streak, timeLeft, timeLimit, truthOrder,
     undercoverOrder, universityOrder,
-    setAnswerReview, setBossLives, setBossOrder, setBossStats, setCityOrder,
+    setAnswerReview, setBossLives, setBossOrder, setBossStats,
+    setCityNeighborHintVisible, setCityNeighborRetry, setCityOrder,
     setCompletedLevels, setConfusableOrder, setDraftShapeProvinceCodes,
     setDualIntruderOrder,
     setFeedback, setFeedbackType, setGroupOrder, setLevel, setMapRegionOrder,

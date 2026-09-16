@@ -199,6 +199,10 @@ export function useGauntletAdvanceActions(round: GauntletRoundActions) {
     s.setProvinceAnswer("");
     s.setPlateAnswer("");
     s.setMapSelections(new Set());
+    if (reviewedLevel === LEVEL.CITY_NEIGHBORS) {
+      s.setCityNeighborHintVisible(false);
+      s.setCityNeighborRetry(false);
+    }
     if (nextAction === "finish") {
       round.finishLevel(reviewedLevel);
       return;

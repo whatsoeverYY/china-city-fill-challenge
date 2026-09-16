@@ -30,6 +30,8 @@ export default function GauntletQuestionCount() {
     label = `易混城市 · 第 ${s.questionIndex + 1} 题`;
   } else if (s.level === LEVEL.PROVINCE_CITY_COUNT) {
     label = `${s.selectedShapeProvinceCodes.size} 省 · 第 ${s.questionIndex + 1} 题`;
+  } else if (s.level === LEVEL.CITY_NEIGHBORS) {
+    label = `${s.selectedShapeProvinceCodes.size} 省 · ${s.mapRegionOrder.length} 行政区 · 第 ${s.questionIndex + 1} 题`;
   } else if (s.level === LEVEL.FINAL_BOSS) {
     label = `终极混战 · 第 ${s.questionIndex + 1} / ${d.target} 题`;
   } else if (s.level === LEVEL.UNIVERSITY_CITY) {

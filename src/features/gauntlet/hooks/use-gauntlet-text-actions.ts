@@ -15,6 +15,7 @@ import {
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import { normalizePlate } from "@/features/gauntlet/model/question-generators";
+import { cityNeighborAnswerMatches } from "@/features/gauntlet/model/city-neighbor-question";
 import {
   normalizePlaceName,
   placeNameMatches,
@@ -82,6 +83,41 @@ export function useGauntletTextActions(
           correctAnswer,
           explanation: item.explanation,
         },
+      );
+      return;
+    }
+
+    if (s.level === LEVEL.CITY_NEIGHBORS) {
+      const question = d.currentCityNeighborQuestion;
+      if (!question) return;
+      const neighborNames = question.neighbors.map((neighbor) => neighbor.name);
+      const correct = cityNeighborAnswerMatches(
+        s.provinceAnswer,
+        neighborNames,
+      );
+      if (!correct && !s.cityNeighborRetry) {
+        s.setCityNeighborHintVisible(true);
+        s.setCityNeighborRetry(true);
+        s.setFeedbackType("wrong");
+        s.setFeedback("答案还不完整，已显示带市界的提示地图；请修改后再答一次");
+        round.focusProvinceInput();
+        return;
+      }
+
+      s.setCityNeighborHintVisible(false);
+      s.setCityNeighborRetry(false);
+      const correctAnswer = neighborNames.length
+        ? neighborNames.join("、")
+        : "没有（0）";
+      const explanation = neighborNames.length
+        ? `${question.city}在本省地图上与${correctAnswer}陆地接壤`
+        : `${question.city}在本省地图上没有陆地接壤的行政区`;
+      advance.advanceStreakChallenge(
+        LEVEL.CITY_NEIGHBORS,
+        correct,
+        d.target,
+        correctAnswer,
+        explanation,
       );
       return;
     }

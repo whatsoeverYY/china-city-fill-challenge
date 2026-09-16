@@ -37,7 +37,6 @@ import type { GauntletLevel } from "@/features/gauntlet/model/gauntlet-types";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import { normalizeMistakeList } from "@/domain/game/mistakes";
 import { provinceForFeature } from "@/features/map/lib/map-geometry";
-import { useMapCollection } from "@/features/map/model/map-data";
 import {
   GAUNTLET_MISTAKES_KEY,
   GAUNTLET_PLATE_CITY_MAP_HISTORY_KEY,
@@ -50,6 +49,8 @@ import {
   GAUNTLET_PROVINCE_PICKER_OPTIONS,
   summarizeGauntletProvinceScope,
 } from "./gauntlet-province-scope";
+import { useCityNeighborQuestion } from "./use-city-neighbor-question";
+import { useGauntletDetailMap } from "./use-gauntlet-detail-map";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -177,7 +178,9 @@ function useGauntletDerivedValue() {
   const currentCity = cityOrder.length
     ? cityOrder[questionIndex % cityOrder.length]
     : null;
-  const currentMapRegion = mapRegionOrder[questionIndex] ?? null;
+  const currentMapRegion = mapRegionOrder.length
+    ? mapRegionOrder[questionIndex % mapRegionOrder.length]
+    : null;
   const cityPoolSize = useMemo(
     () => new Set(cityOrder.map(cityQuizKey)).size,
     [cityOrder],
@@ -230,35 +233,23 @@ function useGauntletDerivedValue() {
         (province) => province.code === plateCityMapFocusedProvinceCode,
       ) ?? null
     : null;
-  const detailProvinceCode = level === LEVEL.REGION_MAP && currentMapRegion
-    ? currentMapRegion.provinceCode
-    : null;
-  const detailProvinceCodes = level === LEVEL.PLATE_CITY_MAP
-    ? selectedCityMapProvinces.map((province) => province.code)
-    : detailProvinceCode
-      ? [detailProvinceCode]
-      : [];
-  const { data: gauntletDetailMap, error: gauntletDetailError } =
-    useMapCollection(detailProvinceCodes);
-  const detailProvinceCodeSet = new Set(detailProvinceCodes);
-  const gauntletDetailReady = Boolean(
-    detailProvinceCodes.length && gauntletDetailMap?.features.length &&
-    gauntletDetailMap.features.every(
-      (feature) =>
-        detailProvinceCodeSet.has(feature.properties.provinceCode ?? ""),
-    ) &&
-    detailProvinceCodes.every((code) =>
-      gauntletDetailMap?.features.some(
-        (feature) => feature.properties.provinceCode === code,
-      )
-    ),
-  );
+  const { gauntletDetailMap, gauntletDetailError, gauntletDetailReady } =
+    useGauntletDetailMap({
+      currentMapRegion,
+      level,
+      selectedCityMapProvinces,
+    });
   const selectedQuizItems = useMemo(
     () => CITY_QUIZ_DATA.filter(
       (item) => selectedShapeProvinceCodes.has(item.provinceCode),
     ),
     [selectedShapeProvinceCodes],
   );
+  const currentCityNeighborQuestion = useCityNeighborQuestion({
+    currentRegion: currentMapRegion,
+    detailMap: gauntletDetailMap,
+    level,
+  });
   const selectedPlateQuizItems = useMemo(
     () => PLATE_QUIZ_DATA.filter(
       (item) => selectedShapeProvinceCodes.has(item.provinceCode),
@@ -343,6 +334,10 @@ function useGauntletDerivedValue() {
       !selectedQuizItems.length
     ) return "当前范围没有可用的城市题目";
     if (
+      challengeLevel === LEVEL.CITY_NEIGHBORS &&
+      !selectedMapRegionItems.length
+    ) return "当前范围没有可用于邻市题的行政区块";
+    if (
       PLATE_QUESTION_LEVELS.has(challengeLevel) &&
       !selectedPlateQuizItems.length
     ) return "当前范围没有可用的车牌题目";
@@ -360,7 +355,7 @@ function useGauntletDerivedValue() {
 
   return {
     bossShapeFeature, cityPoolSize, currentBossQuestion, currentChallengeProvince,
-    currentCity, currentConfusableQuestion,
+    currentCity, currentCityNeighborQuestion, currentConfusableQuestion,
     currentDualIntruderQuestion, currentGroupQuestion, currentMapRegion,
     currentMistake, currentPlateFaultQuestion, currentProvince,
     currentProvinceCityCount, currentProvinceFeature,

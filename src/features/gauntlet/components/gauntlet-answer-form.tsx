@@ -13,6 +13,7 @@ export default function GauntletAnswerForm({
   inputMode,
   pattern,
   maxLength,
+  allowEmpty = false,
 }: {
   actions: GauntletActions;
   id: string;
@@ -22,6 +23,7 @@ export default function GauntletAnswerForm({
   inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
   pattern?: string;
   maxLength?: number;
+  allowEmpty?: boolean;
 }) {
   const {
     plateAnswer,
@@ -47,7 +49,7 @@ export default function GauntletAnswerForm({
         autoComplete="off"
         maxLength={maxLength}
       />
-      <button className="min-h-12 cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={!value.trim()}>提交答案</button>
+      <button className="min-h-12 cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={!allowEmpty && !value.trim()}>提交答案</button>
     </form>
   );
 }

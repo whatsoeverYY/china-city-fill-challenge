@@ -55,7 +55,7 @@ const questionGeneratorsUrl = new URL(
 test("gauntlet levels use stable IDs while display numbers follow catalog order", () => {
   const ids = GAUNTLET_LEVELS.map((level) => level.id);
 
-  assert.equal(GAUNTLET_LEVEL_COUNT, 19);
+  assert.equal(GAUNTLET_LEVEL_COUNT, 20);
   assert.equal(new Set(ids).size, GAUNTLET_LEVEL_COUNT);
   assert.ok(ids.every((id) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id)));
   assert.ok(ids.every(isGauntletLevelId));
@@ -67,6 +67,8 @@ test("gauntlet levels use stable IDs while display numbers follow catalog order"
   );
   assert.equal(GAUNTLET_LEVELS.at(-2)?.id, GAUNTLET_LEVEL_ID.MISTAKE_REVENGE);
   assert.equal(GAUNTLET_LEVELS.at(-1)?.id, GAUNTLET_LEVEL_ID.FINAL_BOSS);
+  assert.equal(GAUNTLET_LEVELS[16]?.id, GAUNTLET_LEVEL_ID.CITY_NEIGHBORS);
+  assert.equal(GAUNTLET_LEVELS[17]?.id, GAUNTLET_LEVEL_ID.PLATE_CITY_MAP);
   assert.equal(
     activeGauntletCompletionCount([
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,

@@ -164,6 +164,15 @@ export const GAUNTLET_LEVELS: readonly GauntletLevelDefinition[] = [
     roundHeading: "一个省级行政区，究竟有多少座城市",
   },
   {
+    id: GAUNTLET_LEVEL_ID.CITY_NEIGHBORS,
+    title: "邻市包围圈",
+    badge: "邻市",
+    description: "写出与指定行政区陆地接壤的全部省内行政区；自治州、盟及无邻市题都会出现，答错可看市界图重答。",
+    target: "连续答对 20 题",
+    openingFeedback: "写出与目标城市或地区陆地接壤的全部省内行政区",
+    roundHeading: "看一个行政区，答出全部省内邻市",
+  },
+  {
     id: GAUNTLET_LEVEL_ID.PLATE_CITY_MAP,
     title: "车牌落城",
     badge: "牌位",

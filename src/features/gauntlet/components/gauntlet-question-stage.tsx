@@ -5,6 +5,7 @@ import GauntletDetailMap from "@/features/gauntlet/components/maps/gauntlet-deta
 import GauntletNationalMap from "@/features/gauntlet/components/maps/gauntlet-national-map";
 import GauntletProvinceMapWall from "@/features/gauntlet/components/maps/gauntlet-province-map-wall";
 import ProvinceSilhouette from "@/features/gauntlet/components/maps/province-silhouette";
+import CityNeighborHintMap from "@/features/gauntlet/components/maps/city-neighbor-hint-map";
 import GauntletQuestionCount from "@/features/gauntlet/components/gauntlet-question-count";
 import ChoiceQuestion from "@/features/gauntlet/components/choice-question";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
@@ -115,6 +116,35 @@ export default function GauntletQuestionStage({
       return d.currentProvinceCityCount ? (
         <ChoiceQuestion className="city-count-question" badge="数" prompt="地级及以上城市数量" value={d.currentProvinceCityCount.name} hint="内地按2024年《中国统计年鉴》口径；港澳台按当地现行行政层级说明" />
       ) : <LoadingMap />;
+    }
+    if (s.level === LEVEL.CITY_NEIGHBORS) {
+      if (!s.cityNeighborHintVisible) {
+        return d.currentMapRegion ? (
+          <ChoiceQuestion
+            className="city-neighbor-question"
+            badge="邻"
+            prompt="写出同一省级行政区内与它陆地接壤的全部行政区"
+            value={d.currentMapRegion.city}
+            hint="答案不完整时会显示带名称和市界的省级提示地图"
+          />
+        ) : <LoadingMap />;
+      }
+      if (d.gauntletDetailError) {
+        return <p className="map-error grid min-h-48 place-items-center p-8 text-center text-sm font-bold text-brand-red-dark">邻市提示地图载入失败，请重试本关</p>;
+      }
+      return d.gauntletDetailMap && d.gauntletDetailReady &&
+        d.currentCityNeighborQuestion ? (
+          <div className="gauntlet-map-question city-neighbor-map-question relative grid size-full place-items-center">
+            <div className="map-question-banner absolute left-4 top-4 z-[2] rounded-xl bg-ink/90 px-4 py-3 text-white shadow-lg">
+              <small className="block text-[10px] text-white/60">观察哪些行政区与红色目标共享陆地边界</small>
+              <strong className="text-xl">{d.currentCityNeighborQuestion.city}</strong>
+            </div>
+            <CityNeighborHintMap
+              map={d.gauntletDetailMap}
+              targetRegionId={d.currentCityNeighborQuestion.regionId}
+            />
+          </div>
+        ) : <LoadingMap />;
     }
     if (s.level === LEVEL.PLATE_CITY_MAP) {
       if (d.gauntletDetailError) {

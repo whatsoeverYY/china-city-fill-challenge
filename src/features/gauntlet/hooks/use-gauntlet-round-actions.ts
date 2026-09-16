@@ -76,6 +76,8 @@ export function useGauntletRoundActions() {
     s.setProvinceAnswer("");
     s.setPlateAnswer("");
     s.setMapSelections(new Set());
+    s.setCityNeighborHintVisible(false);
+    s.setCityNeighborRetry(false);
     s.setPlateCityMapFocusedProvinceCode(null);
     s.setRouteCodes([]);
     s.setFeedbackType("idle");
@@ -178,6 +180,9 @@ export function useGauntletRoundActions() {
       ))[0];
       s.setRouteCodes(start ? [start.code] : []);
       clearQuestionOrders();
+    } else if (nextLevel === LEVEL.CITY_NEIGHBORS) {
+      s.setMapRegionOrder(randomShuffle(d.selectedMapRegionItems));
+      clearQuestionOrders();
     } else if (nextLevel === LEVEL.REGION_MAP) {
       s.setMapRegionOrder(createCityMapQuestionQueue(
         d.selectedMapRegionItems,
@@ -259,6 +264,14 @@ export function useGauntletRoundActions() {
 
   const clearPickerProvinces = () => s.setDraftShapeProvinceCodes(new Set());
 
+  const showCityNeighborHint = () => {
+    if (s.level !== LEVEL.CITY_NEIGHBORS || !d.currentCityNeighborQuestion) return;
+    s.setCityNeighborHintVisible(true);
+    s.setFeedbackType("idle");
+    s.setFeedback("已显示省内行政区界线提示图；观察哪些区块与目标行政区共享边界");
+    focusProvinceInput();
+  };
+
   const finishLevel = (finishedLevel: GauntletLevel) => {
     const nextCompleted = new Set(s.completedLevels).add(finishedLevel);
     s.setCompletedLevels(nextCompleted);
@@ -298,7 +311,7 @@ export function useGauntletRoundActions() {
     applyProvinceSelection, clearPickerProvinces, finishLevel,
     focusProvinceInput, masterMistake, openProvincePicker, recordMistake,
     returnToLevels, selectAllPickerProvinces, startLevel,
-    toggleDraftProvince,
+    showCityNeighborHint, toggleDraftProvince,
   };
 }
 

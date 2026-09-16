@@ -15,6 +15,7 @@ export const GAUNTLET_LEVEL_ID = {
   UNIVERSITY_CITY: "university-city",
   CONFUSABLE_CITIES: "confusable-cities",
   PROVINCE_CITY_COUNT: "province-city-count",
+  CITY_NEIGHBORS: "city-neighbors",
   PLATE_CITY_MAP: "plate-city-map",
   MISTAKE_REVENGE: "mistake-revenge",
   FINAL_BOSS: "final-boss",

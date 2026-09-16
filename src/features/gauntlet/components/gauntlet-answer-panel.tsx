@@ -1,8 +1,10 @@
 "use client";
 
-import { PROVINCE_BY_CODE, PROVINCES } from "@/domain/geography/data/provinces";
+import { PROVINCE_BY_CODE } from "@/domain/geography/data/provinces";
 import AnswerReviewPanel from "@/features/gauntlet/components/answer-review-panel";
+import CityNeighborAnswer from "@/features/gauntlet/components/city-neighbor-answer";
 import GauntletAnswerForm from "@/features/gauntlet/components/gauntlet-answer-form";
+import ProvinceNeighborAnswer from "@/features/gauntlet/components/province-neighbor-answer";
 import { STREAK_NOTE_LEVELS } from "@/features/gauntlet/config/gauntlet-config";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
 import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-actions";
@@ -200,6 +202,9 @@ export default function GauntletAnswerPanel({
         </>
       );
     }
+    if (s.level === LEVEL.CITY_NEIGHBORS) {
+      return <CityNeighborAnswer actions={actions} />;
+    }
     if (s.level === LEVEL.PLATE_CITY_MAP) {
       return (
         <>
@@ -258,44 +263,7 @@ export default function GauntletAnswerPanel({
       );
     }
     if (s.level === LEVEL.PROVINCE_NEIGHBORS) {
-      return (
-        <>
-          <h2 className={ANSWER_TITLE_CLASS}>选出全部陆地邻省</h2>
-          <div className={`${OPTION_GRID_CLASS} neighbor-text-options`}>
-            {PROVINCES.filter(
-              (item) => item.code !== d.currentChallengeProvince?.code,
-            ).map((item) => {
-              const selected = s.mapSelections.has(item.code);
-              return (
-                <button
-                  key={item.code}
-                  className={`${OPTION_CLASS} ${selected ? "border-brand-red bg-brand-red/10" : ""}`}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => actions.handleGauntletProvince(item)}
-                >
-                  {item.shortName}
-                </button>
-              );
-            })}
-          </div>
-          <p className={SUMMARY_CLASS}>
-            已选 {s.mapSelections.size} 个：
-            {Array.from(s.mapSelections)
-              .map((code) => PROVINCE_BY_CODE.get(code)?.shortName)
-              .filter(Boolean)
-              .join("、") || "暂未选择"}
-          </p>
-          <button
-            className={PRIMARY_CLASS}
-            type="button"
-            disabled={s.mapSelections.size === 0}
-            onClick={actions.submitNeighborSelection}
-          >
-            确认包围圈
-          </button>
-        </>
-      );
+      return <ProvinceNeighborAnswer actions={actions} />;
     }
     if (s.level === LEVEL.CITY_MAP) {
       return (
@@ -389,7 +357,9 @@ export default function GauntletAnswerPanel({
           {STREAK_NOTE_LEVELS.has(s.level) &&
           (s.level !== LEVEL.MISTAKE_REVENGE || Boolean(d.currentMistake)) ? (
             <p className="streak-note text-center text-xs font-black text-brand-gold">
-              答对后自动进入下一题；答错才会展示正确答案与知识解释。
+              {s.level === LEVEL.CITY_NEIGHBORS
+                ? "首次答错会显示市界提示图；重答正确仍计入连胜。"
+                : "答对后自动进入下一题；答错才会展示正确答案与知识解释。"}
             </p>
           ) : null}
         </>
