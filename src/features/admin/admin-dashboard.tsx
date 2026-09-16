@@ -25,7 +25,8 @@ const PAGE_SIZE = 30;
 const SEARCH_DEBOUNCE_MS = 300;
 const INITIAL_LOAD_DEFER_MS = 0;
 const TABLE_HEADER_CLASS = "border-b border-black/10 bg-paper-deep/40 px-4 py-3 text-[9px] font-black tracking-wider text-ink-soft";
-const TABLE_CELL_CLASS = "border-b border-black/10 p-4 align-middle text-[11px]";
+const TABLE_CELL_CLASS = "border-b border-black/10 p-4 align-middle text-[11px] max-sm:flex max-sm:min-w-0 max-sm:flex-col max-sm:gap-1 max-sm:border-b-0 max-sm:p-3";
+const MOBILE_CELL_LABEL_CLASS = "hidden text-[8px] font-black tracking-wider text-ink-soft max-sm:block";
 const STAT_CARD_CLASS = "min-h-36 rounded-[16px_16px_16px_5px] border border-black/10 bg-card/90 p-5 shadow-sm max-sm:min-h-28 max-sm:p-3.5";
 
 function AdminMetric({ label, value }: { label: string; value: React.ReactNode }) {
@@ -181,7 +182,7 @@ export default function AdminDashboard() {
     return (
       <main className="admin-state-page grid min-h-dvh place-content-center justify-items-center p-7 text-center">
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-brand-red text-xl font-black text-white" aria-hidden="true">锁</span>
-        <h1 className="mb-2 mt-3.5 text-[clamp(28px,6vw,48px)] font-black">请先登录管理员账号</h1>
+        <h1 className="mb-2 mt-3.5 text-[clamp(28px,6vw,48px)] font-black max-md:text-3xl">请先登录管理员账号</h1>
         <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">回到游戏首页，点击右下角“登录保存”完成登录。</p>
         <a className="rounded-xl bg-brand-green px-4 py-2.5 text-[11px] font-extrabold text-white no-underline" href={appPath("/")}>返回游戏首页</a>
       </main>
@@ -191,7 +192,7 @@ export default function AdminDashboard() {
     return (
       <main className="admin-state-page grid min-h-dvh place-content-center justify-items-center p-7 text-center">
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-brand-red text-xl font-black text-white" aria-hidden="true">止</span>
-        <h1 className="mb-2 mt-3.5 text-[clamp(28px,6vw,48px)] font-black">当前账号没有管理员权限</h1>
+        <h1 className="mb-2 mt-3.5 text-[clamp(28px,6vw,48px)] font-black max-md:text-3xl">当前账号没有管理员权限</h1>
         <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">{identity.email} 可以正常游戏，但不能查看其他玩家数据。</p>
         <a className="rounded-xl bg-brand-green px-4 py-2.5 text-[11px] font-extrabold text-white no-underline" href={appPath("/")}>继续游戏</a>
       </main>
@@ -201,7 +202,7 @@ export default function AdminDashboard() {
     return (
       <main className="admin-state-page grid min-h-dvh place-content-center justify-items-center p-7 text-center">
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-brand-red text-xl font-black text-white" aria-hidden="true">离</span>
-        <h1 className="mb-2 mt-3.5 text-[clamp(28px,6vw,48px)] font-black">管理员后台需要联网</h1>
+        <h1 className="mb-2 mt-3.5 text-[clamp(28px,6vw,48px)] font-black max-md:text-3xl">管理员后台需要联网</h1>
         <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">游戏仍可离线继续；连接网络后刷新此页面即可查看玩家数据。</p>
         <a className="rounded-xl bg-brand-green px-4 py-2.5 text-[11px] font-extrabold text-white no-underline" href={appPath("/")}>返回离线游戏</a>
       </main>
@@ -215,10 +216,10 @@ export default function AdminDashboard() {
       <header className="admin-header flex items-end justify-between gap-7 border-b border-black/10 pb-7 pt-3 max-lg:flex-col max-lg:items-stretch">
         <div>
           <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-brand-red">ADMIN CONSOLE</p>
-          <h1 className="mb-2 mt-0 text-[clamp(32px,5vw,58px)] font-black leading-none">玩家与进度中心</h1>
+          <h1 className="mb-2 mt-0 text-[clamp(32px,5vw,58px)] font-black leading-none max-md:text-3xl">玩家与进度中心</h1>
           <p className="mb-0 text-xs text-ink-soft">查看玩家账号、活跃时间、地图完成度、闯关进度与完整云存档。</p>
         </div>
-        <div className="admin-header-actions flex gap-2.5 max-sm:grid max-sm:grid-cols-1">
+        <div className="admin-header-actions flex gap-2.5 max-sm:grid max-sm:grid-cols-2">
           <a className="grid min-h-11 place-items-center rounded-xl border border-black/15 bg-card px-3.5 text-[11px] font-extrabold no-underline" href={appPath("/")}>← 返回游戏</a>
           <button className="min-h-11 cursor-pointer rounded-xl border border-black/15 bg-card px-3.5 text-[11px] font-extrabold" type="button" onClick={() => void loadPlayers()} disabled={loading}>
             {loading ? "刷新中…" : "刷新数据"}
@@ -235,7 +236,7 @@ export default function AdminDashboard() {
         ].map(([label, value, note]) => (
           <article className={STAT_CARD_CLASS} key={label}>
             <span className="block text-[10px] font-black tracking-[0.08em] text-ink-soft">{label}</span>
-            <strong className="my-2 block text-[42px] text-brand-green-dark max-sm:text-3xl">{value}</strong>
+            <strong className="my-2 block text-[42px] text-brand-green-dark max-md:text-3xl">{value}</strong>
             <small className="block text-[9px] text-ink-soft">{note}</small>
           </article>
         ))}
@@ -281,22 +282,23 @@ export default function AdminDashboard() {
 
         {notice ? <div className="admin-notice m-5 rounded-xl bg-brand-green/10 p-3.5 text-[11px] text-brand-green-dark" role="status">{notice}</div> : null}
         {error ? <div className="admin-error m-5 rounded-xl bg-brand-red/10 p-3.5 text-[11px] text-brand-red-dark" role="alert">{error}</div> : null}
-        <div className="admin-table-wrap overflow-x-auto" aria-busy={loading}>
-          <table className="admin-player-table w-full min-w-[1040px] border-collapse text-left">
-            <thead>
+        <div className="admin-table-wrap overflow-x-auto max-sm:overflow-visible" aria-busy={loading}>
+          <table className="admin-player-table w-full min-w-[1040px] border-collapse text-left max-sm:block max-sm:min-w-0">
+            <thead className="max-sm:hidden">
               <tr><th className={TABLE_HEADER_CLASS}>玩家</th><th className={TABLE_HEADER_CLASS}>角色</th><th className={TABLE_HEADER_CLASS}>全国地图</th><th className={TABLE_HEADER_CLASS}>闯关进度</th><th className={TABLE_HEADER_CLASS}>最近活跃</th><th className={TABLE_HEADER_CLASS}>云存档</th></tr>
             </thead>
-            <tbody>
+            <tbody className="max-sm:grid max-sm:gap-3 max-sm:p-3">
               {players.map((player) => {
                 const summary = player.progress;
                 return (
-                  <tr key={player.id}>
-                    <td className={TABLE_CELL_CLASS} data-label="玩家"><strong className="block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">{player.email}</strong><small className="mt-1 block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap text-[8px] text-ink-soft">{player.id}</small></td>
-                    <td className={TABLE_CELL_CLASS} data-label="角色"><span className={`admin-role inline-flex rounded-full px-2 py-1 text-[9px] font-extrabold ${player.role === "admin" ? "bg-brand-gold/20 text-[#745719]" : "bg-brand-green/10 text-brand-green-dark"}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
-                    <td className={TABLE_CELL_CLASS} data-label="全国地图"><strong className="block">{summary?.completed_provinces ?? 0}<i className="text-[9px] not-italic text-ink-soft">/{PROVINCES.length}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.placed_names ?? 0} 个名称已归位</small></td>
-                    <td className={TABLE_CELL_CLASS} data-label="闯关进度"><strong className="block">{currentCompletedLevelCount(summary)}<i className="text-[9px] not-italic text-ink-soft">/{GAUNTLET_LEVEL_COUNT}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.mistakes ?? 0} 道待复习错题</small></td>
-                    <td className={TABLE_CELL_CLASS} data-label="最近活跃"><strong className="block">{formatDate(player.last_seen_at)}</strong><small className="mt-1 block text-[8px] text-ink-soft">注册于 {formatDate(player.created_at)}</small></td>
-                    <td className={TABLE_CELL_CLASS} data-label="云存档">
+                  <tr className="max-sm:grid max-sm:grid-cols-2 max-sm:overflow-hidden max-sm:rounded-xl max-sm:border max-sm:border-black/10 max-sm:bg-white/55" key={player.id}>
+                    <td className={`${TABLE_CELL_CLASS} max-sm:col-span-2`} data-label="玩家"><span className={MOBILE_CELL_LABEL_CLASS}>玩家</span><strong className="block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">{player.email}</strong><small className="mt-1 block max-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap text-[8px] text-ink-soft">{player.id}</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="角色"><span className={MOBILE_CELL_LABEL_CLASS}>角色</span><span className={`admin-role inline-flex w-fit rounded-full px-2 py-1 text-[9px] font-extrabold ${player.role === "admin" ? "bg-brand-gold/20 text-[#745719]" : "bg-brand-green/10 text-brand-green-dark"}`}>{player.role === "admin" ? "管理员" : "玩家"}</span></td>
+                    <td className={TABLE_CELL_CLASS} data-label="全国地图"><span className={MOBILE_CELL_LABEL_CLASS}>全国地图</span><strong className="block">{summary?.completed_provinces ?? 0}<i className="text-[9px] not-italic text-ink-soft">/{PROVINCES.length}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.placed_names ?? 0} 个名称已归位</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="闯关进度"><span className={MOBILE_CELL_LABEL_CLASS}>闯关进度</span><strong className="block">{currentCompletedLevelCount(summary)}<i className="text-[9px] not-italic text-ink-soft">/{GAUNTLET_LEVEL_COUNT}</i></strong><small className="mt-1 block text-[8px] text-ink-soft">{summary?.mistakes ?? 0} 道待复习错题</small></td>
+                    <td className={TABLE_CELL_CLASS} data-label="最近活跃"><span className={MOBILE_CELL_LABEL_CLASS}>最近活跃</span><strong className="block">{formatDate(player.last_seen_at)}</strong><small className="mt-1 block text-[8px] text-ink-soft">注册于 {formatDate(player.created_at)}</small></td>
+                    <td className={`${TABLE_CELL_CLASS} max-sm:col-span-2 max-sm:border-t max-sm:border-black/10`} data-label="云存档">
+                      <span className={MOBILE_CELL_LABEL_CLASS}>云存档</span>
                       <button className="min-h-9 cursor-pointer rounded-lg border border-brand-green/25 bg-brand-green/10 px-2.5 text-[10px] font-extrabold text-brand-green-dark" type="button" onClick={() => void openPlayerDetails(player)}>
                         {player.progress ? "查看 / 管理" : "管理存档"}
                       </button>

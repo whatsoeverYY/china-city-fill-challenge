@@ -61,7 +61,7 @@ export default function ChallengeMapPanel({
 }) {
   return (
     <section className="map-card min-w-0 overflow-hidden rounded-3xl border border-black/10 bg-card shadow-[0_20px_60px_rgba(43,48,43,0.1)]">
-      <div className="map-toolbar flex min-h-16 items-center justify-between gap-3 border-b border-black/10 px-5 py-3 max-md:flex-wrap max-md:px-3">
+      <div className="map-toolbar flex min-h-16 items-center justify-between gap-3 border-b border-black/10 px-5 py-3 max-md:min-h-0 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-3 max-md:px-3 max-md:py-2.5">
         <div>
           {province ? (
             <button className="back-button inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-sm font-black text-ink" type="button" onClick={onBack}>
@@ -77,7 +77,7 @@ export default function ChallengeMapPanel({
             </span>
           )}
         </div>
-        <div className="map-status flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-sm font-bold text-ink-soft max-md:order-3 max-md:w-full" aria-live="polite">
+        <div className="map-status flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-sm font-bold text-ink-soft max-md:order-3 max-md:basis-full max-md:flex-none max-md:justify-start max-md:text-left max-md:text-xs" aria-live="polite">
           <span className={`status-dot size-2 shrink-0 rounded-full ${isChallengeComplete ? "bg-brand-green" : "bg-brand-gold"}`} />
           {hoveredFeature && !province && !hardMode
             ? hoveredFeature.properties.name
@@ -86,16 +86,16 @@ export default function ChallengeMapPanel({
               : message}
         </div>
         {province ? (
-          <div className="map-actions flex items-center gap-2">
+          <div className="map-actions flex items-center gap-1.5">
             <button
-              className={`reveal-cities-button cursor-pointer rounded-full border border-black/10 px-3 py-2 text-xs font-black ${showAllCityNames ? "bg-brand-green text-white" : "bg-white/60"}`}
+              className={`reveal-cities-button cursor-pointer rounded-full border border-black/10 px-3 py-2 text-xs font-black max-sm:px-2.5 max-sm:py-1.5 max-sm:text-[10px] ${showAllCityNames ? "bg-brand-green text-white" : "bg-white/60"}`}
               type="button"
               aria-pressed={showAllCityNames}
               onClick={() => setShowAllCityNames((value) => !value)}
             >
               {showAllCityNames ? "隐藏全部城市" : "显示全部城市"}
             </button>
-            <button className="reset-button cursor-pointer border-0 bg-transparent px-2 py-2 text-xs font-black text-brand-red" type="button" onClick={onReset}>
+            <button className="reset-button cursor-pointer border-0 bg-transparent px-2 py-2 text-xs font-black text-brand-red max-sm:px-1 max-sm:py-1.5 max-sm:text-[10px]" type="button" onClick={onReset}>
               重新挑战
             </button>
           </div>
@@ -147,7 +147,7 @@ export default function ChallengeMapPanel({
         </div>
       ) : null}
 
-      <div className="map-stage relative grid min-h-[520px] place-items-center overflow-hidden bg-[#f7f1e5] max-md:min-h-[56vh]">
+      <div className="map-stage relative grid min-h-[520px] place-items-center overflow-hidden bg-[#f7f1e5] max-md:min-h-[44dvh]">
         {mapError ? (
           <div className="map-error grid place-items-center gap-2 p-10 text-center" role="alert">
             <strong className="text-lg">地图没有成功展开</strong>
@@ -177,9 +177,9 @@ export default function ChallengeMapPanel({
 
       {province ? (
         <div className="round-stats grid grid-cols-3 border-t border-black/10 bg-paper-deep/35 text-center">
-          <div className="px-4 py-3"><span className="block text-[10px] font-black uppercase tracking-[0.12em] text-ink-soft">已填入</span><strong className="text-xl">{completedRegionIds.size}<i className="text-xs not-italic text-ink-soft"> / {answerCount}</i></strong></div>
-          <div className="border-l border-black/10 px-4 py-3"><span className="block text-[10px] font-black uppercase tracking-[0.12em] text-ink-soft">正确率</span><strong className="text-xl">{accuracy}<i className="text-xs not-italic text-ink-soft">%</i></strong></div>
-          <div className="border-l border-black/10 px-4 py-3"><span className="block text-[10px] font-black uppercase tracking-[0.12em] text-ink-soft">待归位</span><strong className="text-xl">{Math.max(answerCount - completedRegionIds.size, 0)}</strong></div>
+          <div className="px-4 py-3 max-md:px-2 max-md:py-2"><span className="block text-[10px] font-black uppercase tracking-[0.12em] text-ink-soft">已填入</span><strong className="text-xl max-md:text-base">{completedRegionIds.size}<i className="text-xs not-italic text-ink-soft"> / {answerCount}</i></strong></div>
+          <div className="border-l border-black/10 px-4 py-3 max-md:px-2 max-md:py-2"><span className="block text-[10px] font-black uppercase tracking-[0.12em] text-ink-soft">正确率</span><strong className="text-xl max-md:text-base">{accuracy}<i className="text-xs not-italic text-ink-soft">%</i></strong></div>
+          <div className="border-l border-black/10 px-4 py-3 max-md:px-2 max-md:py-2"><span className="block text-[10px] font-black uppercase tracking-[0.12em] text-ink-soft">待归位</span><strong className="text-xl max-md:text-base">{Math.max(answerCount - completedRegionIds.size, 0)}</strong></div>
         </div>
       ) : null}
     </section>

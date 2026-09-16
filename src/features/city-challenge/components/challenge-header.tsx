@@ -24,7 +24,7 @@ export default function ChallengeHeader({
 }) {
   return (
     <>
-      <header className="site-header mb-8 flex items-center justify-between gap-5 max-lg:items-start max-md:mb-5 max-md:flex-col max-md:items-stretch">
+      <header className="site-header mb-8 flex items-center justify-between gap-5 max-lg:items-start max-md:mb-4 max-md:flex-col max-md:items-stretch max-md:gap-3">
         <button className="brand inline-flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left text-ink" type="button" onClick={onBack}>
           <span className="brand-seal grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-red text-xl font-black text-white shadow-[0_10px_24px_rgba(125,41,36,0.2)] max-md:size-10 max-md:rounded-xl" aria-hidden="true">城</span>
           <span>
@@ -32,47 +32,47 @@ export default function ChallengeHeader({
             <small className="mt-0.5 block text-[10px] font-bold tracking-[0.2em] text-ink-soft">CHINA CITY ATLAS</small>
           </span>
         </button>
-        <div className="header-actions flex flex-wrap items-center justify-end gap-2.5 max-md:grid max-md:grid-cols-2">
+        <div className={`header-actions flex flex-wrap items-center justify-end gap-2.5 max-md:grid max-md:gap-1.5 ${province ? "max-md:grid-cols-2" : "max-md:grid-cols-5"}`}>
           {!province ? (
             <>
-              <a className="atlas-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center" href={routePath("/atlas")}>
-                <span className="grid size-6 place-items-center rounded-full bg-[#dcebf5]" aria-hidden="true">图</span>全国车牌图鉴
+              <a className="atlas-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px]" href={routePath("/atlas")}>
+                <span className="grid size-6 place-items-center rounded-full bg-[#dcebf5]" aria-hidden="true">图</span><span className="max-sm:hidden">全国车牌图鉴</span><span className="hidden max-sm:inline">图鉴</span>
               </a>
-              <a className="knowledge-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center" href={routePath("/knowledge")}>
-                <span className="grid size-6 place-items-center rounded-full bg-[#e5f0e8]" aria-hidden="true">知</span>地理知识馆
+              <a className="knowledge-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px]" href={routePath("/knowledge")}>
+                <span className="grid size-6 place-items-center rounded-full bg-[#e5f0e8]" aria-hidden="true">知</span><span className="max-sm:hidden">地理知识馆</span><span className="hidden max-sm:inline">知识</span>
               </a>
-              <a className="gauntlet-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center" href={routePath("/gauntlet")}>
-                <span className="grid size-6 place-items-center rounded-full bg-[#f5e5df]" aria-hidden="true">关</span>过关斩将
+              <a className="gauntlet-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px]" href={routePath("/gauntlet")}>
+                <span className="grid size-6 place-items-center rounded-full bg-[#f5e5df]" aria-hidden="true">关</span><span className="max-sm:hidden">过关斩将</span><span className="hidden max-sm:inline">闯关</span>
               </a>
             </>
           ) : null}
           <button
-            className={`neighbor-mode-button inline-flex cursor-pointer items-center gap-2 rounded-full border border-brand-green/25 px-3 py-2 text-xs font-black ${neighborMode ? "bg-brand-green text-white" : "bg-card text-ink"}`}
+            className={`neighbor-mode-button inline-flex cursor-pointer items-center gap-2 rounded-full border border-brand-green/25 px-3 py-2 text-xs font-black max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] ${neighborMode ? "bg-brand-green text-white" : "bg-card text-ink"}`}
             type="button"
             aria-pressed={neighborMode}
             onClick={onToggleNeighborMode}
           >
             <span className="grid size-6 place-items-center rounded-full bg-brand-green/10" aria-hidden="true">联</span>
-            邻省连城
+            <span className="max-sm:hidden">邻省连城</span><span className="hidden max-sm:inline">邻省</span>
             {neighborMode ? <i className="rounded-full bg-black/10 px-1.5 py-0.5 text-[9px] not-italic">已开启</i> : null}
           </button>
           <button
-            className={`difficulty-button inline-flex cursor-pointer items-center gap-2 rounded-full border border-brand-red/25 px-3 py-2 text-xs font-black ${hardMode ? "bg-brand-red text-white" : "bg-card text-ink"}`}
+            className={`difficulty-button inline-flex cursor-pointer items-center gap-2 rounded-full border border-brand-red/25 px-3 py-2 text-xs font-black max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] ${hardMode ? "bg-brand-red text-white" : "bg-card text-ink"}`}
             type="button"
             aria-pressed={hardMode}
             onClick={onToggleHardMode}
           >
             <span className="grid size-6 place-items-center rounded-full bg-brand-red/10" aria-hidden="true">↑</span>
-            难度提升
+            <span className="max-sm:hidden">难度提升</span><span className="hidden max-sm:inline">难度</span>
             {hardMode ? <i className="rounded-full bg-black/10 px-1.5 py-0.5 text-[9px] not-italic">已开启</i> : null}
           </button>
           <div
-            className="national-progress min-w-32 rounded-2xl border border-black/10 bg-card px-3 py-2 max-md:col-span-2"
+            className={`national-progress min-w-32 rounded-2xl border border-black/10 bg-card px-3 py-2 max-md:flex max-md:items-center max-md:gap-2 max-md:rounded-xl max-md:py-1.5 ${province ? "max-md:col-span-2" : "max-md:col-span-5"}`}
             aria-label={`已完成 ${completedProvinceCodes.size} 个挑战`}
           >
             <span className="text-[10px] font-bold text-ink-soft">{neighborMode ? "联挑战进度" : "全国进度"}</span>
-            <strong className="ml-2 text-xl">{completedProvinceCodes.size}<i className="text-xs not-italic text-ink-soft">/{PROVINCES.length}</i></strong>
-            <div className="progress-track mt-1 h-1.5 overflow-hidden rounded-full bg-black/10" aria-hidden="true">
+            <strong className="ml-2 text-xl max-md:ml-0 max-md:text-base">{completedProvinceCodes.size}<i className="text-xs not-italic text-ink-soft">/{PROVINCES.length}</i></strong>
+            <div className="progress-track mt-1 h-1.5 overflow-hidden rounded-full bg-black/10 max-md:mt-0 max-md:flex-1" aria-hidden="true">
               <span
                 className="block h-full rounded-full bg-brand-red transition-[width]"
                 style={{ width: `${(completedProvinceCodes.size / PROVINCES.length) * 100}%` }}
@@ -82,10 +82,10 @@ export default function ChallengeHeader({
         </div>
       </header>
 
-      <section className="intro-row mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-8 max-md:grid-cols-1 max-md:gap-4">
+      <section className="intro-row mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-8 max-md:mb-4 max-md:grid-cols-1 max-md:gap-3">
         <div>
-          <p className="eyebrow m-0 text-xs font-black uppercase tracking-[0.18em] text-brand-red">拖动 · 辨认 · 探索</p>
-          <h1 className="my-2 max-w-4xl text-[clamp(2rem,5vw,4.7rem)] font-black leading-[1.06] tracking-[-0.055em]">
+          <p className="eyebrow m-0 text-xs font-black uppercase tracking-[0.18em] text-brand-red max-md:text-[10px]">拖动 · 辨认 · 探索</p>
+          <h1 className="my-2 max-w-4xl text-[clamp(2rem,5vw,4.7rem)] font-black leading-[1.06] tracking-[-0.055em] max-md:my-1.5 max-md:text-[28px] max-sm:text-[26px]">
             {province ? (
               neighborMode ? (
                 <><span className="text-brand-red">{province.shortName}</span>与邻省，连城共答</>
@@ -98,7 +98,7 @@ export default function ChallengeHeader({
               <>从一省出发，拼出整幅中国城市地图</>
             )}
           </h1>
-          <p className="lede m-0 max-w-3xl text-[15px] leading-7 text-ink-soft">
+          <p className="lede m-0 max-w-3xl text-[15px] leading-7 text-ink-soft max-md:text-[13px] max-md:leading-6">
             {province
               ? neighborMode
                 ? `当前联合区域包含 ${challengeProvinces.map((item) => item.shortName).join("、")}，共 ${answerCount || "…"} 个城市或区县。${hardMode ? "点击区块并手动输入名称。" : "拖拽或点选名称完成整片区域。"}`
@@ -114,10 +114,10 @@ export default function ChallengeHeader({
                   : "点击地图或省份名进入挑战。红色标出省级边界，进入省内后，绿色标出地市或区县边界。"}
           </p>
         </div>
-        <div className="legend-card grid min-w-52 gap-2 rounded-2xl border border-black/10 bg-card/85 p-4 shadow-sm max-md:min-w-0 max-md:grid-cols-3" aria-label="地图图例">
-          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft"><span className="block h-0.5 w-6 bg-brand-red" />省级边界</p>
-          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft"><span className="block h-0.5 w-6 bg-brand-green" />地市 / 区县界</p>
-          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft"><span className="legend-fill block size-3 rounded-sm bg-[#f0beb8]" />已正确填入</p>
+        <div className="legend-card grid min-w-52 gap-2 rounded-2xl border border-black/10 bg-card/85 p-4 shadow-sm max-md:min-w-0 max-md:grid-cols-3 max-md:gap-1.5 max-md:rounded-xl max-md:p-3" aria-label="地图图例">
+          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft max-md:gap-1.5 max-md:text-[10px]"><span className="block h-0.5 w-6 bg-brand-red max-md:w-4" />省级边界</p>
+          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft max-md:gap-1.5 max-md:text-[10px]"><span className="block h-0.5 w-6 bg-brand-green max-md:w-4" />地市 / 区县界</p>
+          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft max-md:gap-1.5 max-md:text-[10px]"><span className="legend-fill block size-3 rounded-sm bg-[#f0beb8]" />已正确填入</p>
         </div>
       </section>
     </>

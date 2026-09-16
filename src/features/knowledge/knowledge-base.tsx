@@ -308,10 +308,10 @@ export default function KnowledgeBase({
 
   return (
     <main className="knowledge-shell min-h-dvh bg-[#f1ece1] text-ink">
-      <header className="knowledge-header sticky top-0 z-40 flex min-h-[78px] items-center justify-between gap-6 border-b border-black/10 bg-card/95 px-[max(24px,calc((100vw_-_1380px)/2))] py-3 shadow-sm backdrop-blur-xl max-sm:px-3">
+      <header className="knowledge-header sticky top-0 z-40 flex min-h-[78px] items-center justify-between gap-6 border-b border-black/10 bg-card/95 px-[max(24px,calc((100vw_-_1380px)/2))] py-3 shadow-sm backdrop-blur-xl max-sm:min-h-16 max-sm:gap-2 max-sm:px-3 max-sm:py-2">
         <button className="knowledge-brand flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left" type="button" onClick={backToCatalog}>
           <span className="grid size-12 place-items-center rounded-[14px_14px_14px_5px] bg-[#735285] text-xl font-black text-white max-sm:size-10" aria-hidden="true">知</span>
-          <div>
+          <div className={activeCategory ? "max-sm:hidden" : ""}>
             <p className="m-0 text-[8px] font-black tracking-[0.16em] text-[#817588] max-sm:hidden">CHINA GEO KNOWLEDGE</p>
             <h1 className="m-0 text-xl font-black max-sm:text-base">中国地理知识馆</h1>
           </div>
@@ -320,7 +320,7 @@ export default function KnowledgeBase({
           {activeCategory ? (
             <button className="min-h-10 cursor-pointer rounded-full border border-black/20 bg-white px-3.5 text-[10px] font-black" type="button" onClick={backToCatalog}>← 返回分类</button>
           ) : null}
-          <button className="knowledge-exit min-h-10 cursor-pointer rounded-full border border-brand-red-dark bg-brand-red-dark px-3.5 text-[10px] font-black text-white" type="button" onClick={onExit}>返回游戏</button>
+          <button className="knowledge-exit min-h-10 cursor-pointer rounded-full border border-brand-red-dark bg-brand-red-dark px-3.5 text-[10px] font-black text-white max-sm:min-h-9 max-sm:px-3" type="button" onClick={onExit}>返回游戏</button>
         </div>
       </header>
 
@@ -328,12 +328,12 @@ export default function KnowledgeBase({
         <KnowledgeCatalog onOpenCategory={openCategory} />
       ) : (
         <>
-          <section className="knowledge-detail-hero mx-auto my-10 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[auto_1fr_auto] items-center gap-6 rounded-[24px_24px_24px_8px] bg-[#735285] p-8 text-white shadow-xl max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:p-5">
-            <span className="grid size-16 place-items-center rounded-2xl bg-white/15 text-3xl" aria-hidden="true">{activeCategory.icon}</span>
+          <section className="knowledge-detail-hero mx-auto my-10 grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[auto_1fr_auto] items-center gap-6 rounded-[24px_24px_24px_8px] bg-[#735285] p-8 text-white shadow-xl max-md:grid-cols-[auto_1fr] max-sm:my-4 max-sm:w-[calc(100%_-_24px)] max-sm:gap-3 max-sm:rounded-2xl max-sm:p-4">
+            <span className="grid size-16 place-items-center rounded-2xl bg-white/15 text-3xl max-sm:size-12 max-sm:text-xl" aria-hidden="true">{activeCategory.icon}</span>
             <div>
               <p className="m-0 text-[10px] font-black">{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>
-              <h2 className="my-1 text-4xl font-black">{activeCategory.title}</h2>
-              <strong className="text-sm">{activeCategory.subtitle}</strong>
+              <h2 className="my-1 text-4xl font-black max-md:text-3xl max-sm:text-2xl">{activeCategory.title}</h2>
+              <strong className="text-sm max-sm:text-xs">{activeCategory.subtitle}</strong>
               <div>{activeCategory.levelRefs.map((levelId) => {
                 const levelNumber = gauntletLevelNumber(levelId);
                 return levelNumber > 0

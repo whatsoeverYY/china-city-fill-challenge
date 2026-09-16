@@ -346,7 +346,7 @@ export default function GauntletAnswerPanel({
   })();
 
   return (
-    <aside className="gauntlet-answer-panel border-l border-black/10 bg-card p-6 max-lg:border-l-0 max-lg:border-t">
+    <aside className="gauntlet-answer-panel border-l border-black/10 bg-card p-6 max-lg:border-l-0 max-lg:border-t max-md:p-4">
       <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">你的答案</p>
       {answerContent}
       {!s.answerReview ? (

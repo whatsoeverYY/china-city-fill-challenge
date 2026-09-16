@@ -113,7 +113,7 @@ export default function AccountControl() {
             {identity ? (
               <>
                 <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-brand-red">玩家存档</p>
-                <h2 className="mb-3 mt-0 text-[clamp(24px,5vw,34px)] font-black leading-tight" id="account-dialog-title">欢迎回来</h2>
+                <h2 className="mb-3 mt-0 text-[clamp(24px,5vw,34px)] font-black leading-tight max-md:text-3xl" id="account-dialog-title">欢迎回来</h2>
                 <div className="account-identity-card flex items-center gap-3 rounded-2xl border border-black/10 bg-white/70 p-3.5">
                   <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-green font-black text-white" aria-hidden="true">{identity.email.slice(0, 1).toUpperCase()}</span>
                   <div className="min-w-0">
@@ -212,7 +212,7 @@ export default function AccountControl() {
             ) : (
               <>
                 <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-brand-red">云存档</p>
-                <h2 className="mb-3 mt-0 text-[clamp(24px,5vw,34px)] font-black leading-tight" id="account-dialog-title">登录后，进度真正属于你</h2>
+                <h2 className="mb-3 mt-0 text-[clamp(24px,5vw,34px)] font-black leading-tight max-md:text-3xl" id="account-dialog-title">登录后，进度真正属于你</h2>
                 <p className="account-dialog-lede text-[13px] leading-6 text-ink-soft">
                   游客可以完整试玩，但刷新页面后不会保留进度。登录后支持跨设备同步；曾在线登录过的设备，断网时也能继续玩。
                 </p>

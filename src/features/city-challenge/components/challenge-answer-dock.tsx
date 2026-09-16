@@ -47,7 +47,7 @@ export default function ChallengeAnswerDock({
 }) {
   if (province && hardMode) {
     return (
-      <section className="answer-dock hard-mode-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5 shadow-[0_20px_60px_rgba(43,48,43,0.08)]" aria-labelledby="hard-city-title">
+      <section className="answer-dock hard-mode-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5 shadow-[0_20px_60px_rgba(43,48,43,0.08)] max-md:rounded-2xl max-md:p-4" aria-labelledby="hard-city-title">
         <div className="dock-heading mb-4 flex items-end justify-between gap-3">
           <div>
             <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">{neighborMode ? "邻省连城 · 无提示" : "无提示模式"}</p>
@@ -78,8 +78,8 @@ export default function ChallengeAnswerDock({
 
   if (province) {
     return (
-      <section className="answer-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5 shadow-[0_20px_60px_rgba(43,48,43,0.08)]" aria-labelledby="answer-title">
-        <div className="dock-heading mb-4 flex items-end justify-between gap-3">
+      <section className="answer-dock min-w-0 rounded-3xl border border-black/10 bg-card p-5 shadow-[0_20px_60px_rgba(43,48,43,0.08)] max-md:rounded-2xl max-md:p-4" aria-labelledby="answer-title">
+        <div className="dock-heading mb-4 flex items-end justify-between gap-3 max-md:mb-3">
           <div>
             <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">
               {neighborMode ? `${challengeProvinces.length} 省连城` : "名称卡片"}
@@ -88,9 +88,9 @@ export default function ChallengeAnswerDock({
               {neighborMode ? "让群城各归其位" : "把名字送回地图"}
             </h2>
           </div>
-          <p className="m-0 text-xs text-ink-soft"><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
+          <p className="m-0 text-xs text-ink-soft max-sm:hidden"><span className="mouse-mark" aria-hidden="true">↖</span> 拖拽到区块，或先点名称再点地图</p>
         </div>
-        <div className="answer-grid grid max-h-[620px] grid-cols-2 gap-2 overflow-y-auto pr-1 max-sm:grid-cols-1">
+        <div className="answer-grid grid max-h-[620px] grid-cols-2 gap-2 overflow-y-auto pr-1 max-md:max-h-[42dvh] max-sm:gap-1.5">
           {visibleAnswers.map((answer) => {
             const isPlaced = completedRegionIds.has(answer.id);
             const isSelected = selectedAnswerId === answer.id;
@@ -98,7 +98,7 @@ export default function ChallengeAnswerDock({
               <button
                 key={answer.id}
                 type="button"
-                className={`answer-chip flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${isPlaced ? "cursor-default border-brand-green/20 bg-brand-green/10 text-brand-green-dark opacity-60" : "cursor-grab border-black/10 bg-white/65 hover:-translate-y-0.5 hover:border-brand-red/30 hover:shadow-sm"} ${isSelected ? "border-brand-red bg-brand-red/10" : ""}`}
+                className={`answer-chip flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold transition max-sm:min-h-10 max-sm:gap-1.5 max-sm:px-2 max-sm:text-xs ${isPlaced ? "cursor-default border-brand-green/20 bg-brand-green/10 text-brand-green-dark opacity-60" : "cursor-grab border-black/10 bg-white/65 hover:-translate-y-0.5 hover:border-brand-red/30 hover:shadow-sm"} ${isSelected ? "border-brand-red bg-brand-red/10" : ""}`}
                 draggable={!isPlaced}
                 disabled={isPlaced}
                 aria-pressed={isSelected}
@@ -151,7 +151,7 @@ export default function ChallengeAnswerDock({
                   }
                 }}
               >
-                <span className="chip-grip text-ink-soft/50" aria-hidden="true">⠿</span>
+                <span className="chip-grip text-ink-soft/50 max-sm:hidden" aria-hidden="true">⠿</span>
                 <span>{answer.name}</span>
                 {isPlaced ? <b className="ml-auto text-brand-green" aria-label="已完成">✓</b> : null}
               </button>

@@ -29,9 +29,10 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { min-width: 320px; background: var(--paper); scroll-behavior: smooth; }
+  html { min-width: 0; overflow-x: clip; background: var(--paper); scroll-behavior: smooth; }
   body {
     margin: 0;
+    overflow-x: clip;
     color: var(--ink);
     background:
       radial-gradient(circle at 14% 6%, rgba(255, 255, 255, 0.9), transparent 24rem),

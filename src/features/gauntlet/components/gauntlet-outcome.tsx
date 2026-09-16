@@ -38,13 +38,13 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
   if (d.hasTimedOut || d.hasLostBoss) {
     return (
       <section className="gauntlet-passed gauntlet-timeout mx-auto grid max-w-3xl justify-items-center gap-4 rounded-[28px_28px_28px_8px] bg-card p-[clamp(28px,6vw,64px)] text-center shadow-xl" aria-live="polite">
-        <span className="gauntlet-pass-seal grid size-24 place-items-center rounded-[30px_30px_30px_8px] bg-brand-red text-4xl font-black text-white" aria-hidden="true">
+        <span className="gauntlet-pass-seal grid size-24 place-items-center rounded-[30px_30px_30px_8px] bg-brand-red text-4xl font-black text-white max-md:text-3xl" aria-hidden="true">
           {d.hasLostBoss ? "败" : "时"}
         </span>
         <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">
           第 {displayNumber} 关 · {d.hasLostBoss ? "生命耗尽" : "时间耗尽"}
         </p>
-        <h1 className="m-0 text-[clamp(34px,6vw,62px)] font-black">还差一点，再冲一次</h1>
+        <h1 className="m-0 text-[clamp(34px,6vw,62px)] font-black max-md:text-3xl">还差一点，再冲一次</h1>
         <p className="m-0 text-sm text-ink-soft">
           {d.hasLostBoss
             ? "三条生命已经用完，本轮成绩不会计入通关记录。"
@@ -66,9 +66,9 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
   if (!s.passedLevel) return null;
   return (
     <section className="gauntlet-passed mx-auto grid max-w-3xl justify-items-center gap-4 rounded-[28px_28px_28px_8px] bg-card p-[clamp(28px,6vw,64px)] text-center shadow-xl" aria-live="polite">
-      <span className="gauntlet-pass-seal grid size-24 place-items-center rounded-[30px_30px_30px_8px] bg-brand-green text-4xl font-black text-white" aria-hidden="true">胜</span>
+      <span className="gauntlet-pass-seal grid size-24 place-items-center rounded-[30px_30px_30px_8px] bg-brand-green text-4xl font-black text-white max-md:text-3xl" aria-hidden="true">胜</span>
       <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">第 {displayNumber} 关 · 挑战达成</p>
-      <h1 className="m-0 text-[clamp(34px,6vw,62px)] font-black">{activeConfig?.title}，过关！</h1>
+      <h1 className="m-0 text-[clamp(34px,6vw,62px)] font-black max-md:text-3xl">{activeConfig?.title}，过关！</h1>
       <p className="m-0 text-sm text-ink-soft">{completedTarget}，这一关已留下通关印记。</p>
       {s.passedLevel === LEVEL.FINAL_BOSS
         ? <BossSkillSummary stats={s.bossStats} />
