@@ -8,6 +8,21 @@ const maxLines = 500;
 const warningLines = 400;
 const sourceExtensions = new Set([".ts", ".tsx", ".css"]);
 const allowedCssFiles = new Set(["src/app/globals.css"]);
+const requiredColorPalettes = [
+  "atlas",
+  "city",
+  "clay",
+  "gold",
+  "ink",
+  "jade",
+  "moss",
+  "navy",
+  "olive",
+  "paper",
+  "scholar",
+  "stone",
+];
+const requiredColorShades = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 const kebabCaseFile = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:ts|tsx|css)$/;
 const businessFeatures = new Set([
   "admin",
@@ -97,6 +112,9 @@ for (const path of walk(srcRoot)) {
   if (extname(path) === ".tsx" && /\[&(?:_|>)/u.test(source)) {
     errors.push(`${projectPath} 使用了任意后代选择器；请把 Tailwind utilities 直接写到目标元素。`);
   }
+  if (extname(path) === ".tsx" && /#[\da-f]{3,8}\b/iu.test(source)) {
+    errors.push(`${projectPath} 直接写入了十六进制颜色；组件应使用 tailwind.config.ts 色阶，SVG 数值颜色应下沉到 shared/config。`);
+  }
   if (
     projectPath.startsWith("src/domain/") &&
     dependencies.some((dependency) =>
@@ -180,6 +198,29 @@ for (const [name, command] of Object.entries(packageJson.scripts ?? {})) {
 const globals = readFileSync(join(srcRoot, "app/globals.css"), "utf8");
 if (!globals.includes('@import "tailwindcss";')) {
   errors.push("src/app/globals.css 必须加载 Tailwind CSS。 ");
+}
+const tailwindConfigPath = join(root, "tailwind.config.ts");
+if (!existsSync(tailwindConfigPath)) {
+  errors.push("缺少 tailwind.config.ts，项目色阶必须集中配置。 ");
+} else {
+  const tailwindConfig = readFileSync(tailwindConfigPath, "utf8");
+  for (const palette of requiredColorPalettes) {
+    const match = tailwindConfig.match(
+      new RegExp(`\\b${palette}:\\s*\\{([\\s\\S]*?)\\n\\s*\\},`, "u"),
+    );
+    if (!match) {
+      errors.push(`tailwind.config.ts 缺少 ${palette} 色阶。`);
+      continue;
+    }
+    for (const shade of requiredColorShades) {
+      if (!new RegExp(`\\b${shade}:`, "u").test(match[1])) {
+        errors.push(`tailwind.config.ts 的 ${palette} 色阶缺少 ${shade}。`);
+      }
+    }
+  }
+}
+if (!globals.includes('@config "../../tailwind.config.ts";')) {
+  errors.push("src/app/globals.css 必须通过 @config 加载 tailwind.config.ts。 ");
 }
 
 if (warnings.length) {

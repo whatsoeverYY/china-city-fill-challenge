@@ -60,15 +60,15 @@ export default function ChallengeMapPanel({
   setShowAllProvinceNames: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
-    <section className="map-card min-w-0 overflow-hidden rounded-3xl border border-black/10 bg-card shadow-[0_20px_60px_rgba(43,48,43,0.1)]">
-      <div className="map-toolbar flex min-h-16 items-center justify-between gap-3 border-b border-black/10 px-5 py-3 max-md:flex-wrap max-md:px-3">
+    <section className="map-card min-w-0 overflow-hidden rounded-[22px] border border-black/15 bg-card/90 shadow-[0_30px_70px_rgba(57,46,31,.1)] max-sm:rounded-[14px]">
+      <div className="map-toolbar grid min-h-[62px] grid-cols-[1fr_minmax(280px,1.4fr)_1fr] items-center border-b border-black/[.13] bg-paper-100/70 px-[23px] max-md:grid-cols-[1fr_auto] max-md:px-[15px]">
         <div>
           {province ? (
-            <button className="back-button inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-sm font-black text-ink" type="button" onClick={onBack}>
+            <button className="back-button inline-flex min-h-11 cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0 text-xs font-bold text-city-900" type="button" onClick={onBack}>
               <span aria-hidden="true">←</span> 返回全国地图
             </button>
           ) : (
-            <span className="map-step text-xs font-black uppercase tracking-[0.12em] text-brand-red">
+            <span className="map-step text-[11px] font-bold uppercase tracking-[0.12em] text-ink-500">
               {hardMode
                 ? "第一步 · 辨认并解锁省份"
                 : neighborMode
@@ -77,8 +77,8 @@ export default function ChallengeMapPanel({
             </span>
           )}
         </div>
-        <div className="map-status flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-sm font-bold text-ink-soft max-md:order-3 max-md:w-full" aria-live="polite">
-          <span className={`status-dot size-2 shrink-0 rounded-full ${isChallengeComplete ? "bg-brand-green" : "bg-brand-gold"}`} />
+        <div className="map-status flex min-w-0 items-center justify-center gap-2 text-center text-xs text-ink-600 max-md:col-span-2 max-md:row-start-2 max-md:min-h-9 max-md:border-t max-md:border-black/[.13]" aria-live="polite">
+          <span className={`status-dot size-[7px] shrink-0 rounded-full ${isChallengeComplete ? "bg-jade-500 shadow-[0_0_0_4px_rgba(45,125,95,.14)]" : "bg-gold-500 shadow-[0_0_0_4px_rgba(213,169,69,.15)]"}`} />
           {hoveredFeature && !province && !hardMode
             ? hoveredFeature.properties.name
             : hoveredFeature && completedRegionIds.has(String(hoveredFeature.properties.adcode))
@@ -86,33 +86,33 @@ export default function ChallengeMapPanel({
               : message}
         </div>
         {province ? (
-          <div className="map-actions flex items-center gap-2">
+          <div className="map-actions flex items-center justify-self-end gap-3 max-md:gap-[7px]">
             <button
-              className={`reveal-cities-button cursor-pointer rounded-full border border-black/10 px-3 py-2 text-xs font-black ${showAllCityNames ? "bg-brand-green text-white" : "bg-white/60"}`}
+              className={`reveal-cities-button min-h-8 cursor-pointer whitespace-nowrap rounded-full border px-2.5 py-1.5 text-[10px] font-extrabold ${showAllCityNames ? "border-jade-700 bg-jade-700 text-white" : "border-jade-500/30 bg-jade-100 text-jade-700"}`}
               type="button"
               aria-pressed={showAllCityNames}
               onClick={() => setShowAllCityNames((value) => !value)}
             >
               {showAllCityNames ? "隐藏全部城市" : "显示全部城市"}
             </button>
-            <button className="reset-button cursor-pointer border-0 bg-transparent px-2 py-2 text-xs font-black text-brand-red" type="button" onClick={onReset}>
+            <button className="reset-button min-h-11 cursor-pointer border-0 bg-transparent p-0 text-[11px] text-ink-500 underline decoration-stone-400 underline-offset-4" type="button" onClick={onReset}>
               重新挑战
             </button>
           </div>
         ) : (
-          <div className="map-overview-actions flex items-center gap-3">
+          <div className="map-overview-actions flex items-center justify-self-end gap-3 max-md:gap-[7px]">
             {!hardMode ? (
               <button
-                className={`reveal-cities-button province-label-toggle cursor-pointer rounded-full border border-black/10 px-3 py-2 text-xs font-black ${showAllProvinceNames ? "bg-brand-green text-white" : "bg-white/60"}`}
+                className={`reveal-cities-button province-label-toggle inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-[10px] font-extrabold ${showAllProvinceNames ? "border-jade-700 bg-jade-700 text-white" : "border-jade-500/30 bg-jade-100 text-jade-700"}`}
                 type="button"
                 aria-pressed={showAllProvinceNames}
                 onClick={() => setShowAllProvinceNames((value) => !value)}
               >
-                <span aria-hidden="true">名</span>
+                <span className={`grid size-[18px] place-items-center rounded-full font-serif text-[9px] ${showAllProvinceNames ? "bg-white text-jade-700" : "bg-jade-500 text-white"}`} aria-hidden="true">名</span>
                 {showAllProvinceNames ? "隐藏省名" : "省名标注"}
               </button>
             ) : null}
-            <span className="map-total text-xs font-bold text-ink-soft">
+            <span className="map-total text-[11px] font-bold tracking-[0.12em] text-ink-500 max-sm:hidden">
               {neighborMode ? "选择一省 · 联动接壤省份" : `${PROVINCES.length} 个省级行政区`}
             </span>
           </div>
@@ -126,12 +126,12 @@ export default function ChallengeMapPanel({
             <button
               key={item.code}
               type="button"
-              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border bg-white/70 px-2.5 py-1.5 text-xs font-bold ${index === 0 ? "border-brand-red/30 text-brand-red" : "border-black/10"} ${hiddenProvinceCodes.has(item.code) ? "opacity-45" : ""}`}
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border bg-white/70 px-2.5 py-1.5 text-xs font-bold ${index === 0 ? "border-city-500/30 text-city-500" : "border-black/10"} ${hiddenProvinceCodes.has(item.code) ? "opacity-45" : ""}`}
               aria-pressed={!hiddenProvinceCodes.has(item.code)}
               aria-label={`${hiddenProvinceCodes.has(item.code) ? "显示" : "隐藏"}${item.name}`}
               onClick={() => onToggleProvinceVisibility(item)}
             >
-              <b className="province-visibility-mark text-[9px] text-brand-green-dark" aria-hidden="true">
+              <b className="province-visibility-mark text-[9px] text-jade-700" aria-hidden="true">
                 {hiddenProvinceCodes.has(item.code) ? "○" : "●"}
               </b>
               {showAllCityNames ? (
@@ -141,13 +141,15 @@ export default function ChallengeMapPanel({
                   aria-hidden="true"
                 />
               ) : null}
-              {item.shortName}{index === 0 ? <i className="ml-1 rounded-full bg-brand-red/10 px-1.5 text-[9px] not-italic">起点</i> : null}
+              {item.shortName}{index === 0 ? <i className="ml-1 rounded-full bg-city-500/10 px-1.5 text-[9px] not-italic">起点</i> : null}
             </button>
           ))}
         </div>
       ) : null}
 
-      <div className="map-stage relative grid min-h-[520px] place-items-center overflow-hidden bg-[#f7f1e5] max-md:min-h-[56vh]">
+      <div className="map-stage relative grid min-h-[clamp(390px,58vw,720px)] place-items-center overflow-hidden bg-stone-100 [background-image:radial-gradient(circle_at_50%_50%,rgba(255,255,255,.95),transparent_58%),linear-gradient(135deg,rgba(212,199,170,.2),transparent_40%)] before:pointer-events-none before:absolute before:-left-[14%] before:-top-[40%] before:aspect-square before:w-[66%] before:rounded-full before:border before:border-clay-700/10 after:pointer-events-none after:absolute after:-bottom-[47%] after:-right-[8%] after:aspect-square after:w-[58%] after:rounded-full after:border after:border-clay-700/10 max-[1050px]:min-h-[500px] max-md:min-h-[390px] max-sm:min-h-[330px]">
+        <div className="map-corner map-corner--top pointer-events-none absolute left-[19px] top-[19px] z-[2] size-[66px] border-l border-t border-city-500/35" aria-hidden="true" />
+        <div className="map-corner map-corner--bottom pointer-events-none absolute bottom-[19px] right-[19px] z-[2] size-[66px] border-b border-r border-city-500/35" aria-hidden="true" />
         {mapError ? (
           <div className="map-error grid place-items-center gap-2 p-10 text-center" role="alert">
             <strong className="text-lg">地图没有成功展开</strong>

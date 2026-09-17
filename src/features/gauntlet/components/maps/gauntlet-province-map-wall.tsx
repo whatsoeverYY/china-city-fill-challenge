@@ -15,6 +15,7 @@ import {
   type MapFeature,
   type Position,
 } from "@/features/map/model/map-data";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 const HAINAN_PROVINCE_CODE = "460000";
 const SANSHA_REGION_CODE = "460300";
@@ -75,7 +76,7 @@ export default function GauntletProvinceMapWall({
         <section className="relative min-h-44 overflow-hidden rounded-xl border border-black/10 bg-white/60" key={province.code}>
           {onProvinceFocus && panels.length > 1 && !readOnly ? (
             <button
-              className="absolute right-2 top-2 z-[2] inline-flex cursor-pointer items-center gap-1 rounded-full border border-brand-green/25 bg-card/90 px-2.5 py-1.5 text-[9px] font-black text-brand-green-dark shadow-sm"
+              className="absolute right-2 top-2 z-[2] inline-flex cursor-pointer items-center gap-1 rounded-full border border-jade-500/25 bg-card/90 px-2.5 py-1.5 text-[9px] font-black text-jade-700 shadow-sm"
               type="button"
               aria-label="选择此省并放大地图"
               onClick={() => onProvinceFocus(province.code)}
@@ -95,14 +96,14 @@ export default function GauntletProvinceMapWall({
                   d={geometryToPath(feature.geometry, project)}
                   className={`${readOnly ? "cursor-default" : "cursor-pointer"} [transition:fill_130ms_ease,stroke-width_130ms_ease,filter_130ms_ease] ${
                     !readOnly && !isCorrectAnswer
-                      ? "hover:fill-[#b9d8c4] hover:[stroke-width:2.8px] focus-visible:fill-[#b9d8c4] focus-visible:[stroke-width:2.8px]"
+                      ? "hover:fill-jade-400 hover:[stroke-width:2.8px] focus-visible:fill-jade-400 focus-visible:[stroke-width:2.8px]"
                       : ""
                   } ${isCorrectAnswer ? "drop-shadow-[0_0_5px_rgba(241,199,91,0.68)]" : ""}`}
                   data-region-id={regionId}
-                  fill={isCorrectAnswer ? "#f1c75b" : "#eee4cf"}
+                  fill={isCorrectAnswer ? MAP_COLORS.correctFill : MAP_COLORS.neutralFill}
                   fillRule="evenodd"
                   role="button"
-                  stroke={isCorrectAnswer ? "#8b4a16" : "var(--green)"}
+                  stroke={isCorrectAnswer ? MAP_COLORS.correctStroke : MAP_COLORS.cityBoundary}
                   strokeLinejoin="round"
                   strokeWidth={isCorrectAnswer ? 3 : 1.8}
                   tabIndex={readOnly ? -1 : 0}

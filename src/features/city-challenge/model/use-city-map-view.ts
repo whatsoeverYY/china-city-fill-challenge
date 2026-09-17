@@ -1,10 +1,8 @@
 import { useMemo } from "react";
 import type { Province } from "@/domain/geography/data/provinces";
-import {
-  PROVINCE_FILL_COLORS,
-  provinceForFeature,
-} from "@/features/map/lib/map-geometry";
+import { provinceForFeature } from "@/features/map/lib/map-geometry";
 import type { MapData } from "@/features/map/model/map-data";
+import { PROVINCE_FILL_COLORS } from "@/shared/config/map-colors";
 
 export function useCityMapView(
   nationalMap: MapData | null,

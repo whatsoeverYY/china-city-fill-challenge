@@ -43,6 +43,7 @@ src/
 - 业务 feature 不得直接引用另一个业务 feature；需要共享的内容先下沉到 `domain` 或 `shared`。
 - 业务关系使用稳定 ID（省份使用行政区划 `code`），名称只用于展示和用户输入兼容。
 - 常规布局、间距、颜色、交互状态和响应式规则优先使用 Tailwind utilities。禁止用大型 `*-styles.ts`、任意后代选择器集合或 `@apply` 变相恢复集中样式表。只有 Tailwind 无法清晰、稳定表达的复杂动画、SVG 状态或组合效果，才使用语义 class + CSS。
+- 颜色色阶集中在根目录 `tailwind.config.ts`：品牌主色命名为 `city-100` 至 `city-900`，玉绿、图鉴蓝、知识紫等主题色也必须提供完整 `100` 至 `900` 色阶。组件不得直接写十六进制颜色，应使用 `text-city-500`、`bg-atlas-100` 等命名 utility；SVG 数值颜色放入 `src/shared/config/` 的语义配置。
 - `src/app/globals.css` 用于 Tailwind 入口、主题、全局基线和关键帧。确需 CSS 的功能样式放在对应 `src/features/<feature>/styles/`，不得建立跨功能的大型样式表；SVG 的 `fill`、`stroke`、`vectorEffect` 等固有表现优先写成类型安全的 React SVG 属性。
 - 重复的 Tailwind 组合优先提取为职责明确的小型展示组件；仅供一个文件复用的静态组合可定义为该文件内的 class 常量。
 - 重构不得改变已确认的桌面端视觉。桌面基础 utility 视为视觉契约；移动适配必须用断点前缀隔离，并在桌面视口复查配色、尺寸、间距、圆角、阴影和信息密度。

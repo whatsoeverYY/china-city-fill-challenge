@@ -7,18 +7,6 @@ import type {
 
 export const MAP_WIDTH = 920;
 export const MAP_HEIGHT = 600;
-export const PROVINCE_FILL_COLORS = [
-  "#f0beb8",
-  "#f3c99b",
-  "#eee093",
-  "#b8d9f0",
-  "#bfc8ec",
-  "#d2bdeb",
-  "#edbdd8",
-  "#d9c1a8",
-  "#c2d0da",
-] as const;
-
 export const MAP_HORIZONTAL_PADDING = 46;
 export const MAP_VERTICAL_PADDING = 36;
 

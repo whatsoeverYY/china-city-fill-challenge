@@ -304,7 +304,7 @@ export default function CityGame() {
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
 
   return (
-    <main className="game-shell mx-auto min-h-dvh w-full max-w-[1540px] px-6 pb-10 pt-5 text-ink max-md:px-3 max-md:pb-24 max-md:pt-3">
+    <main className="game-shell mx-auto min-h-dvh w-[min(1460px,calc(100%_-_48px))] pb-10 pt-7 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pb-24 max-md:pt-[15px]">
       <ChallengeHeader
         province={province}
         neighborMode={neighborMode}
@@ -318,7 +318,7 @@ export default function CityGame() {
       />
 
       {isChallengeComplete && province ? (
-        <section className="success-banner mb-5 grid grid-cols-[auto_1fr_auto] items-center gap-3 overflow-hidden rounded-3xl bg-brand-green p-5 text-white shadow-lg" aria-live="polite">
+        <section className="success-banner mb-5 grid grid-cols-[auto_1fr_auto] items-center gap-3 overflow-hidden rounded-3xl bg-jade-500 p-5 text-white shadow-lg" aria-live="polite">
           <span className="success-kicker text-xs font-black tracking-[0.15em]">挑战达成</span>
           <strong className="text-xl">{neighborMode ? `${province.shortName}邻省连城` : province.name}</strong>
           <span className="success-icon grid size-11 place-items-center rounded-full bg-white/15 text-2xl" aria-label="成功">✓</span>
@@ -326,7 +326,7 @@ export default function CityGame() {
         </section>
       ) : null}
 
-      <div className="challenge-layout grid grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] items-start gap-5 max-lg:grid-cols-1">
+      <div className="challenge-layout grid grid-cols-[minmax(0,1fr)_minmax(310px,360px)] items-start gap-[22px] max-[1050px]:grid-cols-[minmax(0,1fr)_310px] max-[820px]:grid-cols-1">
       <ChallengeMapPanel
         province={province}
         neighborMode={neighborMode}

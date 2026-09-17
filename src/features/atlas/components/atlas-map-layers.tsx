@@ -2,6 +2,7 @@ import { memo } from "react";
 import type { Position } from "@/features/map/model/map-data";
 import { MAP_HEIGHT, MAP_WIDTH } from "@/features/map/lib/map-geometry";
 import type { AtlasProvinceDrawing, AtlasRegionDrawing } from "@/features/atlas/model/atlas-types";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 export const ATLAS_MIN_SCALE = 1;
 export const ATLAS_MAX_SCALE = 8;
@@ -27,7 +28,7 @@ export const AtlasRegionShapes = memo(function AtlasRegionShapes({
           d={region.path}
           fill={region.fill}
           fillRule="evenodd"
-          stroke="var(--green)"
+          stroke={MAP_COLORS.cityBoundary}
           strokeLinejoin="round"
           strokeWidth={0.72}
           vectorEffect="non-scaling-stroke"
@@ -54,7 +55,7 @@ export const AtlasProvinceOutlines = memo(function AtlasProvinceOutlines({
           d={province.path}
           fill="none"
           fillRule="evenodd"
-          stroke="var(--red)"
+          stroke={MAP_COLORS.provinceBoundary}
           strokeLinejoin="round"
           strokeWidth={2.1}
           vectorEffect="non-scaling-stroke"
@@ -77,7 +78,7 @@ export const AtlasLabels = memo(function AtlasLabels({
           x={region.labelX}
           y={region.labelY}
           className="font-sans font-black [paint-order:stroke]"
-          fill="#27362f"
+          fill={MAP_COLORS.atlasLabel}
           fontSize={region.longLabel ? 2.95 : 3.7}
           stroke="rgba(255, 253, 247, 0.95)"
           strokeLinejoin="round"
@@ -86,7 +87,7 @@ export const AtlasLabels = memo(function AtlasLabels({
           aria-hidden="true"
         >
           <tspan x={region.labelX} dy="-0.1em">{region.name}</tspan>
-          <tspan fill="#9c2f28" fontSize="0.9em" strokeWidth={0.78} x={region.labelX} dy="1.2em">
+          <tspan fill={MAP_COLORS.atlasPlateLabel} fontSize="0.9em" strokeWidth={0.78} x={region.labelX} dy="1.2em">
             {region.plate}
           </tspan>
         </text>

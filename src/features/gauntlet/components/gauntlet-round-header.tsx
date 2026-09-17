@@ -36,19 +36,19 @@ export default function GauntletRoundHeader({
   const activeConfig = GAUNTLET_LEVEL_BY_ID.get(s.level) ?? null;
   const displayNumber = gauntletLevelNumber(s.level);
   return (
-    <section className="gauntlet-round-heading mb-5 grid grid-cols-[1fr_auto] items-end gap-5 max-lg:grid-cols-1">
+    <section className="gauntlet-round-heading grid grid-cols-[1fr_auto] items-end gap-10 px-1 pb-[25px] pt-[46px] max-lg:grid-cols-1 max-lg:gap-2 max-md:pt-5">
       <div>
-        <button className="cursor-pointer border-0 bg-transparent p-0 text-xs font-black text-brand-red max-md:hidden" type="button" onClick={actions.returnToLevels}>← 返回选关</button>
-        <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">第 {displayNumber} 关 · {activeConfig?.title}</p>
-        <h1 className="mb-0 mt-2 text-[clamp(30px,5vw,58px)] font-black leading-none">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
+        <button className="cursor-pointer border-0 bg-transparent p-0 text-xs font-black text-city-500 max-md:hidden" type="button" onClick={actions.returnToLevels}>← 返回选关</button>
+        <p className="eyebrow mb-2 mt-[22px] text-[11px] font-extrabold tracking-[0.24em] text-city-500">第 {displayNumber} 关 · {activeConfig?.title}</p>
+        <h1 className="m-0 font-serif text-[clamp(32px,3.8vw,52px)] font-bold leading-[1.08]">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
       </div>
-      <div className="gauntlet-round-actions flex gap-3 max-sm:grid max-sm:grid-cols-2">
+      <div className="gauntlet-round-actions flex items-stretch gap-2.5 max-sm:grid max-sm:grid-cols-2">
         {s.level === LEVEL.FINAL_BOSS ? (
-          <div className="boss-lives rounded-2xl bg-[#3b243d] p-3 text-white" aria-label={`剩余 ${s.bossLives} 条生命`}>
-            <span className="text-[9px] font-black text-white/60">生命</span>
+          <div className="boss-lives grid min-w-[116px] content-center rounded-[15px] border border-city-500/25 bg-city-300 px-[15px] py-3 text-center" aria-label={`剩余 ${s.bossLives} 条生命`}>
+            <span className="text-[9px] font-extrabold tracking-[.12em] text-stone-600">生命</span>
             <strong>
               {Array.from({ length: FINAL_BOSS_LIFE_COUNT }, (_, index) => (
-                <i key={index} className={`not-italic ${index < s.bossLives ? "text-brand-red" : "text-white/20"}`}>
+                <i key={index} className={`text-[21px] not-italic leading-[1.15] ${index < s.bossLives ? "text-city-500 drop-shadow-[0_3px_3px_rgba(180,59,50,.16)]" : "text-stone-400"}`}>
                   ♥
                 </i>
               ))}
@@ -56,23 +56,23 @@ export default function GauntletRoundHeader({
           </div>
         ) : null}
         {d.timedMode ? (
-          <div className={`gauntlet-timer min-w-32 rounded-2xl p-3 text-white ${
-            s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "animate-pulse bg-brand-red-dark" : "bg-ink"
+          <div className={`gauntlet-timer grid min-w-[116px] content-center rounded-[15px] border px-4 py-[13px] text-center ${
+            s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "animate-pulse border-city-500/40 bg-clay-300 text-city-900" : "border-jade-500/25 bg-jade-200 text-jade-700"
           }`}>
-            <span className="text-[9px] font-black text-white/60">剩余时间</span>
-            <strong className="block text-2xl">{s.timeLeft}<i className="text-xs not-italic"> 秒</i></strong>
+            <span className="text-[9px] font-extrabold tracking-[.1em]">剩余时间</span>
+            <strong className="block font-numeric text-2xl leading-[1.1]">{s.timeLeft}<i className="[font-family:inherit] text-xs not-italic"> 秒</i></strong>
           </div>
         ) : null}
-        <div className="gauntlet-progress-card min-w-44 rounded-2xl border border-black/10 bg-card p-3">
-          <span className="text-[9px] font-black text-ink-soft">{progressLabel(s.level)}</span>
-          <strong className="block text-2xl">
+        <div className="gauntlet-progress-card grid w-[250px] grid-cols-[auto_auto] items-baseline rounded-[15px] border border-black/[.14] bg-card/80 px-5 py-[17px] max-sm:w-auto">
+          <span className="text-[10px] font-extrabold tracking-[.12em] text-ink-soft">{progressLabel(s.level)}</span>
+          <strong className="justify-self-end font-numeric text-2xl text-city-500">
             {s.level === LEVEL.MISTAKE_REVENGE && d.target === 0
               ? "暂无"
-              : <>{d.progress}<i className="text-xs not-italic text-ink-soft"> / {d.target}</i></>}
+              : <>{d.progress}<i className="text-[13px] font-medium not-italic text-stone-600"> / {d.target}</i></>}
           </strong>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/10">
+          <div className="col-span-full mt-[9px] h-[5px] overflow-hidden rounded-full bg-paper-800">
             <span
-              className="block h-full bg-brand-green"
+              className="block h-full rounded-[inherit] bg-gradient-to-r from-city-500 to-gold-500 transition-[width] duration-300"
               style={{
                 width: `${d.target ? (d.progress / d.target) * 100 : 0}%`,
               }}

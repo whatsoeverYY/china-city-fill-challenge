@@ -14,6 +14,8 @@ export type KnowledgeCategoryId =
   | "confusable"
   | "map-reading";
 
+export type KnowledgeTone = "red" | "green" | "blue" | "gold" | "purple";
+
 export type KnowledgeCategory = {
   id: KnowledgeCategoryId;
   icon: string;
@@ -21,6 +23,7 @@ export type KnowledgeCategory = {
   subtitle: string;
   memoryStyle: string;
   levelRefs: GauntletLevelId[];
+  tone: KnowledgeTone;
 };
 
 export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
@@ -34,6 +37,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
       GAUNTLET_LEVEL_ID.GEOGRAPHY_ELIMINATION,
     ],
+    tone: "red",
   },
   {
     id: "city-plate",
@@ -52,6 +56,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
       GAUNTLET_LEVEL_ID.PLATE_FAULT,
       GAUNTLET_LEVEL_ID.PLATE_CITY_MAP,
     ],
+    tone: "blue",
   },
   {
     id: "universities",
@@ -60,6 +65,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     subtitle: "从省到城再到学校，建立清晰的名校坐标系",
     memoryStyle: "城市集群",
     levelRefs: [GAUNTLET_LEVEL_ID.UNIVERSITY_CITY],
+    tone: "purple",
   },
   {
     id: "neighbors",
@@ -71,6 +77,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
       GAUNTLET_LEVEL_ID.PROVINCE_NEIGHBORS,
       GAUNTLET_LEVEL_ID.NEIGHBOR_CHAIN,
     ],
+    tone: "green",
   },
   {
     id: "city-counts",
@@ -79,6 +86,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     subtitle: "用排行榜和长度条，直观看出数量差异",
     memoryStyle: "长短比较",
     levelRefs: [GAUNTLET_LEVEL_ID.PROVINCE_CITY_COUNT],
+    tone: "gold",
   },
   {
     id: "rivers",
@@ -87,6 +95,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     subtitle: "沿源头到入海口，像坐列车一样顺序记省份",
     memoryStyle: "路线记忆",
     levelRefs: [GAUNTLET_LEVEL_ID.TERRITORY_GROUPS],
+    tone: "blue",
   },
   {
     id: "territory",
@@ -95,6 +104,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     subtitle: "把散落省份收进几个有地理意义的集合",
     memoryStyle: "集合归纳",
     levelRefs: [GAUNTLET_LEVEL_ID.TERRITORY_GROUPS],
+    tone: "green",
   },
   {
     id: "confusable",
@@ -103,6 +113,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     subtitle: "相似城市并排放，抓住那个最关键的不同字",
     memoryStyle: "双城对照",
     levelRefs: [GAUNTLET_LEVEL_ID.CONFUSABLE_CITIES],
+    tone: "red",
   },
   {
     id: "map-reading",
@@ -117,6 +128,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
       GAUNTLET_LEVEL_ID.PROVINCE_SHAPE,
       GAUNTLET_LEVEL_ID.PLATE_CITY_MAP,
     ],
+    tone: "gold",
   },
 ];
 

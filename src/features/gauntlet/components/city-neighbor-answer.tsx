@@ -6,7 +6,7 @@ import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-c
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 
 const SUMMARY_CLASS =
-  "map-answer-summary rounded-xl bg-paper p-3 text-xs leading-5 text-ink-soft";
+  "map-answer-summary mb-1 mt-0 min-h-[58px] text-xs leading-[1.8] text-ink-soft";
 
 export default function CityNeighborAnswer({
   actions,
@@ -19,7 +19,7 @@ export default function CityNeighborAnswer({
   if (d.gauntletDetailError) {
     return (
       <>
-        <h2 className="mb-4 mt-0 text-2xl font-black">提示地图载入失败</h2>
+        <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">提示地图载入失败</h2>
         <p className={SUMMARY_CLASS}>请返回选关后重新进入本关。</p>
       </>
     );
@@ -27,7 +27,7 @@ export default function CityNeighborAnswer({
   if (!d.currentCityNeighborQuestion) {
     return (
       <>
-        <h2 className="mb-4 mt-0 text-2xl font-black">正在准备邻市题</h2>
+        <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">正在准备邻市题</h2>
         <p className={SUMMARY_CLASS}>正在读取省级地图和市界数据…</p>
       </>
     );
@@ -35,7 +35,7 @@ export default function CityNeighborAnswer({
 
   return (
     <>
-      <h2 className="mb-4 mt-0 text-2xl font-black">写出全部省内陆地邻区</h2>
+      <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">写出全部省内陆地邻区</h2>
       <GauntletAnswerForm
         actions={actions}
         id="gauntlet-city-neighbor-answer"
@@ -44,7 +44,7 @@ export default function CityNeighborAnswer({
         allowEmpty
       />
       <button
-        className="mt-3 min-h-11 w-full cursor-pointer rounded-xl border border-brand-green/30 bg-brand-green/10 px-4 text-xs font-black text-brand-green-dark disabled:cursor-default disabled:opacity-60"
+        className="mt-3 min-h-11 w-full cursor-pointer rounded-xl border border-jade-500/30 bg-jade-500/10 px-4 text-xs font-black text-jade-700 disabled:cursor-default disabled:opacity-60"
         type="button"
         disabled={s.cityNeighborHintVisible}
         onClick={actions.showCityNeighborHint}
@@ -55,7 +55,7 @@ export default function CityNeighborAnswer({
         多个答案请用顿号、逗号或空格分隔，必须答全且不能多答。没有陆地邻市时，可以留空提交，也可以填写“0”“无”或“没有”。
       </p>
       {s.cityNeighborRetry ? (
-        <p className="m-0 rounded-xl bg-brand-gold/15 p-3 text-xs font-bold text-ink">
+        <p className="m-0 rounded-xl bg-gold-500/15 p-3 text-xs font-bold text-ink">
           本题正在重答；这次答对仍计入连胜与通关进度。
         </p>
       ) : null}

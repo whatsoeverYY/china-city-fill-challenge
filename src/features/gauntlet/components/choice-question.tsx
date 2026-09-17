@@ -6,21 +6,27 @@ export default function ChoiceQuestion({
   value,
   hint,
   className = "",
+  badgeClassName = "bg-scholar-500",
+  badgeShapeClassName = "rounded-[26px_26px_26px_9px]",
+  valueClassName = "",
 }: {
   badge: string;
   prompt: ReactNode;
   value: ReactNode;
   hint?: ReactNode;
   className?: string;
+  badgeClassName?: string;
+  badgeShapeClassName?: string;
+  valueClassName?: string;
 }) {
   return (
-    <div className={`choice-question ${className} relative grid w-full max-w-3xl justify-items-center gap-4 text-center`}>
-      <span className="grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-red to-[#72558a] text-xl font-black text-white" aria-hidden="true">
+    <div className={`choice-question ${className} relative grid w-full max-w-[720px] justify-items-center text-center`}>
+      <span className={`mb-7 grid size-[88px] -rotate-3 place-items-center font-serif text-[39px] font-black text-white shadow-[inset_0_0_0_4px_rgba(255,255,255,.2),0_16px_35px_rgba(76,48,91,.18)] max-sm:mb-3.5 max-sm:size-16 max-sm:text-[30px] ${badgeShapeClassName} ${badgeClassName}`} aria-hidden="true">
         {badge}
       </span>
-      <p className="m-0 text-sm text-ink-soft">{prompt}</p>
-      <strong className="text-[clamp(26px,5vw,52px)] font-black">{value}</strong>
-      {hint ? <small className="max-w-xl text-xs leading-5 text-ink-soft">{hint}</small> : null}
+      <p className="mb-3 mt-0 text-[11px] font-extrabold tracking-[0.14em] text-stone-700 max-sm:mb-2 max-sm:text-[10px] max-sm:tracking-normal">{prompt}</p>
+      <strong className={`font-serif text-[clamp(38px,5vw,64px)] leading-tight max-sm:text-[32px] ${valueClassName}`}>{value}</strong>
+      {hint ? <small className="mt-4 max-w-xl text-[10px] font-extrabold leading-[1.8] text-gold-800 max-sm:mt-2.5 max-sm:text-[11px]">{hint}</small> : null}
     </div>
   );
 }

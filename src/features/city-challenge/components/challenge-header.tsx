@@ -24,57 +24,57 @@ export default function ChallengeHeader({
 }) {
   return (
     <>
-      <header className="site-header mb-8 flex items-center justify-between gap-5 max-lg:items-start max-md:mb-5 max-md:flex-col max-md:items-stretch">
-        <button className="brand inline-flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left text-ink" type="button" onClick={onBack}>
-          <span className="brand-seal grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-red text-xl font-black text-white shadow-[0_10px_24px_rgba(125,41,36,0.2)] max-md:size-10 max-md:rounded-xl" aria-hidden="true">城</span>
+      <header className="site-header flex min-h-[62px] items-center justify-between border-b border-black/[.13] pb-[22px] max-[1050px]:flex-wrap max-[1050px]:gap-[14px] max-md:gap-5">
+        <button className="brand inline-flex min-h-11 cursor-pointer items-center gap-[13px] border-0 bg-transparent p-0 text-left text-ink" type="button" onClick={onBack}>
+          <span className="brand-seal grid size-[45px] shrink-0 -rotate-2 place-items-center rounded-[9px_9px_9px_3px] bg-city-500 font-serif text-[25px] font-bold text-gold-100 shadow-[inset_0_0_0_2px_rgba(255,248,231,.24)] max-md:size-[39px]" aria-hidden="true">城</span>
           <span>
-            <strong className="block whitespace-nowrap text-base font-black tracking-[0.08em]">中国城市填充挑战</strong>
-            <small className="mt-0.5 block text-[10px] font-bold tracking-[0.2em] text-ink-soft">CHINA CITY ATLAS</small>
+            <strong className="block whitespace-nowrap font-serif text-lg font-bold tracking-[0.06em] max-md:text-sm">中国城市填充挑战</strong>
+            <small className="mt-[3px] block text-[8px] font-bold tracking-[0.22em] text-ink-500 max-md:hidden">CHINA CITY ATLAS</small>
           </span>
         </button>
-        <div className="header-actions flex flex-wrap items-center justify-end gap-2.5 max-md:grid max-md:grid-cols-2">
+        <div className={`header-actions flex flex-wrap items-center justify-end gap-[22px] max-[1050px]:w-full max-[1050px]:gap-2.5 max-[1050px]:border-t max-[1050px]:border-black/[.13] max-[1050px]:pt-3 max-md:grid max-md:gap-1.5 ${province ? "max-md:grid-cols-2" : "max-md:grid-cols-5"}`}>
           {!province ? (
             <>
-              <a className="atlas-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center" href={routePath("/atlas")}>
-                <span className="grid size-6 place-items-center rounded-full bg-[#dcebf5]" aria-hidden="true">图</span>全国车牌图鉴
+              <a className="atlas-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-atlas-500/30 bg-atlas-100 px-3 py-[7px] text-[11px] font-extrabold tracking-[0.06em] text-atlas-700 no-underline transition hover:-translate-y-px hover:bg-atlas-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] max-sm:tracking-normal" href={routePath("/atlas")}>
+                <span className="grid size-5 place-items-center rounded-full bg-atlas-500 font-serif text-white" aria-hidden="true">图</span><span className="max-sm:hidden">全国车牌图鉴</span><span className="hidden max-sm:inline">图鉴</span>
               </a>
-              <a className="knowledge-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center" href={routePath("/knowledge")}>
-                <span className="grid size-6 place-items-center rounded-full bg-[#e5f0e8]" aria-hidden="true">知</span>地理知识馆
+              <a className="knowledge-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-scholar-600/30 bg-scholar-100 px-3 py-[7px] text-[11px] font-extrabold tracking-[0.06em] text-scholar-600 no-underline transition hover:-translate-y-px hover:bg-scholar-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] max-sm:tracking-normal" href={routePath("/knowledge")}>
+                <span className="grid size-5 place-items-center rounded-full bg-scholar-500 font-serif text-white" aria-hidden="true">知</span><span className="max-sm:hidden">地理知识馆</span><span className="hidden max-sm:inline">知识</span>
               </a>
-              <a className="gauntlet-mode-button inline-flex items-center gap-2 rounded-full border border-black/10 bg-card px-3 py-2 text-xs font-black text-ink no-underline transition hover:-translate-y-0.5 hover:shadow-md max-md:justify-center" href={routePath("/gauntlet")}>
-                <span className="grid size-6 place-items-center rounded-full bg-[#f5e5df]" aria-hidden="true">关</span>过关斩将
+              <a className="gauntlet-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-gold-600/35 bg-gold-200 px-3 py-[7px] text-[11px] font-extrabold tracking-[0.06em] text-gold-900 no-underline transition hover:-translate-y-px hover:bg-gold-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] max-sm:tracking-normal" href={routePath("/gauntlet")}>
+                <span className="grid size-5 place-items-center rounded-full bg-gold-600 font-serif text-gold-100" aria-hidden="true">关</span><span className="max-sm:hidden">过关斩将</span><span className="hidden max-sm:inline">闯关</span>
               </a>
             </>
           ) : null}
           <button
-            className={`neighbor-mode-button inline-flex cursor-pointer items-center gap-2 rounded-full border border-brand-green/25 px-3 py-2 text-xs font-black ${neighborMode ? "bg-brand-green text-white" : "bg-card text-ink"}`}
+            className={`neighbor-mode-button inline-flex min-h-[38px] cursor-pointer items-center gap-[7px] rounded-full border px-3 py-[7px] text-[11px] font-extrabold tracking-[0.06em] transition hover:-translate-y-px max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] max-sm:tracking-normal ${neighborMode ? "border-jade-700 bg-jade-700 text-jade-100" : "border-jade-500/30 bg-paper-100/70 text-jade-700"}`}
             type="button"
             aria-pressed={neighborMode}
             onClick={onToggleNeighborMode}
           >
-            <span className="grid size-6 place-items-center rounded-full bg-brand-green/10" aria-hidden="true">联</span>
-            邻省连城
-            {neighborMode ? <i className="rounded-full bg-black/10 px-1.5 py-0.5 text-[9px] not-italic">已开启</i> : null}
+            <span className={`grid size-5 place-items-center rounded-full font-serif text-[11px] ${neighborMode ? "bg-jade-100 text-jade-700" : "bg-jade-500 text-white"}`} aria-hidden="true">联</span>
+            <span className="max-sm:hidden">邻省连城</span><span className="hidden max-sm:inline">邻省</span>
+            {neighborMode ? <i className="border-l border-white/30 pl-[7px] text-[9px] not-italic tracking-[0.08em] max-sm:hidden">已开启</i> : null}
           </button>
           <button
-            className={`difficulty-button inline-flex cursor-pointer items-center gap-2 rounded-full border border-brand-red/25 px-3 py-2 text-xs font-black ${hardMode ? "bg-brand-red text-white" : "bg-card text-ink"}`}
+            className={`difficulty-button inline-flex min-h-[38px] cursor-pointer items-center gap-[7px] rounded-full border px-3 py-[7px] text-[11px] font-extrabold tracking-[0.06em] transition hover:-translate-y-px max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-[10px] max-sm:tracking-normal ${hardMode ? "border-city-900 bg-city-900 text-gold-100" : "border-city-500/30 bg-paper-100/70 text-city-900"}`}
             type="button"
             aria-pressed={hardMode}
             onClick={onToggleHardMode}
           >
-            <span className="grid size-6 place-items-center rounded-full bg-brand-red/10" aria-hidden="true">↑</span>
-            难度提升
-            {hardMode ? <i className="rounded-full bg-black/10 px-1.5 py-0.5 text-[9px] not-italic">已开启</i> : null}
+            <span className={`grid size-5 place-items-center rounded-full text-[13px] ${hardMode ? "bg-gold-100 text-city-900" : "bg-city-500 text-white"}`} aria-hidden="true">↑</span>
+            <span className="max-sm:hidden">难度提升</span><span className="hidden max-sm:inline">难度</span>
+            {hardMode ? <i className="border-l border-white/30 pl-[7px] text-[9px] not-italic tracking-[0.08em] max-sm:hidden">已开启</i> : null}
           </button>
           <div
-            className="national-progress min-w-32 rounded-2xl border border-black/10 bg-card px-3 py-2 max-md:col-span-2"
+            className={`national-progress grid w-[min(330px,34vw)] grid-cols-[auto_auto] items-baseline gap-x-3 max-[1050px]:w-[min(260px,34vw)] max-md:flex max-md:w-auto max-md:items-center max-md:gap-2 ${province ? "max-md:col-span-2" : "max-md:col-span-5"}`}
             aria-label={`已完成 ${completedProvinceCodes.size} 个挑战`}
           >
-            <span className="text-[10px] font-bold text-ink-soft">{neighborMode ? "联挑战进度" : "全国进度"}</span>
-            <strong className="ml-2 text-xl">{completedProvinceCodes.size}<i className="text-xs not-italic text-ink-soft">/{PROVINCES.length}</i></strong>
-            <div className="progress-track mt-1 h-1.5 overflow-hidden rounded-full bg-black/10" aria-hidden="true">
+            <span className="text-xs font-bold tracking-[0.12em] text-ink-soft max-md:text-[9px]">{neighborMode ? "联挑战进度" : "全国进度"}</span>
+            <strong className="justify-self-end font-numeric text-[23px] text-city-500 max-md:text-base">{completedProvinceCodes.size}<i className="text-[.62em] font-medium not-italic text-ink-500">/{PROVINCES.length}</i></strong>
+            <div className="progress-track col-span-2 mt-2 h-[5px] overflow-hidden rounded-full bg-stone-300 max-md:mt-0 max-md:flex-1" aria-hidden="true">
               <span
-                className="block h-full rounded-full bg-brand-red transition-[width]"
+                className="block h-full rounded-full bg-gradient-to-r from-city-500 to-city-400 transition-[width] duration-500"
                 style={{ width: `${(completedProvinceCodes.size / PROVINCES.length) * 100}%` }}
               />
             </div>
@@ -82,15 +82,15 @@ export default function ChallengeHeader({
         </div>
       </header>
 
-      <section className="intro-row mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-8 max-md:grid-cols-1 max-md:gap-4">
+      <section className="intro-row grid grid-cols-[minmax(0,1fr)_auto] items-end gap-14 px-1 pb-[30px] pt-12 max-md:grid-cols-1 max-md:gap-[18px] max-md:pt-[26px]">
         <div>
-          <p className="eyebrow m-0 text-xs font-black uppercase tracking-[0.18em] text-brand-red">拖动 · 辨认 · 探索</p>
-          <h1 className="my-2 max-w-4xl text-[clamp(2rem,5vw,4.7rem)] font-black leading-[1.06] tracking-[-0.055em]">
+          <p className="eyebrow mb-3 mt-0 text-[11px] font-extrabold uppercase tracking-[0.24em] text-city-500 max-md:text-[10px]">拖动 · 辨认 · 探索</p>
+          <h1 className="mb-4 mt-0 max-w-[940px] font-serif text-[clamp(34px,4.2vw,58px)] font-bold leading-[1.08] tracking-[-0.035em] max-md:text-[clamp(26px,7.5vw,34px)] max-md:leading-[1.16]">
             {province ? (
               neighborMode ? (
-                <><span className="text-brand-red">{province.shortName}</span>与邻省，连城共答</>
+                <><span className="text-city-500">{province.shortName}</span>与邻省，连城共答</>
               ) : (
-                <><span className="text-brand-red">{province.shortName}</span>，你认识多少座城？</>
+                <><span className="text-city-500">{province.shortName}</span>，你认识多少座城？</>
               )
             ) : neighborMode ? (
               <>选一省，连起它周围的每一座城</>
@@ -98,7 +98,7 @@ export default function ChallengeHeader({
               <>从一省出发，拼出整幅中国城市地图</>
             )}
           </h1>
-          <p className="lede m-0 max-w-3xl text-[15px] leading-7 text-ink-soft">
+          <p className="lede m-0 max-w-[850px] text-[15px] leading-[1.85] text-ink-soft max-md:text-[13px] max-md:leading-[1.7]">
             {province
               ? neighborMode
                 ? `当前联合区域包含 ${challengeProvinces.map((item) => item.shortName).join("、")}，共 ${answerCount || "…"} 个城市或区县。${hardMode ? "点击区块并手动输入名称。" : "拖拽或点选名称完成整片区域。"}`
@@ -114,10 +114,10 @@ export default function ChallengeHeader({
                   : "点击地图或省份名进入挑战。红色标出省级边界，进入省内后，绿色标出地市或区县边界。"}
           </p>
         </div>
-        <div className="legend-card grid min-w-52 gap-2 rounded-2xl border border-black/10 bg-card/85 p-4 shadow-sm max-md:min-w-0 max-md:grid-cols-3" aria-label="地图图例">
-          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft"><span className="block h-0.5 w-6 bg-brand-red" />省级边界</p>
-          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft"><span className="block h-0.5 w-6 bg-brand-green" />地市 / 区县界</p>
-          <p className="m-0 flex items-center gap-2 text-xs font-bold text-ink-soft"><span className="legend-fill block size-3 rounded-sm bg-[#f0beb8]" />已正确填入</p>
+        <div className="legend-card min-w-[198px] rounded-[14px] border border-black/[.13] bg-card/70 px-5 py-[18px] shadow-[0_12px_32px_rgba(58,47,30,.05)] max-md:flex max-md:min-w-0 max-md:gap-[15px] max-md:px-[13px] max-md:py-2.5" aria-label="地图图例">
+          <p className="m-0 flex items-center gap-[11px] text-xs font-normal leading-[2.1] text-ink-soft max-md:gap-1.5 max-md:text-[9px]"><span className="block h-0.5 w-[27px] bg-city-500 max-md:w-[17px]" />省级边界</p>
+          <p className="m-0 flex items-center gap-[11px] text-xs font-normal leading-[2.1] text-ink-soft max-md:gap-1.5 max-md:text-[9px]"><span className="block h-0.5 w-[27px] bg-jade-500 max-md:w-[17px]" />地市 / 区县界</p>
+          <p className="m-0 flex items-center gap-[11px] text-xs font-normal leading-[2.1] text-ink-soft max-md:gap-1.5 max-md:text-[9px]"><span className="legend-fill block h-[13px] w-[27px] rounded-[3px] border border-jade-500 bg-jade-400 max-md:w-[17px]" />已正确填入</p>
         </div>
       </section>
     </>

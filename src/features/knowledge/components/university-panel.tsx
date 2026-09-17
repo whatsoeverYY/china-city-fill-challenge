@@ -19,14 +19,14 @@ export default function UniversityPanel({
 
   return (
     <div className="knowledge-stack grid gap-5">
-      <div className="knowledge-memory-banner flex items-center gap-4 rounded-2xl bg-[#735285]/10 p-5 max-md:flex-wrap">
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#735285] font-black text-white">学</span>
+      <div className="knowledge-memory-banner grid grid-cols-[50px_minmax(0,1fr)_auto] items-center gap-4 rounded-[17px] border border-scholar-500/20 bg-scholar-200 px-5 py-[18px] text-scholar-600 max-md:grid-cols-[50px_1fr]">
+        <span className="grid size-[50px] shrink-0 place-items-center rounded-[50%_50%_50%_15px] bg-current font-serif text-xl font-black text-white shadow-[inset_0_0_0_4px_rgba(255,255,255,.15)]">学</span>
         <div>
-          <strong>不要逐所散记：先记“名校城市群”</strong>
-          <p className="mb-0 text-xs leading-5 text-ink-soft">北京、上海、南京、武汉、西安、成都等城市聚集较多，再补上每省的单点学校。</p>
+          <strong className="font-serif text-base">不要逐所散记：先记“名校城市群”</strong>
+          <p className="mb-0 mt-1 text-[10px] leading-[1.7] text-ink-600">北京、上海、南京、武汉、西安、成都等城市聚集较多，再补上每省的单点学校。</p>
         </div>
         <a
-          className="ml-auto rounded-full bg-[#735285] px-4 py-3 text-xs font-black text-white no-underline max-md:ml-0"
+          className="rounded-full border border-current bg-white/50 px-[13px] py-[9px] text-[9px] font-black text-current no-underline max-md:col-span-2 max-md:justify-self-start"
           href="https://www.moe.gov.cn/srcsite/A22/s7065/200512/t20051223_82762.html"
           target="_blank"
           rel="noreferrer"
@@ -34,24 +34,24 @@ export default function UniversityPanel({
           教育部名单来源
         </a>
       </div>
-      <div className="knowledge-university-list grid grid-cols-2 gap-3 max-md:grid-cols-1">
+      <div className="knowledge-university-list grid grid-cols-3 items-start gap-3.5 max-lg:grid-cols-2 max-md:grid-cols-1">
         {groups.map(({ province, items }) => (
-          <section className="rounded-2xl border border-black/10 bg-card p-4" key={province.code}>
-            <header className="mb-3 flex items-end justify-between border-b border-black/10 pb-3">
+          <section className="overflow-hidden rounded-[17px] border border-scholar-500/20 bg-paper-100/90" key={province.code}>
+            <header className="flex items-end justify-between gap-[15px] bg-scholar-200 px-[18px] py-4 text-scholar-600">
               <div>
-                <p className="m-0 text-[9px] text-ink-soft">{province.kind}</p>
-                <h3 className="m-0 text-2xl font-black">{province.shortName}</h3>
+                <p className="m-0 text-[8px]">{province.kind}</p>
+                <h3 className="mb-0 mt-[3px] font-serif text-lg">{province.shortName}</h3>
               </div>
-              <strong className="text-3xl text-[#735285]">{items.length}<small className="text-[10px]">所</small></strong>
+              <strong className="font-numeric text-[25px]">{items.length}<small className="ml-[3px] text-[9px]">所</small></strong>
             </header>
-            <div className="grid gap-2">
+            <div className="grid px-[15px] pb-[13px] pt-2">
               {items.map((item) => (
-                <article className="flex items-center gap-3 rounded-xl bg-paper p-3" key={item.id}>
-                  <span className="university-tier rounded-full bg-[#735285]/10 px-2 py-1 text-[9px] font-black text-[#735285]">{item.tier}</span>
+                <article className="grid grid-cols-[38px_minmax(0,1fr)] items-center gap-2.5 border-b border-black/[.13] py-2.5 last:border-b-0" key={item.id}>
+                  <span className={`university-tier grid h-[25px] w-[38px] place-items-center rounded-[7px] border font-numeric text-[9px] font-black ${item.tier === "985" ? "border-city-500/25 bg-city-200 text-city-600" : "border-scholar-500/25 bg-scholar-100 text-scholar-600"}`}>{item.tier}</span>
                   <div>
-                    <h4 className="m-0 text-sm">{item.name}</h4>
-                    <p className="m-0 text-[10px] text-ink-soft">
-                      <b>{plainPlaceName(item.city)}</b>
+                    <h4 className="m-0 text-[11px]">{item.name}</h4>
+                    <p className="mb-0 mt-1 text-[8px] leading-[1.5] text-stone-600">
+                      <b className="text-scholar-600">{plainPlaceName(item.city)}</b>
                       {item.note ? ` · ${item.note}` : ""}
                     </p>
                   </div>

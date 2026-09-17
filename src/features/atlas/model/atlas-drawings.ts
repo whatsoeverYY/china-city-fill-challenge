@@ -4,13 +4,13 @@ import type { AtlasProvinceDrawing, AtlasRegionDrawing } from "./atlas-types";
 import {
   featureLabelPosition,
   geometryToPath,
-  PROVINCE_FILL_COLORS,
 } from "@/features/map/lib/map-geometry";
 import {
   mapFeatureId,
   type MapData,
   type Position,
 } from "@/features/map/model/map-data";
+import { MAP_COLORS, PROVINCE_FILL_COLORS } from "@/shared/config/map-colors";
 
 type Project = (position: Position) => Position;
 
@@ -43,7 +43,7 @@ export function createAtlasRegions(
     return {
       key: regionId,
       path: geometryToPath(feature.geometry, project),
-      fill: provinceFillColors[provinceCode] ?? "#ece4d4",
+      fill: provinceFillColors[provinceCode] ?? MAP_COLORS.atlasFallbackFill,
       name,
       plate:
         CITY_PLATE_BY_REGION_ID.get(regionId) ??

@@ -23,6 +23,7 @@
 
 - 页面和组件只负责渲染及事件连接；可复用状态放 hook/context，业务计算写成可测试的纯函数，数据读取和持久化通过 service/infrastructure。
 - 常规布局、间距、颜色、排版、交互状态与响应式样式优先使用 Tailwind utilities；不得用 `*-styles.ts`、大段任意后代选择器或 `@apply` 把大 CSS 换一个位置隐藏。Tailwind 无法清晰、稳定表达的复杂动画、SVG 状态或组合效果，才使用语义 class + CSS。
+- 项目颜色统一维护在 `tailwind.config.ts`，品牌主色使用 `city-100` 至 `city-900`，其他主题色同样提供 `100` 至 `900` 完整色阶。组件中使用 `text-city-500`、`bg-atlas-100` 等命名 utility，禁止直接写十六进制颜色；SVG 等必须传入数值颜色的场景统一从 `src/shared/config/` 读取语义色值。
 - `src/app/globals.css` 只用于 Tailwind 入口、主题、全局基线和关键帧。确需 CSS 的功能样式放在对应 `src/features/<feature>/styles/`，不得建立跨功能的大型样式表；新增前必须确认 Tailwind 无法合理表达，并保持 400/500 行门禁。
 - 重复的 Tailwind 组合优先抽成职责明确的小型 UI 组件；仅在同一组件文件内重复使用时，才提取为含完整静态 class 字符串的局部常量。
 - 重构不得改变已经确认的桌面端视觉，包括配色、尺寸、间距、圆角、阴影、层级和信息密度；桌面基础 utility 是视觉契约，响应式改动必须通过断点前缀隔离，并在桌面视口回归验证。

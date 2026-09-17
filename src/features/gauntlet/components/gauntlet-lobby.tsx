@@ -13,6 +13,7 @@ import {
   GAUNTLET_LEVELS,
 } from "@/domain/game/gauntlet-levels";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
+import { GAUNTLET_LEVEL_BADGE_CLASS } from "@/features/gauntlet/config/gauntlet-level-style";
 import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-actions";
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
@@ -25,35 +26,35 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
 
   return (
     <>
-      <section className="gauntlet-intro mb-7 rounded-[30px_30px_30px_9px] bg-gradient-to-br from-ink to-[#3b243d] p-[clamp(24px,5vw,58px)] text-white shadow-xl">
-        <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-gold">过关斩将 · 全关卡试炼</p>
-        <h1 className="my-4 max-w-5xl text-[clamp(36px,6vw,72px)] font-black leading-none">从轮廓到终极混战，<span className="text-brand-gold">把中国地理练成直觉</span></h1>
-        <p className="lede m-0 max-w-3xl text-[15px] leading-7 text-white/70">
+      <section className="gauntlet-intro px-1 pb-9 pt-[70px] max-sm:pb-5 max-sm:pt-8">
+        <p className="eyebrow mb-3 mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500 max-sm:text-[10px]">过关斩将 · 全关卡试炼</p>
+        <h1 className="mb-4 mt-0 max-w-[850px] font-serif text-[clamp(34px,4.2vw,58px)] font-bold leading-[1.08] tracking-[-0.035em] max-sm:text-[30px] max-sm:leading-[1.12]">从轮廓到终极混战，<span className="text-city-500">把中国地理练成直觉</span></h1>
+        <p className="lede m-0 max-w-[850px] text-[15px] leading-[1.85] text-ink-soft max-sm:text-xs max-sm:leading-5">
           共 {GAUNTLET_LEVEL_COUNT} 个关卡，均可直接选择。错题复仇会读取本机历史错题，其余连续答题关卡答错后连胜归零。
         </p>
-        <div className="gauntlet-lobby-settings mt-7 grid grid-cols-2 gap-3 max-md:grid-cols-1" aria-label="挑战设置">
+        <div className="gauntlet-lobby-settings mt-7 flex flex-wrap items-stretch gap-3 max-sm:grid max-sm:grid-cols-2 max-sm:gap-2" aria-label="挑战设置">
           <button
-            className={`timed-mode-toggle grid cursor-pointer grid-cols-[44px_1fr] items-center gap-x-3 rounded-2xl border p-3 text-left text-white ${d.timedMode ? "border-brand-gold/50 bg-brand-gold/15" : "border-white/20 bg-white/10"}`}
+            className={`timed-mode-toggle grid w-[min(360px,100%)] cursor-pointer grid-cols-[auto_1fr] items-center gap-x-3 rounded-[15px] border px-4 py-[13px] text-left transition hover:-translate-y-px hover:border-city-500/45 max-sm:w-full max-sm:grid-cols-[34px_1fr] max-sm:gap-x-2 max-sm:px-2 max-sm:py-2.5 ${d.timedMode ? "border-city-500/35 bg-city-300 text-city-900" : "border-black/20 bg-card/80 text-ink-600"}`}
             type="button"
             role="switch"
             aria-checked={d.timedMode}
             onClick={() => s.setTimeLimit(nextGauntletTimeLimit)}
           >
-            <span className="row-span-2 grid size-11 place-items-center rounded-full bg-white/10 font-black" aria-hidden="true">
+            <span className={`row-span-2 grid size-[38px] place-items-center rounded-full font-serif text-[17px] font-black text-white max-sm:size-8 ${d.timedMode ? "bg-city-500" : "bg-ink-500"}`} aria-hidden="true">
               {s.timeLimit === GAUNTLET_TIME_LIMITS.UNLIMITED
                 ? "∞"
                 : s.timeLimit === GAUNTLET_TIME_LIMITS.STANDARD
                   ? "计"
                   : "速"}
             </span>
-            <b className="text-sm">
+            <b className="self-end text-xs max-sm:text-[11px]">
               {s.timeLimit === GAUNTLET_TIME_LIMITS.UNLIMITED
                 ? "不限时模式"
                 : s.timeLimit === GAUNTLET_TIME_LIMITS.STANDARD
                   ? `限时模式 · ${GAUNTLET_TIME_LIMITS.STANDARD} 秒`
                   : `极速模式 · ${GAUNTLET_TIME_LIMITS.FAST} 秒`}
             </b>
-            <small className="text-[10px] text-white/60">
+            <small className="self-start text-[9px] text-stone-600 max-sm:hidden">
               {s.timeLimit === GAUNTLET_TIME_LIMITS.UNLIMITED
                 ? `点击切换到 ${GAUNTLET_TIME_LIMITS.STANDARD} 秒限时`
                 : s.timeLimit === GAUNTLET_TIME_LIMITS.STANDARD
@@ -62,28 +63,28 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
             </small>
           </button>
           <button
-            className="province-picker-button gauntlet-scope-button grid cursor-pointer grid-cols-[44px_1fr_auto] items-center gap-x-3 rounded-2xl border border-white/20 bg-white/10 p-3 text-left text-white disabled:cursor-wait disabled:opacity-50"
+            className="province-picker-button gauntlet-scope-button grid w-[min(480px,100%)] cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 rounded-[15px] border border-jade-500/25 bg-jade-200 px-3.5 py-[11px] text-left text-jade-700 transition hover:-translate-y-px hover:border-jade-500 disabled:cursor-wait disabled:opacity-50 max-sm:w-full max-sm:grid-cols-[34px_1fr] max-sm:px-2 max-sm:py-2.5"
             type="button"
             onClick={actions.openProvincePicker}
             disabled={!s.provinceScopeReady}
           >
-            <span className="row-span-2 grid size-11 place-items-center rounded-full bg-brand-red font-black" aria-hidden="true">域</span>
-            <b className="text-sm">
+            <span className="row-span-2 grid size-[29px] place-items-center rounded-full bg-jade-500 font-serif text-[13px] font-black text-white max-sm:size-8" aria-hidden="true">域</span>
+            <b className="col-start-2 self-end truncate text-[11px] max-sm:text-[10px]">
               统一省份范围 · {s.selectedShapeProvinceCodes.size} / {PROVINCES.length}
             </b>
-            <i className="text-[10px] not-italic text-white/60">{s.provinceScopeReady ? d.provinceScopeSummary : "正在读取已保存范围…"}</i>
-            <em className="row-span-2 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black not-italic">修改</em>
+            <i className="col-start-2 self-start truncate text-[9px] font-bold not-italic text-ink-500 max-sm:hidden">{s.provinceScopeReady ? d.provinceScopeSummary : "正在读取已保存范围…"}</i>
+            <em className="col-start-3 row-span-2 row-start-1 self-center text-[10px] font-black not-italic text-jade-700 max-sm:hidden">修改</em>
           </button>
         </div>
         <p
-          className={`gauntlet-scope-message mb-0 mt-3 min-h-5 text-xs ${s.provinceScopeMessage ? "text-brand-gold" : "text-white/60"}`}
+          className={`gauntlet-scope-message mx-0 mb-0 mt-2.5 min-h-[1.7em] text-[10px] leading-[1.7] ${s.provinceScopeMessage ? "font-extrabold text-jade-700" : "text-ink-500"}`}
           role="status"
         >
           {s.provinceScopeMessage ||
             "选择一次后，支持自选范围的关卡会自动沿用；全国固定关卡不受影响。"}
         </p>
       </section>
-      <section className="gauntlet-level-grid grid grid-cols-4 gap-3 max-xl:grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1" aria-label="选择关卡">
+      <section className="gauntlet-level-grid grid grid-cols-4 gap-5 max-[1200px]:grid-cols-2 max-[900px]:grid-cols-1 max-sm:grid-cols-2 max-sm:gap-2" aria-label="选择关卡">
         {GAUNTLET_LEVELS.map((item, index) => {
           const completed = s.completedLevels.has(item.id);
           const scopeIssue = d.provinceScopeIssue(item.id);
@@ -98,24 +99,24 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
           return (
             <button
               key={item.id}
-              className="gauntlet-level-card relative grid min-h-60 cursor-pointer grid-rows-[auto_auto_auto_1fr_auto_auto] gap-2 overflow-hidden rounded-[20px_20px_20px_6px] border border-black/10 bg-card p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+              className="gauntlet-level-card relative grid min-h-[390px] cursor-pointer content-start overflow-hidden rounded-[22px] border border-black/15 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_100%_0%,rgba(213,169,69,.18),transparent_16rem)] p-[30px] text-left shadow-[0_24px_60px_rgba(57,46,31,.08)] transition after:absolute after:-bottom-[50px] after:-right-11 after:size-[180px] after:rounded-full after:border after:border-city-500/10 hover:-translate-y-[5px] hover:border-city-500/40 hover:shadow-[0_30px_70px_rgba(57,46,31,.13)] disabled:cursor-wait disabled:opacity-60 max-[900px]:grid-cols-[auto_1fr] max-[900px]:gap-x-6 max-[900px]:min-h-0 max-sm:grid-cols-1 max-sm:gap-1.5 max-sm:min-h-48 max-sm:rounded-[16px_16px_16px_5px] max-sm:p-3"
               type="button"
               onClick={() => actions.startLevel(item.id)}
               disabled={mapUnavailable || Boolean(scopeIssue)}
               title={scopeIssue ?? undefined}
             >
-              <span className="level-number text-[10px] font-black tracking-widest text-brand-red">第 {index + 1} 关</span>
-              <i className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-red to-[#72558a] text-xl not-italic text-white">{item.badge}</i>
-              <strong className="text-xl">{item.title}</strong>
-              <p className="m-0 text-xs leading-5 text-ink-soft">{item.description}</p>
-              <b className="text-[10px] text-brand-green-dark">
+              <span className="level-number text-[10px] font-black tracking-[0.18em] text-city-500 max-[900px]:col-start-1 max-sm:col-auto">第 {index + 1} 关</span>
+              <i className={`mb-[22px] mt-8 grid size-[74px] -rotate-2 place-items-center rounded-[24px_24px_24px_8px] font-serif text-[19px] font-extrabold not-italic text-gold-100 shadow-[inset_0_0_0_3px_rgba(255,248,231,.2)] max-[900px]:col-start-1 max-[900px]:row-[2/6] max-[900px]:my-2.5 max-sm:col-auto max-sm:row-auto max-sm:my-2 max-sm:size-12 max-sm:rounded-[16px_16px_16px_6px] max-sm:text-base ${GAUNTLET_LEVEL_BADGE_CLASS[item.id]}`}>{item.badge}</i>
+              <strong className="font-serif text-[28px] max-[900px]:col-start-2 max-[900px]:row-start-1 max-[900px]:self-end max-sm:col-auto max-sm:row-auto max-sm:text-lg">{item.title}</strong>
+              <p className="my-3 min-h-[72px] text-[13px] leading-[1.8] text-ink-soft max-[900px]:col-start-2 max-[900px]:min-h-0 max-sm:hidden">{item.description}</p>
+              <b className="text-[11px] tracking-[0.08em] text-gold-800 max-[900px]:col-start-2 max-sm:col-auto max-sm:text-[9px] max-sm:tracking-normal">
                 {item.id === LEVEL.MISTAKE_REVENGE
                   ? s.mistakes.length
                     ? `当前 ${s.mistakes.length} 道历史错题`
                     : "暂无历史错题"
                   : levelTarget}
               </b>
-              <span className={`level-state text-xs font-black ${completed ? "text-brand-green" : "text-brand-red"}`}>
+              <span className={`level-state z-[1] mt-6 self-end justify-self-end text-xs font-black max-[900px]:col-start-2 max-sm:col-auto max-sm:mt-2 max-sm:text-[10px] ${completed ? "text-jade-700" : "text-city-900"}`}>
                 {mapUnavailable
                   ? "地图载入中…"
                   : scopeIssue

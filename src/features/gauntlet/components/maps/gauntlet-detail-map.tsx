@@ -11,6 +11,7 @@ import {
 } from "@/features/map/lib/map-geometry";
 import { mapFeatureId, type MapData } from "@/features/map/model/map-data";
 import { stripAdministrativeSuffix } from "@/shared/lib/place-name";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 export default function GauntletDetailMap({
   map,
@@ -46,8 +47,8 @@ export default function GauntletDetailMap({
         const isCorrectAnswer = correctRegionId === regionId;
         const isWrongSelection = selectedRegionId === regionId;
         const isHighlighted = isCorrectAnswer || isWrongSelection;
-        const fill = isCorrectAnswer ? "#f1c75b" : isWrongSelection ? "#e7a09a" : "#eee4cf";
-        const stroke = isCorrectAnswer ? "#8b4a16" : isWrongSelection ? "#8f302a" : "var(--green)";
+        const fill = isCorrectAnswer ? MAP_COLORS.correctFill : isWrongSelection ? MAP_COLORS.wrongFill : MAP_COLORS.neutralFill;
+        const stroke = isCorrectAnswer ? MAP_COLORS.correctStroke : isWrongSelection ? MAP_COLORS.wrongStroke : MAP_COLORS.cityBoundary;
         const strokeWidth = isHighlighted ? 3 : 1.8;
         return (
           <path
@@ -55,7 +56,7 @@ export default function GauntletDetailMap({
             d={geometryToPath(feature.geometry, project)}
             className={`${readOnly ? "cursor-default" : "cursor-pointer"} [transition:fill_130ms_ease,stroke-width_130ms_ease,filter_130ms_ease] ${
               !readOnly && !isHighlighted
-                ? "hover:fill-[#b9d8c4] hover:[stroke-width:2.8px] focus-visible:fill-[#b9d8c4] focus-visible:[stroke-width:2.8px]"
+                ? "hover:fill-jade-400 hover:[stroke-width:2.8px] focus-visible:fill-jade-400 focus-visible:[stroke-width:2.8px]"
                 : ""
             } ${isCorrectAnswer ? "drop-shadow-[0_0_5px_rgba(241,199,91,0.68)]" : ""}`}
             fill={fill}
@@ -92,8 +93,8 @@ export default function GauntletDetailMap({
             const regionId = mapFeatureId(feature);
             const isCorrectAnswer = correctRegionId === regionId;
             const isWrongSelection = selectedRegionId === regionId;
-            const fill = isCorrectAnswer ? "#71430f" : isWrongSelection ? "#8f302a" : "#3f4d47";
-            const stroke = isCorrectAnswer ? "#fff7d3" : isWrongSelection ? "#fff0ed" : "rgba(255, 253, 247, 0.92)";
+            const fill = isCorrectAnswer ? MAP_COLORS.correctLabel : isWrongSelection ? MAP_COLORS.wrongStroke : MAP_COLORS.label;
+            const stroke = isCorrectAnswer ? MAP_COLORS.correctLabelOutline : isWrongSelection ? MAP_COLORS.wrongLabelOutline : "rgba(255, 253, 247, 0.92)";
             const fontSize = isCorrectAnswer || isWrongSelection ? 15 : readOnly ? 12 : 10;
             const strokeWidth = isCorrectAnswer || isWrongSelection ? 4 : readOnly ? 3 : 2.6;
             return (

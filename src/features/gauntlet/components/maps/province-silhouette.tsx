@@ -12,6 +12,7 @@ import {
 } from "@/features/map/lib/map-geometry";
 import { fitRotatedPointsScale } from "@/features/map/lib/silhouette";
 import type { MapFeature, Position } from "@/features/map/model/map-data";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 function ProvinceShape({
   feature,
@@ -38,7 +39,7 @@ function ProvinceShape({
 
   return (
     <svg
-      className="h-auto max-h-[360px] w-full max-w-xl"
+      className="gauntlet-silhouette h-[500px] w-[min(100%,760px)] overflow-visible max-sm:h-[300px]"
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="img"
       aria-label="待辨认的省级行政区轮廓"
@@ -52,9 +53,9 @@ function ProvinceShape({
         <path
           className="drop-shadow-[0_15px_14px_rgba(68,55,35,0.14)]"
           d={geometryToPath(feature.geometry, project)}
-          fill="#d9cda9"
+          fill={MAP_COLORS.silhouetteFill}
           fillRule="evenodd"
-          stroke="var(--red)"
+          stroke={MAP_COLORS.provinceBoundary}
           strokeLinejoin="round"
           strokeWidth={3.5}
         />

@@ -12,6 +12,7 @@ import {
   provinceForFeature,
 } from "@/features/map/lib/map-geometry";
 import type { MapData } from "@/features/map/model/map-data";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 type RegionState = {
   selected: boolean;
@@ -23,24 +24,24 @@ type RegionState = {
 
 function regionAppearance(state: RegionState) {
   if (state.correctAnswer) {
-    return { fill: "#f1c75b", stroke: "#8b4a16", strokeWidth: 3 };
+    return { fill: MAP_COLORS.correctFill, stroke: MAP_COLORS.correctStroke, strokeWidth: 3 };
   }
   if (state.current) {
-    return { fill: "#4d8c76", stroke: "#173f32", strokeWidth: 2.8 };
+    return { fill: MAP_COLORS.currentFill, stroke: MAP_COLORS.currentStroke, strokeWidth: 2.8 };
   }
   if (state.inRoute && state.origin) {
-    return { fill: "#e3bd72", stroke: "var(--red)", strokeWidth: 2.5 };
+    return { fill: MAP_COLORS.routeOriginFill, stroke: MAP_COLORS.provinceBoundary, strokeWidth: 2.5 };
   }
   if (state.inRoute) {
-    return { fill: "#a9c9dd", stroke: "#355f91", strokeWidth: 1.8 };
+    return { fill: MAP_COLORS.routeFill, stroke: MAP_COLORS.routeStroke, strokeWidth: 1.8 };
   }
   if (state.origin) {
-    return { fill: "#e3bd72", stroke: "var(--red)", strokeWidth: 2.5 };
+    return { fill: MAP_COLORS.routeOriginFill, stroke: MAP_COLORS.provinceBoundary, strokeWidth: 2.5 };
   }
   if (state.selected) {
-    return { fill: "#94c7aa", stroke: "var(--red)", strokeWidth: 2 };
+    return { fill: MAP_COLORS.selectedFill, stroke: MAP_COLORS.provinceBoundary, strokeWidth: 2 };
   }
-  return { fill: "#eee4cf", stroke: "var(--red)", strokeWidth: 1.25 };
+  return { fill: MAP_COLORS.neutralFill, stroke: MAP_COLORS.provinceBoundary, strokeWidth: 1.25 };
 }
 
 export default function GauntletNationalMap({
@@ -94,7 +95,7 @@ export default function GauntletNationalMap({
               className={`cursor-pointer [transition:fill_130ms_ease,filter_130ms_ease] ${
                 highlighted
                   ? ""
-                  : "hover:fill-[#e4d5b9] hover:brightness-[0.98] focus-visible:fill-[#e4d5b9] focus-visible:brightness-[0.98]"
+                  : "hover:fill-gold-300 hover:brightness-[0.98] focus-visible:fill-gold-300 focus-visible:brightness-[0.98]"
               } ${state.correctAnswer ? "drop-shadow-[0_0_6px_rgba(241,199,91,0.72)]" : ""}`}
               fill={appearance.fill}
               fillRule="evenodd"
@@ -123,7 +124,7 @@ export default function GauntletNationalMap({
                 x={x}
                 y={y}
                 className="pointer-events-none font-sans font-black [paint-order:stroke]"
-                fill="#4c574f"
+                fill={MAP_COLORS.neutralLabel}
                 fontSize={province.shortName.length > 3 ? 8 : 10}
                 stroke="rgba(255, 253, 247, 0.9)"
                 strokeWidth={2}

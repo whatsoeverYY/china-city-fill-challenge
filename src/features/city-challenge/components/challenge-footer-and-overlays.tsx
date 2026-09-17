@@ -41,11 +41,11 @@ export default function ChallengeFooterAndOverlays({
         <span>一张地图，500 个待归位的名字</span>
         <span>
           边界数据：
-          <a className="font-bold text-brand-red" href="https://geojson.cn/data/atlas/china" target="_blank" rel="noreferrer">
+          <a className="font-bold text-city-500" href="https://geojson.cn/data/atlas/china" target="_blank" rel="noreferrer">
             GeoJSON.CN
           </a>
           {" · "}
-          <a className="font-bold text-brand-red" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+          <a className="font-bold text-city-500" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
             © OpenStreetMap contributors
           </a>
         </span>
@@ -82,7 +82,7 @@ export default function ChallengeFooterAndOverlays({
             >
               ×
             </button>
-            <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">难度提升 · 区块已选中</p>
+            <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-city-500">难度提升 · 区块已选中</p>
             <h2 className="mt-2 pr-10 text-2xl" id="manual-answer-title">
               {provinceSelected ? "这里是什么城市或区县？" : "这里是哪个省份？"}
             </h2>
@@ -104,13 +104,13 @@ export default function ChallengeFooterAndOverlays({
                     setManualAnswer(event.target.value);
                     setManualError("");
                   }}
-                  className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white px-3 py-3 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
+                  className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white px-3 py-3 outline-none focus:border-city-500 focus:ring-2 focus:ring-city-500/15"
                 />
-                <button className="cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-40" type="submit" disabled={!manualAnswer.trim()}>
+                <button className="cursor-pointer rounded-xl border-0 bg-city-500 px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-40" type="submit" disabled={!manualAnswer.trim()}>
                   确认答案
                 </button>
               </div>
-              <p className="manual-error min-h-5 text-sm font-bold text-brand-red" aria-live="polite">
+              <p className="manual-error min-h-5 text-sm font-bold text-city-500" aria-live="polite">
                 {manualError || "按 Enter 键也可以提交"}
               </p>
             </form>

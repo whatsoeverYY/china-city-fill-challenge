@@ -6,7 +6,7 @@ import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-c
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 
 const OPTION_CLASS =
-  "min-h-12 cursor-pointer rounded-xl border border-black/15 bg-white px-3 text-sm font-bold hover:border-brand-red/40";
+  "min-h-[49px] cursor-pointer rounded-xl border border-jade-500/25 bg-jade-200 px-1.5 text-sm font-black text-ink-700 hover:border-jade-500/50";
 
 export default function ProvinceNeighborAnswer({
   actions,
@@ -18,8 +18,8 @@ export default function ProvinceNeighborAnswer({
 
   return (
     <>
-      <h2 className="mb-4 mt-0 text-2xl font-black">选出全部陆地邻省</h2>
-      <div className="neighbor-text-options gauntlet-option-grid grid grid-cols-2 gap-2 max-sm:grid-cols-1">
+      <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">选出全部陆地邻省</h2>
+      <div className="neighbor-text-options gauntlet-option-grid grid max-h-[min(390px,48vh)] grid-cols-4 content-start gap-2.5 overflow-y-auto p-[3px] max-sm:grid-cols-2">
         {PROVINCES.filter(
           (item) => item.code !== d.currentChallengeProvince?.code,
         ).map((item) => {
@@ -27,7 +27,7 @@ export default function ProvinceNeighborAnswer({
           return (
             <button
               key={item.code}
-              className={`${OPTION_CLASS} ${selected ? "border-brand-red bg-brand-red/10" : ""}`}
+              className={`${OPTION_CLASS} ${selected ? "border-jade-700 bg-jade-500 text-white shadow-[inset_0_0_0_2px_rgba(255,255,255,.18)]" : ""}`}
               type="button"
               aria-pressed={selected}
               onClick={() => actions.handleGauntletProvince(item)}
@@ -37,7 +37,7 @@ export default function ProvinceNeighborAnswer({
           );
         })}
       </div>
-      <p className="map-answer-summary rounded-xl bg-paper p-3 text-xs leading-5 text-ink-soft">
+      <p className="map-answer-summary mb-1 mt-3.5 min-h-0 text-xs leading-[1.8] text-ink-soft">
         已选 {s.mapSelections.size} 个：
         {Array.from(s.mapSelections)
           .map((code) => PROVINCE_BY_CODE.get(code)?.shortName)
@@ -45,7 +45,7 @@ export default function ProvinceNeighborAnswer({
           .join("、") || "暂未选择"}
       </p>
       <button
-        className="gauntlet-primary-action min-h-12 cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="gauntlet-primary-action mt-[18px] min-h-[50px] w-full cursor-pointer rounded-[10px] border-0 bg-city-500 px-4 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
         type="button"
         disabled={s.mapSelections.size === 0}
         onClick={actions.submitNeighborSelection}

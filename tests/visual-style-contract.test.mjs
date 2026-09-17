@@ -28,6 +28,15 @@ function assertTokens(classList, requiredTokens, contractName) {
   }
 }
 
+function assertSourceContainsAll(fileSource, requiredFragments, contractName) {
+  for (const fragment of requiredFragments) {
+    assert.ok(
+      fileSource.includes(fragment),
+      `${contractName} 缺少视觉契约片段：${fragment}`,
+    );
+  }
+}
+
 test("desktop visual foundations remain stable during refactors", async () => {
   const challengeHeader = await source(
     "src/features/city-challenge/components/challenge-header.tsx",
@@ -39,12 +48,46 @@ test("desktop visual foundations remain stable during refactors", async () => {
   const knowledgeCatalog = await source(
     "src/features/knowledge/components/knowledge-catalog.tsx",
   );
+  const knowledgeBase = await source(
+    "src/features/knowledge/knowledge-base.tsx",
+  );
   const admin = await source("src/features/admin/admin-dashboard.tsx");
 
   assertTokens(
     staticClassValue(challengeHeader, "site-header"),
-    ["mb-8", "flex", "items-center", "justify-between", "gap-5"],
+    [
+      "flex",
+      "min-h-[62px]",
+      "items-center",
+      "justify-between",
+      "border-b",
+      "pb-[22px]",
+    ],
     "首页桌面头部",
+  );
+  assertTokens(
+    staticClassValue(challengeHeader, "brand-seal"),
+    [
+      "size-[45px]",
+      "-rotate-2",
+      "rounded-[9px_9px_9px_3px]",
+      "bg-city-500",
+      "font-serif",
+    ],
+    "首页品牌印章",
+  );
+  assertSourceContainsAll(
+    challengeHeader,
+    [
+      "bg-atlas-100",
+      "text-atlas-700",
+      "bg-scholar-100",
+      "text-scholar-600",
+      "bg-gold-200",
+      "text-gold-900",
+      "font-numeric text-[23px] text-city-500",
+    ],
+    "首页彩色入口与进度",
   );
   assertTokens(
     staticClassValue(atlas, "city-atlas-header"),
@@ -53,21 +96,37 @@ test("desktop visual foundations remain stable during refactors", async () => {
       "min-h-[82px]",
       "grid-cols-[auto_minmax(0,1fr)_auto]",
       "gap-7",
-      "px-5",
+      "px-[22px]",
       "py-3",
     ],
     "图鉴桌面头部",
   );
   assertTokens(
+    staticClassValue(atlas, "city-atlas-canvas"),
+    [
+      "bg-paper-600",
+      "[background-size:auto,24px_24px,24px_24px]",
+    ],
+    "图鉴纸张网格",
+  );
+  assertTokens(
     staticClassValue(gauntletLobby, "gauntlet-intro"),
     [
-      "rounded-[30px_30px_30px_9px]",
-      "bg-gradient-to-br",
-      "from-ink",
-      "to-[#3b243d]",
-      "shadow-xl",
+      "px-1",
+      "pb-9",
+      "pt-[70px]",
     ],
     "闯关桌面主视觉",
+  );
+  assertTokens(
+    staticClassValue(gauntletLobby, "gauntlet-level-card"),
+    [
+      "min-h-[390px]",
+      "rounded-[22px]",
+      "bg-[rgba(251,248,240,.94)]",
+      "[background-image:radial-gradient(circle_at_100%_0%,rgba(213,169,69,.18),transparent_16rem)]",
+    ],
+    "闯关关卡卡片",
   );
   assertTokens(
     staticClassValue(knowledgeCatalog, "knowledge-home-hero"),
@@ -78,6 +137,27 @@ test("desktop visual foundations remain stable during refactors", async () => {
       "items-end",
     ],
     "知识馆桌面主视觉",
+  );
+  assertSourceContainsAll(
+    knowledgeCatalog,
+    [
+      "font-numeric text-[58px] font-bold",
+      "rounded-[17px_17px_17px_5px]",
+      "bg-city-600",
+      "bg-jade-500",
+      "bg-atlas-500",
+      "bg-gold-700",
+      "bg-scholar-500",
+    ],
+    "知识馆数字、标签形状与专题配色",
+  );
+  assertTokens(
+    staticClassValue(knowledgeBase, "knowledge-shell"),
+    [
+      "bg-paper-400",
+      "[background-size:auto,auto,30px_30px,30px_30px]",
+    ],
+    "知识馆纸张网格",
   );
   assertTokens(
     staticClassValue(admin, "admin-shell"),
@@ -104,12 +184,17 @@ test("major modules keep intentional mobile layouts", async () => {
 
   assertTokens(
     staticClassValue(challengeHeader, "site-header"),
-    ["max-md:flex-col", "max-md:items-stretch"],
+    ["max-[1050px]:flex-wrap", "max-md:gap-5"],
     "首页移动头部",
   );
-  assertTokens(
-    staticClassValue(challengeHeader, "header-actions"),
-    ["max-md:grid", "max-md:grid-cols-2"],
+  assertSourceContainsAll(
+    challengeHeader,
+    [
+      "max-md:grid",
+      'province ? "max-md:grid-cols-2" : "max-md:grid-cols-5"',
+      "max-sm:flex-col",
+      "max-sm:rounded-xl",
+    ],
     "首页移动操作区",
   );
   assertTokens(
@@ -118,14 +203,43 @@ test("major modules keep intentional mobile layouts", async () => {
     "图鉴移动信息层级",
   );
   assertTokens(
-    staticClassValue(gauntletScreen, "gauntlet-shell"),
-    ["max-md:px-3", "max-md:pb-24", "max-md:pt-3"],
+    staticClassValue(atlas, "city-atlas-toolbar"),
+    ["max-md:grid-cols-4", "max-md:items-center"],
+    "图鉴移动操作栏",
+  );
+  assertSourceContainsAll(
+    gauntletScreen,
+    [
+      "gauntlet-shell",
+      "max-md:w-[min(680px,calc(100%_-_24px))]",
+      "max-md:pb-24",
+      "max-md:pt-[15px]",
+    ],
     "闯关移动外壳",
   );
   assertTokens(
+    staticClassValue(gauntletScreen, "gauntlet-mobile-nav"),
+    ["hidden", "max-md:grid", "grid-cols-[82px_minmax(0,1fr)_82px]"],
+    "闯关移动导航",
+  );
+  assertTokens(
     staticClassValue(knowledgeCatalog, "knowledge-home-hero"),
-    ["max-lg:grid-cols-1", "max-sm:w-[calc(100%_-_24px)]", "max-sm:py-10"],
+    [
+      "max-lg:grid-cols-1",
+      "max-sm:w-[calc(100%_-_24px)]",
+      "max-sm:pb-7",
+      "max-sm:pt-8",
+    ],
     "知识馆移动主视觉",
+  );
+  assertSourceContainsAll(
+    knowledgeCatalog,
+    [
+      "max-sm:grid-cols-[44px_minmax(0,1fr)_auto]",
+      "max-sm:min-h-0",
+      "max-sm:p-3",
+    ],
+    "知识馆移动专题列表",
   );
   assertTokens(
     staticClassValue(admin, "admin-player-table"),
@@ -134,7 +248,61 @@ test("major modules keep intentional mobile layouts", async () => {
   );
   assertTokens(
     staticClassValue(neighborAnswer, "neighbor-text-options"),
-    ["max-sm:grid-cols-1"],
+    ["grid-cols-4", "max-sm:grid-cols-2", "overflow-y-auto"],
     "邻省关卡移动选项",
   );
+});
+
+test("presentation colors follow stable ids instead of labels or positions", async () => {
+  const lobby = await source(
+    "src/features/gauntlet/components/gauntlet-lobby.tsx",
+  );
+  const levelStyles = await source(
+    "src/features/gauntlet/config/gauntlet-level-style.ts",
+  );
+  const knowledgeData = await source(
+    "src/features/knowledge/data/knowledge-data.ts",
+  );
+
+  assert.ok(!lobby.includes("LEVEL_BADGE_CLASSES[index]"));
+  assert.ok(lobby.includes("GAUNTLET_LEVEL_BADGE_CLASS[item.id]"));
+  assert.ok(levelStyles.includes("Record<GauntletLevelId, string>"));
+  assert.ok(levelStyles.includes("[GAUNTLET_LEVEL_ID.FINAL_BOSS]"));
+  assert.ok(knowledgeData.includes("tone: KnowledgeTone"));
+  assert.ok(knowledgeData.includes('tone: "red"'));
+  assert.ok(knowledgeData.includes('tone: "green"'));
+  assert.ok(knowledgeData.includes('tone: "blue"'));
+  assert.ok(knowledgeData.includes('tone: "gold"'));
+  assert.ok(knowledgeData.includes('tone: "purple"'));
+});
+
+test("project colors use named Tailwind palettes", async () => {
+  const tailwindConfig = await source("tailwind.config.ts");
+  const globals = await source("src/app/globals.css");
+  const shades = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+  for (const palette of [
+    "atlas",
+    "city",
+    "clay",
+    "gold",
+    "ink",
+    "jade",
+    "moss",
+    "navy",
+    "olive",
+    "paper",
+    "scholar",
+    "stone",
+  ]) {
+    const match = tailwindConfig.match(
+      new RegExp(`\\b${palette}:\\s*\\{([\\s\\S]*?)\\n\\s*\\},`, "u"),
+    );
+    assert.ok(match, `缺少 ${palette} Tailwind 色阶`);
+    for (const shade of shades) {
+      assert.match(match[1], new RegExp(`\\b${shade}:`, "u"));
+    }
+  }
+
+  assert.ok(globals.includes('@config "../../tailwind.config.ts";'));
 });

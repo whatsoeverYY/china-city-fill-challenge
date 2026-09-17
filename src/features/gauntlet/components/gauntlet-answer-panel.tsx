@@ -13,11 +13,11 @@ import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-c
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
-const ANSWER_TITLE_CLASS = "mb-4 mt-0 text-2xl font-black";
+const ANSWER_TITLE_CLASS = "mb-[30px] mt-0 font-serif text-[27px] font-bold leading-[1.35]";
 const OPTION_GRID_CLASS = "gauntlet-option-grid grid grid-cols-2 gap-2 max-sm:grid-cols-1";
-const OPTION_CLASS = "min-h-12 cursor-pointer rounded-xl border border-black/15 bg-white px-3 text-sm font-bold hover:border-brand-red/40";
-const SUMMARY_CLASS = "map-answer-summary rounded-xl bg-paper p-3 text-xs leading-5 text-ink-soft";
-const PRIMARY_CLASS = "gauntlet-primary-action min-h-12 cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-50";
+const OPTION_CLASS = "min-h-[76px] cursor-pointer rounded-xl border border-jade-500/25 bg-jade-200 px-3 text-[13px] font-black leading-[1.45] text-ink-700 transition hover:-translate-y-px hover:border-jade-500/50";
+const SUMMARY_CLASS = "map-answer-summary mb-1 mt-0 min-h-[58px] text-xs leading-[1.8] text-ink-soft";
+const PRIMARY_CLASS = "gauntlet-primary-action mt-[18px] min-h-[50px] w-full cursor-pointer rounded-[10px] border-0 bg-city-500 px-4 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function GauntletAnswerPanel({
   actions,
@@ -114,7 +114,7 @@ export default function GauntletAnswerPanel({
             {d.currentPlateFaultQuestion?.options.map((item) => (
               <button
                 key={item.id}
-                className={OPTION_CLASS}
+                className={`${OPTION_CLASS} min-h-[62px] border-navy-500/25 bg-navy-200 font-mono text-xs text-atlas-600`}
                 type="button"
                 onClick={() => actions.answerOptionQuestion(item.id)}
               >
@@ -173,7 +173,7 @@ export default function GauntletAnswerPanel({
             {d.currentConfusableQuestion?.options.map((item) => (
               <button
                 key={item.id}
-                className={OPTION_CLASS}
+                className={`${OPTION_CLASS} min-h-[92px] border-scholar-500/25 bg-scholar-200 text-base text-scholar-700`}
                 type="button"
                 onClick={() => actions.answerOptionQuestion(item.id)}
               >
@@ -239,11 +239,11 @@ export default function GauntletAnswerPanel({
                 : "提交本题答案"}
           </h2>
           {boss?.kind === "truth" ? (
-            <div className="truth-actions grid grid-cols-2 gap-2">
-              <button className="min-h-14 cursor-pointer rounded-xl border-0 bg-brand-green font-black text-white" type="button" onClick={() => actions.answerBossTruth(true)}>
+            <div className="truth-actions grid grid-cols-2 gap-2.5">
+              <button className="grid min-h-[108px] cursor-pointer place-content-center gap-[7px] rounded-[14px] border border-jade-500/30 bg-jade-200 text-[13px] font-black text-jade-700" type="button" onClick={() => actions.answerBossTruth(true)}>
                 <span>✓</span> 正确
               </button>
-              <button className="min-h-14 cursor-pointer rounded-xl border-0 bg-brand-red font-black text-white" type="button" onClick={() => actions.answerBossTruth(false)}>
+              <button className="grid min-h-[108px] cursor-pointer place-content-center gap-[7px] rounded-[14px] border border-city-500/30 bg-city-300 text-[13px] font-black text-city-900" type="button" onClick={() => actions.answerBossTruth(false)}>
                 <span>×</span> 错误
               </button>
             </div>
@@ -279,11 +279,11 @@ export default function GauntletAnswerPanel({
       return (
         <>
           <h2 className={ANSWER_TITLE_CLASS}>这句话是真的吗？</h2>
-          <div className="truth-actions grid grid-cols-2 gap-2">
-            <button className="min-h-14 cursor-pointer rounded-xl border-0 bg-brand-green font-black text-white" type="button" onClick={() => actions.answerTruthQuestion(true)}>
+          <div className="truth-actions grid grid-cols-2 gap-2.5">
+            <button className="grid min-h-[108px] cursor-pointer place-content-center gap-[7px] rounded-[14px] border border-jade-500/30 bg-jade-200 text-[13px] font-black text-jade-700" type="button" onClick={() => actions.answerTruthQuestion(true)}>
               <span aria-hidden="true">✓</span> 正确
             </button>
-            <button className="min-h-14 cursor-pointer rounded-xl border-0 bg-brand-red font-black text-white" type="button" onClick={() => actions.answerTruthQuestion(false)}>
+            <button className="grid min-h-[108px] cursor-pointer place-content-center gap-[7px] rounded-[14px] border border-city-500/30 bg-city-300 text-[13px] font-black text-city-900" type="button" onClick={() => actions.answerTruthQuestion(false)}>
               <span aria-hidden="true">×</span> 错误
             </button>
           </div>
@@ -297,10 +297,10 @@ export default function GauntletAnswerPanel({
           <p className={SUMMARY_CLASS}>
             走过的省份不能重复。选错或走进死路会随机重置起点。
           </p>
-          <ol className="province-route m-0 grid list-none gap-2 p-0" aria-label="当前邻省路线">
+          <ol className="province-route m-0 mt-[18px] flex max-h-[230px] list-none flex-wrap gap-[7px] overflow-y-auto p-0" aria-label="当前邻省路线">
             {s.routeCodes.map((code, index) => (
-              <li className="flex items-center gap-2" key={code}>
-                <span className="grid size-6 place-items-center rounded-full bg-brand-green text-[10px] text-white">{index + 1}</span>
+              <li className="flex items-center gap-1.5 rounded-full border border-navy-500/25 bg-navy-200 px-2.5 py-[7px] text-[11px] font-extrabold text-navy-500" key={code}>
+                <span className="grid size-[18px] place-items-center rounded-full bg-navy-400 font-numeric text-[9px] text-white">{index + 1}</span>
                 {PROVINCE_BY_CODE.get(code)?.shortName}
               </li>
             ))}
@@ -346,17 +346,17 @@ export default function GauntletAnswerPanel({
   })();
 
   return (
-    <aside className="gauntlet-answer-panel border-l border-black/10 bg-card p-6 max-lg:border-l-0 max-lg:border-t">
-      <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">你的答案</p>
+    <aside className="gauntlet-answer-panel border-l border-black/[.13] bg-paper-100/65 px-[35px] pb-8 pt-12 max-lg:border-l-0 max-lg:border-t max-md:px-6 max-md:pb-6 max-md:pt-8 max-sm:px-4 max-sm:py-5">
+      <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-city-500">你的答案</p>
       {answerContent}
       {!s.answerReview ? (
         <>
-          <p className={`gauntlet-feedback mt-3 rounded-xl p-3 text-xs font-bold ${s.feedbackType === "right" ? "bg-brand-green/10 text-brand-green-dark" : s.feedbackType === "wrong" ? "bg-brand-red/10 text-brand-red-dark" : "bg-paper text-ink-soft"}`} aria-live="polite">
+          <p className={`gauntlet-feedback mb-0 mt-[22px] min-h-[43px] rounded-[9px] p-3 text-[11px] leading-[1.7] ${s.feedbackType === "right" ? "bg-jade-300 text-jade-700" : s.feedbackType === "wrong" ? "bg-city-300 font-bold text-city-900" : "bg-stone-200 text-stone-700"}`} aria-live="polite">
             {s.feedback}
           </p>
           {STREAK_NOTE_LEVELS.has(s.level) &&
           (s.level !== LEVEL.MISTAKE_REVENGE || Boolean(d.currentMistake)) ? (
-            <p className="streak-note text-center text-xs font-black text-brand-gold">
+            <p className="streak-note mb-0 mt-3 text-[10px] leading-[1.6] text-stone-500">
               {s.level === LEVEL.CITY_NEIGHBORS
                 ? "首次答错会显示市界提示图；重答正确仍计入连胜。"
                 : "答对后自动进入下一题；答错才会展示正确答案与知识解释。"}

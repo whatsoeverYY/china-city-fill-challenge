@@ -9,9 +9,9 @@ import type { KnowledgeProvince } from "@/features/knowledge/model/knowledge-typ
 import { plainPlaceName } from "@/features/knowledge/model/knowledge-format";
 import { PROFILE_BATCH_SIZE } from "@/features/knowledge/config/knowledge-catalog-config";
 
-const PROFILE_METRIC_CLASS = "rounded-lg bg-paper p-2";
-const PROFILE_TERM_CLASS = "text-[9px] text-ink-soft";
-const PROFILE_VALUE_CLASS = "m-0 mt-1 font-black";
+const PROFILE_METRIC_CLASS = "grid gap-1 border-b border-r border-black/[.13] p-[11px]";
+const PROFILE_TERM_CLASS = "text-[8px] text-stone-500";
+const PROFILE_VALUE_CLASS = "m-0 text-xs font-black";
 
 type ProvinceProfilePanelProps = {
   provinces: KnowledgeProvince[];
@@ -54,12 +54,12 @@ export default function ProvinceProfilePanel({
 }: ProvinceProfilePanelProps) {
   return (
     <div className="knowledge-stack grid gap-5">
-      <section className="knowledge-province-filter rounded-2xl border border-black/10 bg-card p-5" aria-label="筛选省份名片">
-        <header className="flex items-end justify-between gap-4 max-md:flex-col max-md:items-stretch">
-          <label className="grid gap-1.5">
-            <span className="text-[10px] font-black text-ink-soft">按名称检索</span>
+      <section className="knowledge-province-filter grid gap-[15px] rounded-[18px_18px_18px_7px] border border-city-700/15 bg-paper-100/90 p-[18px] shadow-[0_10px_28px_rgba(60,50,36,.04)]" aria-label="筛选省份名片">
+        <header className="flex items-end justify-between gap-[18px] max-md:flex-col max-md:items-stretch">
+          <label className="grid w-[min(100%,380px)] gap-[7px]">
+            <span className="text-[9px] font-black tracking-[.1em] text-ink-500">按名称检索</span>
             <input
-              className="min-h-11 w-72 rounded-xl border border-black/15 bg-white px-3 outline-none focus:border-[#735285] focus:ring-2 focus:ring-[#735285]/15 max-md:w-full"
+              className="min-h-11 w-full rounded-xl border border-city-700/25 bg-white px-3.5 text-xs outline-none focus:border-city-500 focus:ring-4 focus:ring-city-700/10"
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
@@ -69,26 +69,26 @@ export default function ProvinceProfilePanel({
               type="search"
             />
           </label>
-          <div className="flex items-center gap-3">
-            <strong className="text-xs" aria-live="polite">
+          <div className="flex min-h-11 items-center gap-2.5">
+            <strong className="whitespace-nowrap text-[10px] text-stone-700" aria-live="polite">
               显示 {filteredProvinces.length} / {provinces.length}
             </strong>
             {query || selectedProvinceCodes.size > 0 ? (
-              <button className="cursor-pointer rounded-full border border-black/15 bg-white px-3 py-2 text-[10px] font-black" type="button" onClick={clearFilters}>清除筛选</button>
+              <button className="cursor-pointer rounded-full border border-city-700/20 bg-city-200 px-2.5 py-[7px] text-[9px] font-black text-city-800" type="button" onClick={clearFilters}>清除筛选</button>
             ) : null}
           </div>
         </header>
-        <p className="knowledge-province-filter-hint text-xs text-ink-soft">
+        <p className="knowledge-province-filter-hint -mt-[3px] mb-0 text-[9px] text-stone-600">
           点击省份可多选，未选择时显示全部
         </p>
-        <div className="knowledge-province-tags flex flex-wrap gap-2" role="group" aria-label="按省份多选">
+        <div className="knowledge-province-tags flex flex-wrap gap-[7px]" role="group" aria-label="按省份多选">
           {provinces.map((province) => {
             const isSelected = selectedProvinceCodes.has(province.code);
             return (
               <button
                 key={province.code}
                 type="button"
-                className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-bold ${isSelected ? "border-[#735285] bg-[#735285] text-white" : "border-black/15 bg-white"}`}
+                className={`min-w-[43px] cursor-pointer rounded-full border px-2.5 py-[7px] text-[9px] font-extrabold transition hover:-translate-y-px hover:border-city-700/35 hover:text-city-800 ${isSelected ? "border-city-500 bg-city-500 text-white shadow-[0_5px_14px_rgba(160,59,50,.18)] hover:text-white" : "border-black/15 bg-paper-300 text-stone-700"}`}
                 aria-pressed={isSelected}
                 title={province.name}
                 onClick={() => toggleProvince(province.code)}
@@ -99,11 +99,11 @@ export default function ProvinceProfilePanel({
           })}
         </div>
       </section>
-      <div className="knowledge-profile-guide flex items-center gap-4 rounded-2xl border border-black/10 bg-card p-5">
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#735285] font-black text-white" aria-hidden="true">总</span>
+      <div className="knowledge-profile-guide grid grid-cols-[48px_minmax(0,1fr)] items-center gap-3.5 rounded-[16px_16px_16px_6px] border border-city-700/15 bg-clay-200 px-[18px] py-4 text-city-900">
+        <span className="grid size-12 shrink-0 place-items-center rounded-[50%_50%_50%_13px] bg-city-500 font-serif text-[21px] font-black text-white" aria-hidden="true">总</span>
         <div>
-          <strong>城市数和综合总量要分开记</strong>
-          <p className="mb-0 text-xs leading-5 text-ink-soft">
+          <strong className="font-serif text-base">城市数和综合总量要分开记</strong>
+          <p className="mb-0 mt-1 text-[9px] leading-[1.7] text-stone-700">
             综合总量加入州、地区、盟、省直辖单位等；新区、示范区按独立号牌学习单元纳入，不改变统计年鉴的城市数。
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function ProvinceProfilePanel({
         <KnowledgeSearchEmpty query={query} />
       ) : (
         <>
-          <div className="knowledge-profile-grid grid grid-cols-3 gap-4 max-xl:grid-cols-2 max-md:grid-cols-1">
+          <div className="knowledge-profile-grid grid grid-cols-3 gap-[13px] max-xl:grid-cols-2 max-md:grid-cols-1">
             {visibleProvinces.map((province, index) => {
               const cityCount = cityCountByCode.get(province.code);
               const cityTotal = cityCount?.cityCount ?? 0;
@@ -126,59 +126,59 @@ export default function ProvinceProfilePanel({
               const universityCount =
                 universityCountByProvince.get(province.code) ?? 0;
               return (
-                <article className="knowledge-profile-card rounded-[18px_18px_18px_6px] border border-black/10 bg-card p-5 shadow-sm" key={province.code}>
-                  <div className="knowledge-profile-head grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                    <span className="text-[10px] font-black text-black/30">{String(index + 1).padStart(2, "0")}</span>
+                <article className="knowledge-profile-card rounded-[17px_17px_17px_6px] border border-black/15 bg-paper-100/90 p-5 shadow-[0_10px_28px_rgba(60,50,36,.05)]" key={province.code}>
+                  <div className="knowledge-profile-head grid grid-cols-[auto_1fr_auto] items-center gap-[11px]">
+                    <span className="font-numeric text-[10px] text-stone-500">{String(index + 1).padStart(2, "0")}</span>
                     <div>
-                      <h3 className="m-0 text-2xl font-black">{province.name}</h3>
-                      <p className="m-0 text-[10px] text-ink-soft">{province.kind}</p>
+                      <h3 className="m-0 font-serif text-base">{province.name}</h3>
+                      <p className="mb-0 mt-[3px] text-[8px] text-stone-500">{province.kind}</p>
                     </div>
-                    <b className="rounded-lg bg-[#735285] px-2 py-1 text-white">{provincePlatePrefixes[province.code]}</b>
+                    <b className="grid size-[38px] place-items-center rounded-[11px_11px_11px_4px] bg-city-500 font-serif text-lg text-white">{provincePlatePrefixes[province.code]}</b>
                   </div>
-                  <dl className="my-4 grid grid-cols-3 gap-2">
+                  <dl className="mb-0 mt-[18px] grid grid-cols-3 border-l border-t border-black/[.13]">
                     <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>行政中心</dt><dd className={PROFILE_VALUE_CLASS}>{plainPlaceName(provinceCapitals[province.code])}</dd></div>
                     <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>城市数量</dt><dd className={PROFILE_VALUE_CLASS}>{cityCount?.cityCount ?? "—"}</dd></div>
                     <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>特殊单位</dt><dd className={PROFILE_VALUE_CLASS}>{specialUnitCount || 0}</dd></div>
-                    <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>综合总量</dt><dd className={PROFILE_VALUE_CLASS}>{profile.totalUnitCount}</dd></div>
+                    <div className={`${PROFILE_METRIC_CLASS} bg-city-200 text-city-800`}><dt className={PROFILE_TERM_CLASS}>综合总量</dt><dd className={PROFILE_VALUE_CLASS}>{profile.totalUnitCount}</dd></div>
                     <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>陆地邻省</dt><dd className={PROFILE_VALUE_CLASS}>{provinceNeighbors[province.code]?.length ?? 0}</dd></div>
                     <div className={PROFILE_METRIC_CLASS}><dt className={PROFILE_TERM_CLASS}>号牌分组</dt><dd className={PROFILE_VALUE_CLASS}>{profile.plateRegions.length || "—"}</dd></div>
                   </dl>
-                  <div className="knowledge-region-categories flex flex-wrap gap-1.5 text-[10px] text-ink-soft" aria-label={`${province.name}行政区域分类`}>
-                    <span className="rounded-full bg-[#735285]/10 px-2 py-1"><b>{cityTotal}</b> 地级及以上城市</span>
+                  <div className="knowledge-region-categories mt-[13px] flex flex-wrap gap-1.5 text-[8px] font-extrabold text-ink-600" aria-label={`${province.name}行政区域分类`}>
+                    <span className="rounded-full border border-jade-500/15 bg-jade-200 px-2 py-1.5"><b className="text-[10px] text-jade-700">{cityTotal}</b> 地级及以上城市</span>
                     {profile.categories.map((item) => (
-                      <span className="rounded-full bg-[#735285]/10 px-2 py-1" key={`${province.code}-${item.label}`}>
-                        <b>{item.count}</b> {item.label}
+                      <span className="rounded-full border border-jade-500/15 bg-jade-200 px-2 py-1.5" key={`${province.code}-${item.label}`}>
+                        <b className="text-[10px] text-jade-700">{item.count}</b> {item.label}
                       </span>
                     ))}
                   </div>
                   {profile.plateRegions.length > 0 ? (
-                    <section className="knowledge-special-regions mt-4 rounded-xl border border-black/10 p-3">
-                      <header className="flex justify-between text-xs">
-                        <strong>特殊车牌辖区</strong>
-                        <small>{profile.plateRegions.length} 组</small>
+                    <section className="knowledge-special-regions mt-3.5 border-t border-dashed border-black/20 pt-3">
+                      <header className="flex items-center justify-between text-clay-700">
+                        <strong className="text-[9px] tracking-[.08em]">特殊车牌辖区</strong>
+                        <small className="text-[8px] text-stone-500">{profile.plateRegions.length} 组</small>
                       </header>
-                      <div className="mt-2 grid gap-2">
+                      <div className="mt-2 grid gap-1.5">
                         {profile.plateRegions.map((item) => (
-                          <article className="flex items-center justify-between rounded-lg bg-paper p-2 text-xs" key={`${province.code}-${item.plate}-${item.name}`}>
-                            <span>
-                              <strong>{item.name}</strong>
-                              <small className="ml-2 text-ink-soft">{item.type}</small>
-                              {item.note ? <em className="ml-2 text-[9px] text-ink-soft">{item.note}</em> : null}
+                          <article className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 rounded-[10px_10px_10px_3px] bg-stone-100 px-[9px] py-2" key={`${province.code}-${item.plate}-${item.name}`}>
+                            <span className="grid min-w-0 gap-0.5">
+                              <strong className="truncate text-[9px]">{item.name}</strong>
+                              <small className="text-[7px] leading-[1.55] text-stone-500">{item.type}</small>
+                              {item.note ? <em className="text-[7px] not-italic leading-[1.55] text-stone-500">{item.note}</em> : null}
                             </span>
-                            <b>{item.plate}</b>
+                            <b className="min-w-[35px] rounded-[7px] bg-atlas-500 px-1.5 py-[5px] text-center font-serif text-[10px] text-white">{item.plate}</b>
                           </article>
                         ))}
                       </div>
                     </section>
                   ) : (
-                    <p className="knowledge-no-special-region text-xs text-ink-soft">
+                    <p className="knowledge-no-special-region mb-0 mt-[13px] rounded-[9px] bg-paper-300 px-2.5 py-[9px] text-[8px] leading-[1.65] text-stone-600">
                       {profile.note ?? "无城市口径外的独立车牌辖区"}
                     </p>
                   )}
                   {profile.plateRegions.length > 0 && profile.note ? (
-                    <p className="knowledge-profile-note rounded-xl bg-[#735285]/5 p-3 text-xs">{profile.note}</p>
+                    <p className="knowledge-profile-note mb-0 mt-[13px] rounded-[9px] bg-clay-200 px-2.5 py-[9px] text-[8px] leading-[1.65] text-stone-700">{profile.note}</p>
                   ) : null}
-                  <p className="knowledge-card-note mb-0 text-[10px] text-ink-soft">
+                  <p className="knowledge-card-note mb-0 mt-[13px] text-[8px] text-stone-700">
                     {universityCount > 0
                       ? `名校专题收录 ${universityCount} 所 · 车牌题库 ${quizCount} 组`
                       : `简称印章：${provincePlatePrefixes[province.code]} · 车牌题库 ${quizCount} 组`}
@@ -188,11 +188,11 @@ export default function ProvinceProfilePanel({
             })}
           </div>
           {!hasActiveFilter && visibleProvinces.length < filteredProvinces.length ? (
-            <div className="knowledge-profile-more flex items-center justify-center gap-4 rounded-2xl bg-card p-4 text-xs">
+            <div className="knowledge-profile-more flex items-center justify-between gap-4 rounded-[14px] border border-black/15 bg-paper-100/80 px-[18px] py-4 text-[10px] text-ink-500">
               <span>已展示 {visibleProvinces.length} / {filteredProvinces.length}</span>
               <div className="flex gap-2">
                 <button
-                  className="cursor-pointer rounded-full border-0 bg-[#735285] px-4 py-2 font-black text-white"
+                  className="min-h-10 cursor-pointer rounded-full border border-city-500 bg-city-500 px-[13px] py-2 text-[10px] font-black text-white"
                   type="button"
                   onClick={() => setVisibleCount((count) => count + PROFILE_BATCH_SIZE)}
                 >
@@ -202,7 +202,7 @@ export default function ProvinceProfilePanel({
                   )} 个
                 </button>
                 <button
-                  className="cursor-pointer rounded-full border border-black/15 bg-white px-4 py-2 font-black"
+                  className="min-h-10 cursor-pointer rounded-full border border-city-500 bg-transparent px-[13px] py-2 text-[10px] font-black text-city-900"
                   type="button"
                   onClick={() => setVisibleCount(filteredProvinces.length)}
                 >

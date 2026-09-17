@@ -10,6 +10,7 @@ import {
 } from "@/features/map/lib/map-geometry";
 import { mapFeatureId, type MapData } from "@/features/map/model/map-data";
 import { stripAdministrativeSuffix } from "@/shared/lib/place-name";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 export default function CityNeighborHintMap({
   map,
@@ -34,9 +35,9 @@ export default function CityNeighborHintMap({
           <path
             key={regionId}
             d={geometryToPath(feature.geometry, project)}
-            fill={isTarget ? "#d95d4f" : "#eee4cf"}
+            fill={isTarget ? MAP_COLORS.targetFill : MAP_COLORS.neutralFill}
             fillRule="evenodd"
-            stroke={isTarget ? "#7c2822" : "var(--green)"}
+            stroke={isTarget ? MAP_COLORS.targetStroke : MAP_COLORS.cityBoundary}
             strokeLinejoin="round"
             strokeWidth={isTarget ? 3.6 : 2}
             vectorEffect="non-scaling-stroke"
@@ -53,9 +54,9 @@ export default function CityNeighborHintMap({
             x={x}
             y={y}
             className="pointer-events-none font-sans font-black [paint-order:stroke]"
-            fill={isTarget ? "#fff" : "#3f4d47"}
+            fill={isTarget ? "white" : MAP_COLORS.label}
             fontSize={isTarget ? 15 : 11}
-            stroke={isTarget ? "#7c2822" : "rgba(255,253,247,0.94)"}
+            stroke={isTarget ? MAP_COLORS.targetStroke : "rgba(255,253,247,0.94)"}
             strokeWidth={isTarget ? 4 : 3}
             textAnchor="middle"
             dominantBaseline="central"

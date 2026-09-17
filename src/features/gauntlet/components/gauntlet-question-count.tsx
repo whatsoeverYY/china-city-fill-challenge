@@ -44,5 +44,5 @@ export default function GauntletQuestionCount() {
     const noun = PLATE_QUESTION_LEVELS.has(s.level) ? "城市/地区" : "城";
     label = `${d.selectedQuizProvinces.size} 省 · ${s.cityOrder.length} ${noun} · 第 ${s.questionIndex + 1} 题`;
   }
-  return <span className="question-count absolute left-4 top-4 z-[3] rounded-full bg-ink/80 px-3 py-1.5 text-[10px] font-black text-white">{label}</span>;
+  return <span className="question-count absolute left-[25px] top-[22px] z-[3] rounded-full border border-black/[.13] bg-paper-100/75 px-2.5 py-1.5 text-[10px] font-extrabold tracking-[.08em] text-stone-700 max-sm:left-3 max-sm:top-3 max-sm:text-[9px]">{label}</span>;
 }

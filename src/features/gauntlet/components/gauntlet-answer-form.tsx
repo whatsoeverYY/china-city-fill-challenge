@@ -35,10 +35,10 @@ export default function GauntletAnswerForm({
   const value = valueSource === "plate" ? plateAnswer : provinceAnswer;
   const setValue = valueSource === "plate" ? setPlateAnswer : setProvinceAnswer;
   return (
-    <form className="grid gap-2" onSubmit={actions.submitAnswer}>
-      <label className="text-[10px] font-black text-ink-soft" htmlFor={id}>{label}</label>
+    <form className="grid gap-[9px]" onSubmit={actions.submitAnswer}>
+      <label className="mt-2 text-[10px] font-black tracking-[.1em] text-ink-600" htmlFor={id}>{label}</label>
       <input
-        className="min-h-12 rounded-xl border border-black/20 bg-white px-3 outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
+        className="h-[50px] w-full rounded-[10px] border border-stone-400 bg-paper-100 px-3.5 text-[15px] text-ink outline-none focus:border-city-500 focus:ring-[3px] focus:ring-city-500/15"
         ref={provinceInputRef}
         id={id}
         value={value}
@@ -49,7 +49,7 @@ export default function GauntletAnswerForm({
         autoComplete="off"
         maxLength={maxLength}
       />
-      <button className="min-h-12 cursor-pointer rounded-xl border-0 bg-brand-red px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={!allowEmpty && !value.trim()}>提交答案</button>
+      <button className="mt-[13px] min-h-[50px] cursor-pointer rounded-[10px] border-0 bg-city-500 px-[18px] text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40" type="submit" disabled={!allowEmpty && !value.trim()}>提交答案</button>
     </form>
   );
 }

@@ -15,6 +15,7 @@ import {
   MAP_WIDTH,
   provinceForFeature,
 } from "@/features/map/lib/map-geometry";
+import { MAP_COLORS } from "@/shared/config/map-colors";
 
 const WRONG_REGION_ANIMATION_CLASS = "animate-[wrong-region_520ms_ease]";
 
@@ -85,7 +86,7 @@ export default function MapCanvas({
           <feDropShadow dx="0" dy="8" stdDeviation="10" floodOpacity="0.12" />
         </filter>
         <pattern id="paper-dots" width="13" height="13" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="2" r="0.7" fill="#967d59" opacity="0.12" />
+          <circle cx="2" cy="2" r="0.7" fill={MAP_COLORS.patternDot} opacity="0.12" />
         </pattern>
       </defs>
       {mode === "detail" ? (
@@ -126,8 +127,8 @@ export default function MapCanvas({
               ? provinceFillColors[feature.properties.provinceCode ?? ""]
               : undefined;
           const fill = mode === "national"
-            ? isComplete ? "#b8d5b5" : "#e9dfc9"
-            : provinceFill ?? (isComplete ? "#c6dec3" : "url(#paper-dots)");
+            ? isComplete ? MAP_COLORS.nationalCompleteFill : MAP_COLORS.nationalEmptyFill
+            : provinceFill ?? (isComplete ? MAP_COLORS.detailCompleteFill : "url(#paper-dots)");
           const cursorClass = hardMode && !isComplete
             ? "cursor-crosshair"
             : mode === "detail" && isComplete
@@ -136,12 +137,12 @@ export default function MapCanvas({
           const hoverClass = mode === "national"
             ? isComplete
               ? "hover:brightness-[1.03] focus-visible:brightness-[1.03]"
-              : "hover:fill-[#e5c08b] hover:brightness-[1.03] focus-visible:fill-[#e5c08b] focus-visible:brightness-[1.03]"
+              : "hover:fill-clay-400 hover:brightness-[1.03] focus-visible:fill-clay-400 focus-visible:brightness-[1.03]"
             : provinceFill
               ? "hover:brightness-[0.96] hover:saturate-[1.08]"
               : isComplete
                 ? ""
-                : "hover:fill-[#eadcb5]";
+                : "hover:fill-gold-300";
           return (
             <path
               key={regionId}
@@ -153,7 +154,7 @@ export default function MapCanvas({
               fill={fill}
               fillRule="evenodd"
               role="button"
-              stroke={mode === "national" ? "var(--red)" : "var(--green)"}
+              stroke={mode === "national" ? MAP_COLORS.provinceBoundary : MAP_COLORS.cityBoundary}
               strokeLinecap={mode === "national" ? "round" : undefined}
               strokeLinejoin="round"
               strokeWidth={mode === "national" ? 1.35 : 1.25}
@@ -201,7 +202,7 @@ export default function MapCanvas({
               fill="none"
               fillRule="evenodd"
               aria-hidden="true"
-              stroke="var(--red)"
+              stroke={MAP_COLORS.provinceBoundary}
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={joined ? 2.1 : 2.4}
@@ -236,7 +237,7 @@ export default function MapCanvas({
               className={`pointer-events-none font-extrabold [paint-order:stroke] [stroke-linejoin:round] ${labelClass} ${
                 isHint ? "opacity-[0.78]" : ""
               }`}
-              fill={mode === "national" ? "var(--red-dark)" : isHint ? "#7e5d39" : "var(--green-dark)"}
+              fill={mode === "national" ? MAP_COLORS.provinceLabel : isHint ? MAP_COLORS.hintLabel : MAP_COLORS.cityLabel}
               textAnchor="middle"
               dominantBaseline="central"
               aria-hidden="true"
