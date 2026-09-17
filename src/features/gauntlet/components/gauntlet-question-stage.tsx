@@ -101,7 +101,7 @@ export default function GauntletQuestionStage({
         <ChoiceQuestion className="mistake-question" badge="错" prompt={`${d.currentMistake.category}错题 · 曾答错 ${d.currentMistake.wrongCount} 次`} value={d.currentMistake.prompt} hint="答对后，这道题会从本机错题库移除" />
       ) : (
         <div className="mistake-empty-state grid justify-items-center gap-3 text-center">
-          <span className="text-5xl max-md:text-3xl" aria-hidden="true">✓</span>
+          <span className="text-5xl" aria-hidden="true">✓</span>
           <strong className="text-2xl">暂无历史错题</strong>
           <p className="m-0 text-sm text-ink-soft">先去挑战其他关卡；答错的城市、省份、车牌、省会和高校题会自动收录到这里。</p>
         </div>
@@ -313,7 +313,7 @@ export default function GauntletQuestionStage({
   })();
 
   return (
-    <div className="gauntlet-question-stage relative grid min-h-[560px] place-items-center bg-[#f7f1e5] p-[clamp(18px,4vw,48px)] max-md:min-h-[36dvh] max-md:p-4">
+    <div className="gauntlet-question-stage relative grid min-h-[560px] place-items-center bg-[#f7f1e5] p-[clamp(18px,4vw,48px)] max-md:min-h-[50vh]">
       <GauntletQuestionCount />
       {question}
     </div>

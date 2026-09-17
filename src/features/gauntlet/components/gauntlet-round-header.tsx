@@ -36,13 +36,13 @@ export default function GauntletRoundHeader({
   const activeConfig = GAUNTLET_LEVEL_BY_ID.get(s.level) ?? null;
   const displayNumber = gauntletLevelNumber(s.level);
   return (
-    <section className="gauntlet-round-heading mb-5 grid grid-cols-[1fr_auto] items-end gap-5 max-lg:grid-cols-1 max-md:mb-3 max-md:gap-2">
+    <section className="gauntlet-round-heading mb-5 grid grid-cols-[1fr_auto] items-end gap-5 max-lg:grid-cols-1">
       <div>
         <button className="cursor-pointer border-0 bg-transparent p-0 text-xs font-black text-brand-red max-md:hidden" type="button" onClick={actions.returnToLevels}>← 返回选关</button>
         <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-brand-red">第 {displayNumber} 关 · {activeConfig?.title}</p>
-        <h1 className="mb-0 mt-2 text-[clamp(30px,5vw,58px)] font-black leading-none max-md:text-3xl">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
+        <h1 className="mb-0 mt-2 text-[clamp(30px,5vw,58px)] font-black leading-none">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
       </div>
-      <div className="gauntlet-round-actions flex gap-3 max-md:hidden max-sm:grid max-sm:grid-cols-2">
+      <div className="gauntlet-round-actions flex gap-3 max-sm:grid max-sm:grid-cols-2">
         {s.level === LEVEL.FINAL_BOSS ? (
           <div className="boss-lives rounded-2xl bg-[#3b243d] p-3 text-white" aria-label={`剩余 ${s.bossLives} 条生命`}>
             <span className="text-[9px] font-black text-white/60">生命</span>

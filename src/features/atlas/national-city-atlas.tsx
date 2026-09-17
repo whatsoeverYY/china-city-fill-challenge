@@ -284,12 +284,12 @@ export default function NationalCityAtlas({
 
   return (
     <main className="city-atlas-shell fixed inset-0 z-[1500] grid h-dvh w-screen grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-[#e9e3d6] text-ink">
-      <header className="city-atlas-header z-[3] grid min-h-[82px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-7 border-b border-black/15 bg-card/95 px-5 py-3 shadow-sm max-lg:gap-3 max-md:min-h-16 max-md:grid-cols-[1fr_auto] max-md:px-3 max-md:py-2">
+      <header className="city-atlas-header z-[3] grid min-h-[82px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-7 border-b border-black/15 bg-card/95 px-5 py-3 shadow-sm max-lg:gap-3 max-md:grid-cols-[1fr_auto]">
         <div className="city-atlas-title flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-[13px_13px_13px_4px] bg-[#356b8e] text-xl font-black text-white max-md:size-10" aria-hidden="true">图</span>
+          <span className="grid size-11 place-items-center rounded-[13px_13px_13px_4px] bg-[#356b8e] text-xl font-black text-white" aria-hidden="true">图</span>
           <div>
             <p className="m-0 text-[9px] font-extrabold tracking-[0.12em] text-[#718087]">可缩放全国城市参考地图</p>
-            <h1 className="m-0 text-[clamp(20px,2.2vw,30px)] font-black leading-tight max-md:text-lg">全国车牌图鉴</h1>
+            <h1 className="m-0 text-[clamp(20px,2.2vw,30px)] font-black leading-tight">全国车牌图鉴</h1>
           </div>
         </div>
         <div className="city-atlas-summary flex justify-center gap-[clamp(12px,3vw,42px)] text-[10px] font-extrabold tracking-wide text-[#68736d] max-lg:gap-3 max-md:hidden" aria-label="图鉴数据范围">
@@ -297,8 +297,8 @@ export default function NationalCityAtlas({
           <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
           <span className="whitespace-nowrap"><strong className="mr-1 text-lg text-brand-red">{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
         </div>
-        <button className="city-atlas-exit min-h-10 cursor-pointer rounded-full border-0 bg-brand-red-dark px-4 py-2 text-[11px] font-black text-white hover:bg-brand-red max-sm:min-h-9 max-sm:px-3 max-sm:text-[10px]" type="button" onClick={onExit}>
-          <span aria-hidden="true">←</span> <span className="max-sm:hidden">返回挑战首页</span><span className="hidden max-sm:inline">返回首页</span>
+        <button className="city-atlas-exit min-h-10 cursor-pointer rounded-full border-0 bg-brand-red-dark px-4 py-2 text-[11px] font-black text-white hover:bg-brand-red max-sm:px-3" type="button" onClick={onExit}>
+          <span aria-hidden="true">←</span> 返回挑战首页
         </button>
       </header>
 
@@ -362,9 +362,9 @@ export default function NationalCityAtlas({
             </div>
           ) : null}
 
-          <div className="city-atlas-toolbar absolute bottom-5 right-5 z-[2] grid w-24 gap-2 rounded-2xl border border-black/10 bg-card/95 p-2 shadow-lg backdrop-blur-md max-md:bottom-3 max-md:right-3 max-md:w-auto max-md:grid-cols-[auto_auto_auto_auto] max-md:items-center max-md:gap-1 max-md:rounded-xl max-md:p-1.5" aria-label="地图缩放工具栏">
+          <div className="city-atlas-toolbar absolute bottom-5 right-5 z-[2] grid w-24 gap-2 rounded-2xl border border-black/10 bg-card/95 p-2 shadow-lg backdrop-blur-md max-md:bottom-3 max-md:right-3 max-md:w-20" aria-label="地图缩放工具栏">
             <button
-              className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] disabled:cursor-not-allowed disabled:opacity-40 max-md:min-h-8 max-md:px-2"
+              className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] disabled:cursor-not-allowed disabled:opacity-40"
               type="button"
               aria-label="放大地图"
               disabled={view.scale >= ATLAS_MAX_SCALE}
@@ -372,9 +372,9 @@ export default function NationalCityAtlas({
             >
               <span aria-hidden="true">＋</span> 放大
             </button>
-            <output className="text-center text-xs font-bold text-[#766b5b] max-md:px-1 max-md:text-[10px]" aria-label="当前缩放比例">{Math.round(view.scale * 100)}%</output>
+            <output className="text-center text-xs font-bold text-[#766b5b]" aria-label="当前缩放比例">{Math.round(view.scale * 100)}%</output>
             <button
-              className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] disabled:cursor-not-allowed disabled:opacity-40 max-md:min-h-8 max-md:px-2"
+              className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] disabled:cursor-not-allowed disabled:opacity-40"
               type="button"
               aria-label="缩小地图"
               disabled={view.scale <= ATLAS_MIN_SCALE}
@@ -382,7 +382,7 @@ export default function NationalCityAtlas({
             >
               <span aria-hidden="true">−</span> 缩小
             </button>
-            <button className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0] max-md:min-h-8 max-md:px-2" type="button" onClick={resetView}>
+            <button className="min-h-9 cursor-pointer rounded-lg border border-brand-green/20 bg-[#edf4e9] p-1.5 text-[10px] font-black text-brand-green-dark hover:border-brand-green hover:bg-[#dfece0]" type="button" onClick={resetView}>
               <span aria-hidden="true">⌂</span> 复位
             </button>
           </div>

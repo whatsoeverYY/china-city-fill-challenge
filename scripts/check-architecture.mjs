@@ -41,6 +41,11 @@ function sourceLineCount(source) {
   return source.endsWith("\n") ? count - 1 : count;
 }
 
+function isAllowedCssFile(projectPath) {
+  if (allowedCssFiles.has(projectPath)) return true;
+  return /^src\/features\/[^/]+\/styles\/[a-z0-9]+(?:-[a-z0-9]+)*\.css$/u.test(projectPath);
+}
+
 function importedProjectPaths(source, importerPath) {
   return Array.from(source.matchAll(/from\s+["']([^"']+)["']/gu))
     .map((match) => match[1])
@@ -78,8 +83,8 @@ for (const path of walk(srcRoot)) {
     : null;
   const sourceFeatureLayer = sourceFeature ? projectSegments[3] : null;
   const lineCount = sourceLineCount(source);
-  if (extname(path) === ".css" && !allowedCssFiles.has(projectPath)) {
-    errors.push(`${projectPath} 不在允许的 CSS 文件清单中；常规样式应直接使用 Tailwind utilities。`);
+  if (extname(path) === ".css" && !isAllowedCssFile(projectPath)) {
+    errors.push(`${projectPath} 不在允许的 CSS 目录中；功能样式应放在对应 feature/styles，常规样式优先使用 Tailwind utilities。`);
   }
   if (lineCount > maxLines) {
     errors.push(`${projectPath} 有 ${lineCount} 行，超过 ${maxLines} 行上限。`);
@@ -187,5 +192,5 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`架构检查通过：源码文件不超过 ${maxLines} 行（${warningLines} 行预警），Tailwind、目录、命名、依赖方向和包管理器符合约定。`);
+  console.log(`架构检查通过：源码文件不超过 ${maxLines} 行（${warningLines} 行预警），Tailwind 优先样式、目录、命名、依赖方向和包管理器符合约定。`);
 }

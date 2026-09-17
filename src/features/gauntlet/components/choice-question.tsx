@@ -19,7 +19,7 @@ export default function ChoiceQuestion({
         {badge}
       </span>
       <p className="m-0 text-sm text-ink-soft">{prompt}</p>
-      <strong className="text-[clamp(26px,5vw,52px)] font-black max-md:text-3xl">{value}</strong>
+      <strong className="text-[clamp(26px,5vw,52px)] font-black">{value}</strong>
       {hint ? <small className="max-w-xl text-xs leading-5 text-ink-soft">{hint}</small> : null}
     </div>
   );
