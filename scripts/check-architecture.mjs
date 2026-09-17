@@ -76,8 +76,28 @@ function importedProjectPaths(source, importerPath) {
 if (existsSync(join(root, "app"))) {
   errors.push("根目录 app/ 不应存在；Next.js 入口统一放在 src/app/。 ");
 }
-if (!existsSync(join(root, "AGENTS.md"))) {
+const agentsPath = join(root, "AGENTS.md");
+const architecturePath = join(root, "docs/architecture.md");
+if (!existsSync(agentsPath)) {
   errors.push("缺少仓库级 AGENTS.md，Codex 开发规则必须纳入版本控制。 ");
+}
+if (!existsSync(architecturePath)) {
+  errors.push("缺少 docs/architecture.md，前端架构约定必须纳入版本控制。 ");
+}
+const designSystemPath = join(root, "docs/design-system.md");
+if (!existsSync(designSystemPath)) {
+  errors.push("缺少 docs/design-system.md，已确认的视觉设计规范必须纳入版本控制。 ");
+} else {
+  const agents = existsSync(agentsPath) ? readFileSync(agentsPath, "utf8") : "";
+  const architecture = existsSync(architecturePath)
+    ? readFileSync(architecturePath, "utf8")
+    : "";
+  if (agents && !agents.includes("docs/design-system.md")) {
+    errors.push("AGENTS.md 必须要求开发前阅读 docs/design-system.md。 ");
+  }
+  if (architecture && !architecture.includes("docs/design-system.md")) {
+    errors.push("docs/architecture.md 必须引用 docs/design-system.md。 ");
+  }
 }
 
 for (const route of ["page.tsx", "atlas/page.tsx", "gauntlet/page.tsx", "knowledge/page.tsx", "admin/page.tsx"]) {

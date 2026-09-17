@@ -1,6 +1,6 @@
 # Codex 开发规则
 
-本文件是仓库级强制约束。使用 Codex 或其他自动化工具开发前，必须先阅读本文件和 `docs/architecture.md`。
+本文件是仓库级强制约束。使用 Codex 或其他自动化工具开发前，必须先阅读本文件、`docs/architecture.md` 和 `docs/design-system.md`。
 
 ## 目录与依赖
 
@@ -22,6 +22,7 @@
 ## UI、逻辑与样式
 
 - 页面和组件只负责渲染及事件连接；可复用状态放 hook/context，业务计算写成可测试的纯函数，数据读取和持久化通过 service/infrastructure。
+- `docs/design-system.md` 是仓库级视觉契约。新增或修改 UI 必须遵循其中的颜色、排版、间距、形状、Tag、按钮、链接、模块结构和响应式规则；无明确设计需求的重构不得改变既有视觉。
 - 常规布局、间距、颜色、排版、交互状态与响应式样式优先使用 Tailwind utilities；不得用 `*-styles.ts`、大段任意后代选择器或 `@apply` 把大 CSS 换一个位置隐藏。Tailwind 无法清晰、稳定表达的复杂动画、SVG 状态或组合效果，才使用语义 class + CSS。
 - 项目颜色统一维护在 `tailwind.config.ts`，品牌主色使用 `city-100` 至 `city-900`，其他主题色同样提供 `100` 至 `900` 完整色阶。组件中使用 `text-city-500`、`bg-atlas-100` 等命名 utility，禁止直接写十六进制颜色；SVG 等必须传入数值颜色的场景统一从 `src/shared/config/` 读取语义色值。
 - `src/app/globals.css` 只用于 Tailwind 入口、主题、全局基线和关键帧。确需 CSS 的功能样式放在对应 `src/features/<feature>/styles/`，不得建立跨功能的大型样式表；新增前必须确认 Tailwind 无法合理表达，并保持 400/500 行门禁。
