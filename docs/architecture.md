@@ -48,6 +48,7 @@ src/
 - 颜色色阶集中在根目录 `tailwind.config.ts`：品牌主色命名为 `city-100` 至 `city-900`，玉绿、图鉴蓝、知识紫等主题色也必须提供完整 `100` 至 `900` 色阶。组件不得直接写十六进制颜色，应使用 `text-city-500`、`bg-atlas-100` 等命名 utility；SVG 数值颜色放入 `src/shared/config/` 的语义配置。
 - `src/app/globals.css` 用于 Tailwind 入口、主题、全局基线和关键帧。确需 CSS 的功能样式放在对应 `src/features/<feature>/styles/`，不得建立跨功能的大型样式表；SVG 的 `fill`、`stroke`、`vectorEffect` 等固有表现优先写成类型安全的 React SVG 属性。
 - 重复的 Tailwind 组合优先提取为职责明确的小型展示组件；仅供一个文件复用的静态组合可定义为该文件内的 class 常量。
+- 排版使用 `tailwind.config.ts` 中的 `display/page/section/card-title/body/compact/meta` 语义字号与行高，桌面标题封顶 `40px`。文字按钮通过字号、行高和 padding 形成尺寸，min-height 只承担点击区域下限。
 - 重构不得改变已确认的桌面端视觉。桌面基础 utility 视为视觉契约；移动适配必须用断点前缀隔离，并在桌面视口复查配色、尺寸、间距、圆角、阴影和信息密度。
 - 移动端按触控尺寸、单列信息层级、滚动区域、地图可视高度和操作优先级独立设计，不得只缩放或照搬桌面布局；移动端继续复用桌面端品牌色、卡片形状和视觉语言。
 - 常量放入 feature config 或领域数据，禁止在组件中复制关卡 ID、存储 key 等魔法字符串。

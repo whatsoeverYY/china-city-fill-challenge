@@ -76,7 +76,7 @@ export default function GauntletProvinceMapWall({
         <section className="relative min-h-44 overflow-hidden rounded-xl border border-black/10 bg-white/60" key={province.code}>
           {onProvinceFocus && panels.length > 1 && !readOnly ? (
             <button
-              className="absolute right-2 top-2 z-[2] inline-flex cursor-pointer items-center gap-1 rounded-full border border-jade-500/25 bg-card/90 px-2.5 py-1.5 text-[9px] font-black text-jade-700 shadow-sm"
+              className="absolute right-2 top-2 z-[2] inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-full border border-jade-500/25 bg-card/90 px-2.5 py-1.5 text-meta font-black text-jade-700 shadow-sm max-sm:min-h-11"
               type="button"
               aria-label="选择此省并放大地图"
               onClick={() => onProvinceFocus(province.code)}

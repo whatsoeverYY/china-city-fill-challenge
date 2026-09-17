@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { usePlayerData } from "@/features/player/player-data-context";
 import { adminPath } from "@/shared/lib/app-path";
 
-const ACCOUNT_ACTION_BUTTON_CLASS = "min-h-10 cursor-pointer rounded-xl border border-black/15 bg-white/70 text-[11px] font-extrabold disabled:cursor-wait disabled:opacity-60";
+const ACCOUNT_ACTION_BUTTON_CLASS = "min-h-10 cursor-pointer rounded-xl border border-black/15 bg-white/70 px-3 py-2 text-compact font-extrabold disabled:cursor-wait disabled:opacity-60 max-sm:min-h-11";
 const ACCOUNT_TAB_CLASS = "min-h-10 cursor-pointer rounded-lg border-0 bg-transparent text-xs font-extrabold";
 const ACCOUNT_INPUT_CLASS = "min-h-11 rounded-xl border border-black/20 bg-white px-3 py-2 outline-none focus:border-jade-500 focus:ring-2 focus:ring-jade-500/15";
 
@@ -113,7 +113,7 @@ export default function AccountControl() {
             {identity ? (
               <>
                 <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-city-500">玩家存档</p>
-                <h2 className="mb-3 mt-0 text-[clamp(24px,5vw,34px)] font-black leading-tight max-md:text-3xl" id="account-dialog-title">欢迎回来</h2>
+                <h2 className="mb-3 mt-0 text-section font-black max-md:text-section-mobile" id="account-dialog-title">欢迎回来</h2>
                 <div className="account-identity-card flex items-center gap-3 rounded-2xl border border-black/10 bg-white/70 p-3.5">
                   <span className="grid size-11 shrink-0 place-items-center rounded-full bg-jade-500 font-black text-white" aria-hidden="true">{identity.email.slice(0, 1).toUpperCase()}</span>
                   <div className="min-w-0">
@@ -125,7 +125,7 @@ export default function AccountControl() {
                   <i className={`block size-2 rounded-full ${syncStatus === "synced" ? "bg-status-success" : syncStatus === "offline" ? "bg-status-offline" : syncStatus === "error" ? "bg-status-error" : syncStatus === "pending" || syncStatus === "syncing" || syncStatus === "loading" ? "bg-gold-500" : "bg-status-idle"}`} aria-hidden="true" />
                   <div>
                     <strong className="block text-[11px]">{syncMessage}</strong>
-                    <small className="mt-1 block text-[9px] text-ink-soft">
+                    <small className="mt-1 block text-meta text-ink-soft">
                       {lastSyncedAt
                         ? `最近同步：${new Date(lastSyncedAt).toLocaleString("zh-CN")}`
                         : "登录后，本机进度会与云端合并"}
@@ -188,7 +188,7 @@ export default function AccountControl() {
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        className="min-h-10 cursor-pointer rounded-lg border border-black/15 bg-white px-2.5 text-[10px] font-black disabled:cursor-wait disabled:opacity-60"
+                        className="min-h-10 cursor-pointer rounded-lg border border-black/15 bg-white px-2.5 py-2 text-compact font-black disabled:cursor-wait disabled:opacity-60 max-sm:min-h-11"
                         type="button"
                         onClick={() => setDeleteConfirmOpen(false)}
                         disabled={busy}
@@ -197,7 +197,7 @@ export default function AccountControl() {
                       </button>
                       <button
                         type="button"
-                        className="min-h-10 cursor-pointer rounded-lg border border-city-900 bg-city-900 px-2.5 text-[10px] font-black text-white disabled:cursor-wait disabled:opacity-60"
+                        className="min-h-10 cursor-pointer rounded-lg border border-city-900 bg-city-900 px-2.5 py-2 text-compact font-black text-white disabled:cursor-wait disabled:opacity-60 max-sm:min-h-11"
                         onClick={() => void confirmClearProgress()}
                         disabled={busy}
                       >
@@ -212,7 +212,7 @@ export default function AccountControl() {
             ) : (
               <>
                 <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-city-500">云存档</p>
-                <h2 className="mb-3 mt-0 text-[clamp(24px,5vw,34px)] font-black leading-tight max-md:text-3xl" id="account-dialog-title">登录后，进度真正属于你</h2>
+                <h2 className="mb-3 mt-0 text-section font-black max-md:text-section-mobile" id="account-dialog-title">登录后，进度真正属于你</h2>
                 <p className="account-dialog-lede text-[13px] leading-6 text-ink-soft">
                   游客可以完整试玩，但刷新页面后不会保留进度。登录后支持跨设备同步；曾在线登录过的设备，断网时也能继续玩。
                 </p>

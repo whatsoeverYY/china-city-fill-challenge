@@ -18,9 +18,9 @@ export default function BossSkillSummary({
           : 0;
         return (
           <div className="rounded-xl bg-paper p-3" key={id}>
-            <span className="block text-[9px] text-ink-soft">{label}</span>
+            <span className="block text-meta text-ink-soft">{label}</span>
             <strong className="block text-xl">{accuracy}%</strong>
-            <small className="text-[9px]">{stat.correct} / {stat.total}</small>
+            <small className="text-meta">{stat.correct} / {stat.total}</small>
           </div>
         );
       })}

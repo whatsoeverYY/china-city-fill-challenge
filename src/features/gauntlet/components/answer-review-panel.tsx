@@ -16,16 +16,16 @@ export default function AnswerReviewPanel({
       <span className={`answer-review-state w-max rounded-full px-2.5 py-1.5 text-[11px] font-black ${review.correct ? "bg-jade-500/10 text-jade-700" : "bg-city-500/10 text-city-900"}`}>
         {review.correct ? "✓ 回答正确" : "！需要复习"}
       </span>
-      <p className="mb-[-8px] mt-1 text-[10px] font-black tracking-[.12em] text-stone-700">正确答案</p>
-      <strong className="font-serif text-[clamp(27px,3.2vw,40px)] leading-tight text-clay-800">{review.correctAnswer}</strong>
+      <p className="mb-[-8px] mt-1 text-meta font-black tracking-[.12em] text-stone-700">正确答案</p>
+      <strong className="font-serif text-page text-clay-800 max-sm:text-page-mobile">{review.correctAnswer}</strong>
       <div className="answer-explanation rounded-r-[10px] border-l-[3px] border-gold-500 bg-gold-100/85 px-[15px] py-3.5">
-        <small className="text-[9px] font-black tracking-[.14em] text-gold-700">知识解释</small>
-        <p className="mb-0 mt-1.5 text-[13px] leading-[1.7] text-stone-800">{review.explanation}</p>
+        <small className="text-meta font-black tracking-[.14em] text-gold-700">知识解释</small>
+        <p className="mb-0 mt-1.5 text-compact text-stone-800">{review.explanation}</p>
       </div>
       {review.checkpoint ? (
         <p className="boss-checkpoint m-0 rounded-lg bg-gold-500/15 p-2 text-xs">{review.checkpoint}</p>
       ) : null}
-      <button className="min-h-[50px] cursor-pointer rounded-[10px] border-0 bg-city-500 text-xs font-black text-white" type="button" onClick={onContinue}>
+      <button className="min-h-11 cursor-pointer rounded-[10px] border-0 bg-city-500 px-4 py-3 text-compact font-black text-white" type="button" onClick={onContinue}>
         {review.nextAction === "finish"
           ? "查看通关结果"
           : review.nextAction === "lose"

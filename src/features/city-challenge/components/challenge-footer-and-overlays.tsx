@@ -83,7 +83,7 @@ export default function ChallengeFooterAndOverlays({
               ×
             </button>
             <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-city-500">难度提升 · 区块已选中</p>
-            <h2 className="mt-2 pr-10 text-2xl" id="manual-answer-title">
+            <h2 className="mt-2 pr-10 text-section max-sm:text-section-mobile" id="manual-answer-title">
               {provinceSelected ? "这里是什么城市或区县？" : "这里是哪个省份？"}
             </h2>
             <p className="dialog-hint text-sm leading-6 text-ink-soft">
@@ -106,7 +106,7 @@ export default function ChallengeFooterAndOverlays({
                   }}
                   className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white px-3 py-3 outline-none focus:border-city-500 focus:ring-2 focus:ring-city-500/15"
                 />
-                <button className="cursor-pointer rounded-xl border-0 bg-city-500 px-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-40" type="submit" disabled={!manualAnswer.trim()}>
+                <button className="min-h-11 cursor-pointer rounded-xl border-0 bg-city-500 px-4 py-2.5 text-compact font-black text-white disabled:cursor-not-allowed disabled:opacity-40" type="submit" disabled={!manualAnswer.trim()}>
                   确认答案
                 </button>
               </div>

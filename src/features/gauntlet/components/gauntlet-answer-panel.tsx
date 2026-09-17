@@ -13,11 +13,11 @@ import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-c
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
-const ANSWER_TITLE_CLASS = "mb-[30px] mt-0 font-serif text-[27px] font-bold leading-[1.35]";
+const ANSWER_TITLE_CLASS = "mb-6 mt-0 font-serif text-section font-bold max-sm:text-section-mobile";
 const OPTION_GRID_CLASS = "gauntlet-option-grid grid grid-cols-2 gap-2 max-sm:grid-cols-1";
 const OPTION_CLASS = "min-h-[76px] cursor-pointer rounded-xl border border-jade-500/25 bg-jade-200 px-3 text-[13px] font-black leading-[1.45] text-ink-700 transition hover:-translate-y-px hover:border-jade-500/50";
-const SUMMARY_CLASS = "map-answer-summary mb-1 mt-0 min-h-[58px] text-xs leading-[1.8] text-ink-soft";
-const PRIMARY_CLASS = "gauntlet-primary-action mt-[18px] min-h-[50px] w-full cursor-pointer rounded-[10px] border-0 bg-city-500 px-4 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40";
+const SUMMARY_CLASS = "map-answer-summary mb-1 mt-0 min-h-[52px] text-xs leading-[1.65] text-ink-soft";
+const PRIMARY_CLASS = "gauntlet-primary-action mt-4 min-h-11 w-full cursor-pointer rounded-[10px] border-0 bg-city-500 px-4 py-3 text-compact font-black text-white disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function GauntletAnswerPanel({
   actions,
@@ -300,7 +300,7 @@ export default function GauntletAnswerPanel({
           <ol className="province-route m-0 mt-[18px] flex max-h-[230px] list-none flex-wrap gap-[7px] overflow-y-auto p-0" aria-label="当前邻省路线">
             {s.routeCodes.map((code, index) => (
               <li className="flex items-center gap-1.5 rounded-full border border-navy-500/25 bg-navy-200 px-2.5 py-[7px] text-[11px] font-extrabold text-navy-500" key={code}>
-                <span className="grid size-[18px] place-items-center rounded-full bg-navy-400 font-numeric text-[9px] text-white">{index + 1}</span>
+                <span className="grid size-[18px] place-items-center rounded-full bg-navy-400 font-numeric text-meta text-white">{index + 1}</span>
                 {PROVINCE_BY_CODE.get(code)?.shortName}
               </li>
             ))}

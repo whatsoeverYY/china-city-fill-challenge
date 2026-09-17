@@ -113,15 +113,15 @@ test("desktop visual foundations remain stable during refactors", async () => {
     staticClassValue(gauntletLobby, "gauntlet-intro"),
     [
       "px-1",
-      "pb-9",
-      "pt-[70px]",
+      "pb-7",
+      "pt-[52px]",
     ],
     "闯关桌面主视觉",
   );
   assertTokens(
     staticClassValue(gauntletLobby, "gauntlet-level-card"),
     [
-      "min-h-[390px]",
+      "min-h-[360px]",
       "rounded-[22px]",
       "bg-[rgba(251,248,240,.94)]",
       "[background-image:radial-gradient(circle_at_100%_0%,rgba(213,169,69,.18),transparent_16rem)]",
@@ -227,8 +227,8 @@ test("major modules keep intentional mobile layouts", async () => {
     [
       "max-lg:grid-cols-1",
       "max-sm:w-[calc(100%_-_24px)]",
-      "max-sm:pb-7",
-      "max-sm:pt-8",
+      "max-sm:pb-6",
+      "max-sm:pt-7",
     ],
     "知识馆移动主视觉",
   );
@@ -305,4 +305,65 @@ test("project colors use named Tailwind palettes", async () => {
   }
 
   assert.ok(globals.includes('@config "../../tailwind.config.ts";'));
+});
+
+test("typography and text buttons follow named responsive scales", async () => {
+  const tailwindConfig = await source("tailwind.config.ts");
+  const challengeHeader = await source(
+    "src/features/city-challenge/components/challenge-header.tsx",
+  );
+  const gauntletLobby = await source(
+    "src/features/gauntlet/components/gauntlet-lobby.tsx",
+  );
+  const knowledgeCatalog = await source(
+    "src/features/knowledge/components/knowledge-catalog.tsx",
+  );
+  const admin = await source("src/features/admin/admin-dashboard.tsx");
+
+  for (const token of [
+    "display",
+    "display-mobile",
+    "page",
+    "page-mobile",
+    "section",
+    "section-mobile",
+    "card-title",
+    "card-title-mobile",
+    "body",
+    "body-mobile",
+    "compact",
+    "compact-mobile",
+    "meta",
+  ]) {
+    assert.ok(tailwindConfig.includes(`"${token}":`), `缺少 ${token} 排版 token`);
+  }
+  assert.ok(
+    tailwindConfig.includes('"display": ["clamp(36px, 2.1vw, 40px)"'),
+    "桌面展示标题必须封顶 40px",
+  );
+  assertSourceContainsAll(
+    challengeHeader,
+    ["text-page", "max-md:text-page-mobile", "text-body", "py-2 text-compact"],
+    "首页标题、正文和按钮",
+  );
+  assertSourceContainsAll(
+    gauntletLobby,
+    ["text-page", "max-sm:text-page-mobile", "text-card-title", "text-compact"],
+    "闯关标题与卡片",
+  );
+  assertSourceContainsAll(
+    knowledgeCatalog,
+    ["text-display", "max-sm:text-display-mobile", "text-section", "text-card-title"],
+    "知识馆排版层级",
+  );
+  assertSourceContainsAll(
+    admin,
+    [
+      "text-page",
+      "text-section",
+      "py-2 text-compact",
+      "inline-flex min-h-10 items-center justify-center",
+    ],
+    "管理页排版与按钮",
+  );
 });

@@ -25,10 +25,10 @@ export default function GauntletScreen() {
           <span className="brand-seal gauntlet-brand-seal grid size-[45px] -rotate-2 place-items-center rounded-[9px_9px_9px_3px] bg-gold-600 font-serif text-[25px] font-bold text-gold-100 shadow-[inset_0_0_0_2px_rgba(255,248,231,.24)] max-md:size-[39px]" aria-hidden="true">关</span>
           <span>
             <strong className="block whitespace-nowrap font-serif text-lg font-bold tracking-[0.06em] max-md:text-sm">中国城市填充挑战</strong>
-            <small className="mt-[3px] block text-[8px] font-bold tracking-[0.22em] text-ink-500 max-md:hidden">GAUNTLET MODE</small>
+            <small className="mt-[3px] block text-meta font-bold tracking-[0.22em] text-ink-500 max-md:hidden">GAUNTLET MODE</small>
           </span>
         </button>
-        <button className="gauntlet-exit min-h-10 cursor-pointer rounded-full border border-city-500/25 bg-paper-100/70 px-3.5 py-[9px] text-xs font-extrabold text-city-900" type="button" onClick={s.onExit}>
+        <button className="gauntlet-exit min-h-10 cursor-pointer rounded-full border border-city-500/25 bg-paper-100/70 px-3.5 py-2 text-compact font-extrabold text-city-900 max-md:min-h-11" type="button" onClick={s.onExit}>
           返回地图玩法
         </button>
       </header>

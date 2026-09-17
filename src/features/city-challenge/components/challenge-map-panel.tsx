@@ -88,7 +88,7 @@ export default function ChallengeMapPanel({
         {province ? (
           <div className="map-actions flex items-center justify-self-end gap-3 max-md:gap-[7px]">
             <button
-              className={`reveal-cities-button min-h-8 cursor-pointer whitespace-nowrap rounded-full border px-2.5 py-1.5 text-[10px] font-extrabold ${showAllCityNames ? "border-jade-700 bg-jade-700 text-white" : "border-jade-500/30 bg-jade-100 text-jade-700"}`}
+              className={`reveal-cities-button min-h-8 cursor-pointer whitespace-nowrap rounded-full border px-2.5 py-1.5 text-compact font-extrabold max-md:min-h-11 ${showAllCityNames ? "border-jade-700 bg-jade-700 text-white" : "border-jade-500/30 bg-jade-100 text-jade-700"}`}
               type="button"
               aria-pressed={showAllCityNames}
               onClick={() => setShowAllCityNames((value) => !value)}
@@ -103,12 +103,12 @@ export default function ChallengeMapPanel({
           <div className="map-overview-actions flex items-center justify-self-end gap-3 max-md:gap-[7px]">
             {!hardMode ? (
               <button
-                className={`reveal-cities-button province-label-toggle inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-[10px] font-extrabold ${showAllProvinceNames ? "border-jade-700 bg-jade-700 text-white" : "border-jade-500/30 bg-jade-100 text-jade-700"}`}
+                className={`reveal-cities-button province-label-toggle inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-compact font-extrabold max-md:min-h-11 ${showAllProvinceNames ? "border-jade-700 bg-jade-700 text-white" : "border-jade-500/30 bg-jade-100 text-jade-700"}`}
                 type="button"
                 aria-pressed={showAllProvinceNames}
                 onClick={() => setShowAllProvinceNames((value) => !value)}
               >
-                <span className={`grid size-[18px] place-items-center rounded-full font-serif text-[9px] ${showAllProvinceNames ? "bg-white text-jade-700" : "bg-jade-500 text-white"}`} aria-hidden="true">名</span>
+                <span className={`grid size-[18px] place-items-center rounded-full font-serif text-meta ${showAllProvinceNames ? "bg-white text-jade-700" : "bg-jade-500 text-white"}`} aria-hidden="true">名</span>
                 {showAllProvinceNames ? "隐藏省名" : "省名标注"}
               </button>
             ) : null}
@@ -131,7 +131,7 @@ export default function ChallengeMapPanel({
               aria-label={`${hiddenProvinceCodes.has(item.code) ? "显示" : "隐藏"}${item.name}`}
               onClick={() => onToggleProvinceVisibility(item)}
             >
-              <b className="province-visibility-mark text-[9px] text-jade-700" aria-hidden="true">
+              <b className="province-visibility-mark text-meta text-jade-700" aria-hidden="true">
                 {hiddenProvinceCodes.has(item.code) ? "○" : "●"}
               </b>
               {showAllCityNames ? (
@@ -141,7 +141,7 @@ export default function ChallengeMapPanel({
                   aria-hidden="true"
                 />
               ) : null}
-              {item.shortName}{index === 0 ? <i className="ml-1 rounded-full bg-city-500/10 px-1.5 text-[9px] not-italic">起点</i> : null}
+              {item.shortName}{index === 0 ? <i className="ml-1 rounded-full bg-city-500/10 px-1.5 text-meta not-italic">起点</i> : null}
             </button>
           ))}
         </div>

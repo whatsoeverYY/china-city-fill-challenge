@@ -51,7 +51,7 @@ export default function ChallengeAnswerDock({
         <div className="dock-heading mb-[22px] flex items-end justify-between gap-6">
           <div>
             <p className="eyebrow mb-[5px] mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500">{neighborMode ? "邻省连城 · 无提示" : "无提示模式"}</p>
-            <h2 className="m-0 font-serif text-[25px]" id="hard-city-title">点区块，写名称</h2>
+            <h2 className="m-0 font-serif text-section" id="hard-city-title">点区块，写名称</h2>
           </div>
         </div>
         <div className="hard-mode-card grid justify-items-center rounded-[14px] border border-dashed border-city-500/30 bg-paper-100/70 px-[18px] py-[26px] text-center">
@@ -84,7 +84,7 @@ export default function ChallengeAnswerDock({
             <p className="eyebrow mb-[5px] mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500">
               {neighborMode ? `${challengeProvinces.length} 省连城` : "名称卡片"}
             </p>
-            <h2 className="m-0 font-serif text-[25px]" id="answer-title">
+            <h2 className="m-0 font-serif text-section" id="answer-title">
               {neighborMode ? "让群城各归其位" : "把名字送回地图"}
             </h2>
           </div>
@@ -202,7 +202,7 @@ export default function ChallengeAnswerDock({
       <div className="dock-heading mb-[22px] flex items-end justify-between gap-6">
         <div>
           <p className="eyebrow mb-[5px] mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500">{PROVINCES.length} 个省级行政区</p>
-          <h2 className="m-0 font-serif text-[25px]" id="province-title">
+          <h2 className="m-0 font-serif text-section" id="province-title">
             {neighborMode ? "选择连城起点" : "也可以从名称进入"}
           </h2>
         </div>
@@ -224,7 +224,7 @@ export default function ChallengeAnswerDock({
               className={`province-chip grid min-h-[52px] min-w-0 cursor-pointer grid-cols-[auto_1fr_auto] items-center rounded-[10px] border px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-city-500 hover:bg-gold-100 ${complete ? "border-jade-400 bg-jade-200 text-jade-700" : "border-stone-300 bg-paper-100"}`}
               onClick={() => onEnterProvince(item)}
             >
-              <span className="mr-[9px] font-serif text-[9px] text-stone-500">{String(index + 1).padStart(2, "0")}</span>
+              <span className="mr-[9px] font-serif text-meta text-stone-500">{String(index + 1).padStart(2, "0")}</span>
               <strong className="text-[13px] font-bold">{item.shortName}</strong>
               <i className={`text-[15px] not-italic ${complete ? "text-jade-500" : "text-city-500"}`}>{complete ? "✓" : "→"}</i>
             </button>

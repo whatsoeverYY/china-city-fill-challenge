@@ -26,13 +26,13 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
 
   return (
     <>
-      <section className="gauntlet-intro px-1 pb-9 pt-[70px] max-sm:pb-5 max-sm:pt-8">
+      <section className="gauntlet-intro px-1 pb-7 pt-[52px] max-sm:pb-5 max-sm:pt-7">
         <p className="eyebrow mb-3 mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500 max-sm:text-[10px]">过关斩将 · 全关卡试炼</p>
-        <h1 className="mb-4 mt-0 max-w-[850px] font-serif text-[clamp(34px,4.2vw,58px)] font-bold leading-[1.08] tracking-[-0.035em] max-sm:text-[30px] max-sm:leading-[1.12]">从轮廓到终极混战，<span className="text-city-500">把中国地理练成直觉</span></h1>
-        <p className="lede m-0 max-w-[850px] text-[15px] leading-[1.85] text-ink-soft max-sm:text-xs max-sm:leading-5">
+        <h1 className="mb-3 mt-0 max-w-[850px] font-serif text-page font-bold tracking-[-0.025em] max-sm:text-page-mobile">从轮廓到终极混战，<span className="text-city-500">把中国地理练成直觉</span></h1>
+        <p className="lede m-0 max-w-[850px] text-body text-ink-soft max-sm:text-body-mobile">
           共 {GAUNTLET_LEVEL_COUNT} 个关卡，均可直接选择。错题复仇会读取本机历史错题，其余连续答题关卡答错后连胜归零。
         </p>
-        <div className="gauntlet-lobby-settings mt-7 flex flex-wrap items-stretch gap-3 max-sm:grid max-sm:grid-cols-2 max-sm:gap-2" aria-label="挑战设置">
+        <div className="gauntlet-lobby-settings mt-6 flex flex-wrap items-stretch gap-3 max-sm:grid max-sm:grid-cols-2 max-sm:gap-2" aria-label="挑战设置">
           <button
             className={`timed-mode-toggle grid w-[min(360px,100%)] cursor-pointer grid-cols-[auto_1fr] items-center gap-x-3 rounded-[15px] border px-4 py-[13px] text-left transition hover:-translate-y-px hover:border-city-500/45 max-sm:w-full max-sm:grid-cols-[34px_1fr] max-sm:gap-x-2 max-sm:px-2 max-sm:py-2.5 ${d.timedMode ? "border-city-500/35 bg-city-300 text-city-900" : "border-black/20 bg-card/80 text-ink-600"}`}
             type="button"
@@ -54,7 +54,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
                   ? `限时模式 · ${GAUNTLET_TIME_LIMITS.STANDARD} 秒`
                   : `极速模式 · ${GAUNTLET_TIME_LIMITS.FAST} 秒`}
             </b>
-            <small className="self-start text-[9px] text-stone-600 max-sm:hidden">
+            <small className="self-start text-meta text-stone-600 max-sm:hidden">
               {s.timeLimit === GAUNTLET_TIME_LIMITS.UNLIMITED
                 ? `点击切换到 ${GAUNTLET_TIME_LIMITS.STANDARD} 秒限时`
                 : s.timeLimit === GAUNTLET_TIME_LIMITS.STANDARD
@@ -72,12 +72,12 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
             <b className="col-start-2 self-end truncate text-[11px] max-sm:text-[10px]">
               统一省份范围 · {s.selectedShapeProvinceCodes.size} / {PROVINCES.length}
             </b>
-            <i className="col-start-2 self-start truncate text-[9px] font-bold not-italic text-ink-500 max-sm:hidden">{s.provinceScopeReady ? d.provinceScopeSummary : "正在读取已保存范围…"}</i>
+            <i className="col-start-2 self-start truncate text-meta font-bold not-italic text-ink-500 max-sm:hidden">{s.provinceScopeReady ? d.provinceScopeSummary : "正在读取已保存范围…"}</i>
             <em className="col-start-3 row-span-2 row-start-1 self-center text-[10px] font-black not-italic text-jade-700 max-sm:hidden">修改</em>
           </button>
         </div>
         <p
-          className={`gauntlet-scope-message mx-0 mb-0 mt-2.5 min-h-[1.7em] text-[10px] leading-[1.7] ${s.provinceScopeMessage ? "font-extrabold text-jade-700" : "text-ink-500"}`}
+          className={`gauntlet-scope-message mx-0 mb-0 mt-2.5 min-h-[1.5em] text-meta ${s.provinceScopeMessage ? "font-extrabold text-jade-700" : "text-ink-500"}`}
           role="status"
         >
           {s.provinceScopeMessage ||
@@ -99,7 +99,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
           return (
             <button
               key={item.id}
-              className="gauntlet-level-card relative grid min-h-[390px] cursor-pointer content-start overflow-hidden rounded-[22px] border border-black/15 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_100%_0%,rgba(213,169,69,.18),transparent_16rem)] p-[30px] text-left shadow-[0_24px_60px_rgba(57,46,31,.08)] transition after:absolute after:-bottom-[50px] after:-right-11 after:size-[180px] after:rounded-full after:border after:border-city-500/10 hover:-translate-y-[5px] hover:border-city-500/40 hover:shadow-[0_30px_70px_rgba(57,46,31,.13)] disabled:cursor-wait disabled:opacity-60 max-[900px]:grid-cols-[auto_1fr] max-[900px]:gap-x-6 max-[900px]:min-h-0 max-sm:grid-cols-1 max-sm:gap-1.5 max-sm:min-h-48 max-sm:rounded-[16px_16px_16px_5px] max-sm:p-3"
+              className="gauntlet-level-card relative grid min-h-[360px] cursor-pointer content-start overflow-hidden rounded-[22px] border border-black/15 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_100%_0%,rgba(213,169,69,.18),transparent_16rem)] p-6 text-left shadow-[0_24px_60px_rgba(57,46,31,.08)] transition after:absolute after:-bottom-[50px] after:-right-11 after:size-[180px] after:rounded-full after:border after:border-city-500/10 hover:-translate-y-[5px] hover:border-city-500/40 hover:shadow-[0_30px_70px_rgba(57,46,31,.13)] disabled:cursor-wait disabled:opacity-60 max-[900px]:grid-cols-[auto_1fr] max-[900px]:gap-x-6 max-[900px]:min-h-0 max-sm:grid-cols-1 max-sm:gap-1.5 max-sm:min-h-48 max-sm:rounded-[16px_16px_16px_5px] max-sm:p-3"
               type="button"
               onClick={() => actions.startLevel(item.id)}
               disabled={mapUnavailable || Boolean(scopeIssue)}
@@ -107,16 +107,16 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
             >
               <span className="level-number text-[10px] font-black tracking-[0.18em] text-city-500 max-[900px]:col-start-1 max-sm:col-auto">第 {index + 1} 关</span>
               <i className={`mb-[22px] mt-8 grid size-[74px] -rotate-2 place-items-center rounded-[24px_24px_24px_8px] font-serif text-[19px] font-extrabold not-italic text-gold-100 shadow-[inset_0_0_0_3px_rgba(255,248,231,.2)] max-[900px]:col-start-1 max-[900px]:row-[2/6] max-[900px]:my-2.5 max-sm:col-auto max-sm:row-auto max-sm:my-2 max-sm:size-12 max-sm:rounded-[16px_16px_16px_6px] max-sm:text-base ${GAUNTLET_LEVEL_BADGE_CLASS[item.id]}`}>{item.badge}</i>
-              <strong className="font-serif text-[28px] max-[900px]:col-start-2 max-[900px]:row-start-1 max-[900px]:self-end max-sm:col-auto max-sm:row-auto max-sm:text-lg">{item.title}</strong>
-              <p className="my-3 min-h-[72px] text-[13px] leading-[1.8] text-ink-soft max-[900px]:col-start-2 max-[900px]:min-h-0 max-sm:hidden">{item.description}</p>
-              <b className="text-[11px] tracking-[0.08em] text-gold-800 max-[900px]:col-start-2 max-sm:col-auto max-sm:text-[9px] max-sm:tracking-normal">
+              <strong className="font-serif text-card-title max-[900px]:col-start-2 max-[900px]:row-start-1 max-[900px]:self-end max-sm:col-auto max-sm:row-auto max-sm:text-card-title-mobile">{item.title}</strong>
+              <p className="my-3 min-h-[66px] text-compact text-ink-soft max-[900px]:col-start-2 max-[900px]:min-h-0 max-sm:hidden">{item.description}</p>
+              <b className="text-compact tracking-[0.08em] text-gold-800 max-[900px]:col-start-2 max-sm:col-auto max-sm:text-meta max-sm:tracking-normal">
                 {item.id === LEVEL.MISTAKE_REVENGE
                   ? s.mistakes.length
                     ? `当前 ${s.mistakes.length} 道历史错题`
                     : "暂无历史错题"
                   : levelTarget}
               </b>
-              <span className={`level-state z-[1] mt-6 self-end justify-self-end text-xs font-black max-[900px]:col-start-2 max-sm:col-auto max-sm:mt-2 max-sm:text-[10px] ${completed ? "text-jade-700" : "text-city-900"}`}>
+              <span className={`level-state z-[1] mt-5 self-end justify-self-end text-xs font-black max-[900px]:col-start-2 max-sm:col-auto max-sm:mt-2 max-sm:text-meta ${completed ? "text-jade-700" : "text-city-900"}`}>
                 {mapUnavailable
                   ? "地图载入中…"
                   : scopeIssue

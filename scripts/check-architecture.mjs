@@ -23,6 +23,21 @@ const requiredColorPalettes = [
   "stone",
 ];
 const requiredColorShades = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+const requiredTypographyTokens = [
+  "display",
+  "display-mobile",
+  "page",
+  "page-mobile",
+  "section",
+  "section-mobile",
+  "card-title",
+  "card-title-mobile",
+  "body",
+  "body-mobile",
+  "compact",
+  "compact-mobile",
+  "meta",
+];
 const kebabCaseFile = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:ts|tsx|css)$/;
 const businessFeatures = new Set([
   "admin",
@@ -237,6 +252,14 @@ if (!existsSync(tailwindConfigPath)) {
         errors.push(`tailwind.config.ts 的 ${palette} 色阶缺少 ${shade}。`);
       }
     }
+  }
+  for (const token of requiredTypographyTokens) {
+    if (!tailwindConfig.includes(`"${token}":`)) {
+      errors.push(`tailwind.config.ts 缺少 ${token} 语义字号。`);
+    }
+  }
+  if (!tailwindConfig.includes('"display": ["clamp(36px, 2.1vw, 40px)"')) {
+    errors.push("text-display 必须在 1920px 桌面封顶 40px。 ");
   }
 }
 if (!globals.includes('@config "../../tailwind.config.ts";')) {

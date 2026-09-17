@@ -167,6 +167,21 @@ export default {
   theme: {
     extend: {
       colors,
+      fontSize: {
+        "display": ["clamp(36px, 2.1vw, 40px)", { lineHeight: "1.16" }],
+        "display-mobile": ["30px", { lineHeight: "1.18" }],
+        "page": ["clamp(30px, 1.8vw, 36px)", { lineHeight: "1.2" }],
+        "page-mobile": ["28px", { lineHeight: "1.22" }],
+        "section": ["clamp(24px, 1.45vw, 28px)", { lineHeight: "1.26" }],
+        "section-mobile": ["22px", { lineHeight: "1.28" }],
+        "card-title": ["clamp(18px, 1.15vw, 22px)", { lineHeight: "1.32" }],
+        "card-title-mobile": ["18px", { lineHeight: "1.34" }],
+        "body": ["15px", { lineHeight: "1.75" }],
+        "body-mobile": ["14px", { lineHeight: "1.7" }],
+        "compact": ["13px", { lineHeight: "1.6" }],
+        "compact-mobile": ["12px", { lineHeight: "1.58" }],
+        "meta": ["10px", { lineHeight: "1.5" }],
+      },
       backgroundImage: {
         "river-atlas": "radial-gradient(circle at 100% 0%, #e8f1f5, transparent 27rem)",
         "river-gold": "radial-gradient(circle at 100% 0%, #f5ebca, transparent 27rem)",

@@ -36,16 +36,16 @@ export default function GauntletRoundHeader({
   const activeConfig = GAUNTLET_LEVEL_BY_ID.get(s.level) ?? null;
   const displayNumber = gauntletLevelNumber(s.level);
   return (
-    <section className="gauntlet-round-heading grid grid-cols-[1fr_auto] items-end gap-10 px-1 pb-[25px] pt-[46px] max-lg:grid-cols-1 max-lg:gap-2 max-md:pt-5">
+    <section className="gauntlet-round-heading grid grid-cols-[1fr_auto] items-end gap-8 px-1 pb-5 pt-9 max-lg:grid-cols-1 max-lg:gap-2 max-md:pt-5">
       <div>
         <button className="cursor-pointer border-0 bg-transparent p-0 text-xs font-black text-city-500 max-md:hidden" type="button" onClick={actions.returnToLevels}>← 返回选关</button>
-        <p className="eyebrow mb-2 mt-[22px] text-[11px] font-extrabold tracking-[0.24em] text-city-500">第 {displayNumber} 关 · {activeConfig?.title}</p>
-        <h1 className="m-0 font-serif text-[clamp(32px,3.8vw,52px)] font-bold leading-[1.08]">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
+        <p className="eyebrow mb-2 mt-[18px] text-[11px] font-extrabold tracking-[0.24em] text-city-500">第 {displayNumber} 关 · {activeConfig?.title}</p>
+        <h1 className="m-0 font-serif text-page font-bold max-md:text-page-mobile">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>
       </div>
       <div className="gauntlet-round-actions flex items-stretch gap-2.5 max-sm:grid max-sm:grid-cols-2">
         {s.level === LEVEL.FINAL_BOSS ? (
           <div className="boss-lives grid min-w-[116px] content-center rounded-[15px] border border-city-500/25 bg-city-300 px-[15px] py-3 text-center" aria-label={`剩余 ${s.bossLives} 条生命`}>
-            <span className="text-[9px] font-extrabold tracking-[.12em] text-stone-600">生命</span>
+            <span className="text-meta font-extrabold tracking-[.12em] text-stone-600">生命</span>
             <strong>
               {Array.from({ length: FINAL_BOSS_LIFE_COUNT }, (_, index) => (
                 <i key={index} className={`text-[21px] not-italic leading-[1.15] ${index < s.bossLives ? "text-city-500 drop-shadow-[0_3px_3px_rgba(180,59,50,.16)]" : "text-stone-400"}`}>
@@ -59,7 +59,7 @@ export default function GauntletRoundHeader({
           <div className={`gauntlet-timer grid min-w-[116px] content-center rounded-[15px] border px-4 py-[13px] text-center ${
             s.timeLeft <= GAUNTLET_URGENT_TIME_SECONDS ? "animate-pulse border-city-500/40 bg-clay-300 text-city-900" : "border-jade-500/25 bg-jade-200 text-jade-700"
           }`}>
-            <span className="text-[9px] font-extrabold tracking-[.1em]">剩余时间</span>
+            <span className="text-meta font-extrabold tracking-[.1em]">剩余时间</span>
             <strong className="block font-numeric text-2xl leading-[1.1]">{s.timeLeft}<i className="[font-family:inherit] text-xs not-italic"> 秒</i></strong>
           </div>
         ) : null}

@@ -30,14 +30,14 @@ export default function ProvincePickerDialog({
           ×
         </button>
         <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-city-500">过关斩将 · 全局设置</p>
-        <h2 className="mb-[9px] mt-0 font-serif text-3xl" id="province-picker-title">统一选择省份范围（可多选）</h2>
+        <h2 className="mb-[9px] mt-0 font-serif text-section max-sm:text-section-mobile" id="province-picker-title">统一选择省份范围（可多选）</h2>
         <p className="province-picker-hint mb-[22px] text-xs leading-[1.7] text-ink-soft">
           保存后，辨轮廓、城市、车牌、大学与地图落点等关卡都会自动使用这套范围，下次进入无需重选。邻省连锁、疆域集合、错题复仇、易混城市和终极混战仍使用各自的全国固定题库。
         </p>
         <div className="province-picker-tools mb-[13px] flex items-center gap-2">
-          <button className="cursor-pointer rounded-full border border-jade-500/25 bg-jade-200 px-[11px] py-1.5 text-[10px] font-extrabold text-jade-700" type="button" onClick={actions.selectAllPickerProvinces}>全选</button>
-          <button className="cursor-pointer rounded-full border border-jade-500/25 bg-jade-200 px-[11px] py-1.5 text-[10px] font-extrabold text-jade-700" type="button" onClick={actions.clearPickerProvinces}>清空</button>
-          <span className="ml-auto text-[10px] font-extrabold tracking-[.06em] text-ink-500">
+          <button className="min-h-10 cursor-pointer rounded-full border border-jade-500/25 bg-jade-200 px-[11px] py-2 text-compact font-extrabold text-jade-700 max-md:min-h-11" type="button" onClick={actions.selectAllPickerProvinces}>全选</button>
+          <button className="min-h-10 cursor-pointer rounded-full border border-jade-500/25 bg-jade-200 px-[11px] py-2 text-compact font-extrabold text-jade-700 max-md:min-h-11" type="button" onClick={actions.clearPickerProvinces}>清空</button>
+          <span className="ml-auto text-meta font-extrabold tracking-[.06em] text-ink-500">
             已选 {s.draftShapeProvinceCodes.size} / {d.provincePickerOptions.length}
           </span>
         </div>
@@ -54,7 +54,7 @@ export default function ProvincePickerDialog({
               >
                 <span className={`grid size-5 place-items-center rounded-full ${selected ? "bg-jade-500 text-white" : "border border-stone-400 bg-white"}`}>{selected ? "✓" : ""}</span>
                 <strong className="text-xs">{item.shortName}</strong>
-                <small className="col-start-2 text-[8px] leading-[1.45] text-ink-soft">
+                <small className="col-start-2 text-meta text-ink-soft">
                   {item.cityCount > 0
                     ? item.cityCount === item.plateCount &&
                         item.cityCount === item.mapRegionCount
@@ -67,7 +67,7 @@ export default function ProvincePickerDialog({
           })}
         </div>
         <div className="province-picker-footer mt-5 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
-          <p className="m-0 text-[10px] text-ink-soft">
+          <p className="m-0 text-meta text-ink-soft">
             {s.draftShapeProvinceCodes.size === 0
               ? "请至少选择一个省份"
               : s.identity
@@ -75,7 +75,7 @@ export default function ProvincePickerDialog({
                 : "试玩状态仅本次有效，登录后可长期保存"}
           </p>
           <button
-            className="min-h-11 cursor-pointer rounded-full border-0 bg-jade-500 px-5 text-[11px] font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 cursor-pointer rounded-full border-0 bg-jade-500 px-5 py-2.5 text-compact font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
             type="button"
             disabled={!d.draftSelectionValid}
             onClick={actions.applyProvinceSelection}

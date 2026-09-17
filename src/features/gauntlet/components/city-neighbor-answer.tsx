@@ -6,7 +6,7 @@ import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-c
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 
 const SUMMARY_CLASS =
-  "map-answer-summary mb-1 mt-0 min-h-[58px] text-xs leading-[1.8] text-ink-soft";
+  "map-answer-summary mb-1 mt-0 min-h-[52px] text-xs leading-[1.65] text-ink-soft";
 
 export default function CityNeighborAnswer({
   actions,
@@ -19,7 +19,7 @@ export default function CityNeighborAnswer({
   if (d.gauntletDetailError) {
     return (
       <>
-        <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">提示地图载入失败</h2>
+        <h2 className="mb-6 mt-0 font-serif text-section">提示地图载入失败</h2>
         <p className={SUMMARY_CLASS}>请返回选关后重新进入本关。</p>
       </>
     );
@@ -27,7 +27,7 @@ export default function CityNeighborAnswer({
   if (!d.currentCityNeighborQuestion) {
     return (
       <>
-        <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">正在准备邻市题</h2>
+        <h2 className="mb-6 mt-0 font-serif text-section">正在准备邻市题</h2>
         <p className={SUMMARY_CLASS}>正在读取省级地图和市界数据…</p>
       </>
     );
@@ -35,7 +35,7 @@ export default function CityNeighborAnswer({
 
   return (
     <>
-      <h2 className="mb-[30px] mt-0 font-serif text-[27px] leading-[1.35]">写出全部省内陆地邻区</h2>
+      <h2 className="mb-6 mt-0 font-serif text-section">写出全部省内陆地邻区</h2>
       <GauntletAnswerForm
         actions={actions}
         id="gauntlet-city-neighbor-answer"
@@ -44,7 +44,7 @@ export default function CityNeighborAnswer({
         allowEmpty
       />
       <button
-        className="mt-3 min-h-11 w-full cursor-pointer rounded-xl border border-jade-500/30 bg-jade-500/10 px-4 text-xs font-black text-jade-700 disabled:cursor-default disabled:opacity-60"
+        className="mt-3 min-h-11 w-full cursor-pointer rounded-xl border border-jade-500/30 bg-jade-500/10 px-4 py-2.5 text-compact font-black text-jade-700 disabled:cursor-default disabled:opacity-60"
         type="button"
         disabled={s.cityNeighborHintVisible}
         onClick={actions.showCityNeighborHint}

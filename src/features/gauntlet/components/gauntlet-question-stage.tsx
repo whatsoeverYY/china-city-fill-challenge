@@ -48,7 +48,7 @@ export default function GauntletQuestionStage({
       return d.gauntletDetailMap && d.gauntletDetailReady && d.currentMapRegion ? (
         <div className="gauntlet-map-question relative grid size-full place-items-center">
           <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-            <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">在{d.currentMapRegion.provinceShort}地图上找到</small>
+            <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">在{d.currentMapRegion.provinceShort}地图上找到</small>
             <strong className="font-serif text-[23px]">{d.currentMapRegion.city}</strong>
           </div>
           <GauntletDetailMap
@@ -66,7 +66,7 @@ export default function GauntletQuestionStage({
       return s.nationalMap && d.currentGroupQuestion ? (
         <div className="gauntlet-map-question relative grid size-full place-items-center">
           <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-            <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">{d.currentGroupQuestion.description}</small>
+            <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">{d.currentGroupQuestion.description}</small>
             <strong className="font-serif text-[23px]">{d.currentGroupQuestion.title}</strong>
           </div>
           <GauntletNationalMap
@@ -102,8 +102,8 @@ export default function GauntletQuestionStage({
       ) : (
         <div className="mistake-empty-state grid max-w-[560px] justify-items-center gap-3.5 text-center">
           <span className="grid size-[92px] place-items-center rounded-full bg-jade-500 text-[43px] font-black text-white shadow-[0_18px_35px_rgba(45,125,95,.2)]" aria-hidden="true">✓</span>
-          <strong className="font-serif text-[clamp(32px,4vw,52px)]">暂无历史错题</strong>
-          <p className="m-0 text-[13px] leading-[1.8] text-ink-500">先去挑战其他关卡；答错的城市、省份、车牌、省会和高校题会自动收录到这里。</p>
+          <strong className="font-serif text-page max-sm:text-page-mobile">暂无历史错题</strong>
+          <p className="m-0 text-compact text-ink-500">先去挑战其他关卡；答错的城市、省份、车牌、省会和高校题会自动收录到这里。</p>
         </div>
       );
     }
@@ -137,7 +137,7 @@ export default function GauntletQuestionStage({
         d.currentCityNeighborQuestion ? (
           <div className="gauntlet-map-question city-neighbor-map-question relative grid size-full place-items-center">
             <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-              <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">观察哪些行政区与红色目标共享陆地边界</small>
+              <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">观察哪些行政区与红色目标共享陆地边界</small>
               <strong className="font-serif text-[23px]">{d.currentCityNeighborQuestion.city}</strong>
             </div>
             <CityNeighborHintMap
@@ -154,7 +154,7 @@ export default function GauntletQuestionStage({
       return d.gauntletDetailMap && d.gauntletDetailReady && d.currentCity ? (
         <div className="gauntlet-map-question plate-city-map-question relative grid size-full place-items-center">
           <div className="map-question-banner plate-city-map-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-            <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">
+            <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">
               {d.plateCityMapFocusedProvince
                 ? "已放大一张省级地图，点击城市区块后才会判题"
                 : "可以直接点击城市，也可以先选择一张省级地图放大"}
@@ -166,7 +166,7 @@ export default function GauntletQuestionStage({
               <div className="gauntlet-focused-province-toolbar flex items-center justify-between gap-3 rounded-xl bg-card p-3 text-xs">
                 <span className="text-ink-soft">省份选择不会判错，城市落点后才计算答案</span>
                 <button
-                  className="cursor-pointer rounded-full border border-black/15 bg-white px-3 py-2 text-[10px] font-black"
+                  className="min-h-10 cursor-pointer rounded-full border border-black/15 bg-white px-3 py-2 text-compact font-black max-md:min-h-11"
                   type="button"
                   onClick={() => s.setPlateCityMapFocusedProvinceCode(null)}
                 >
@@ -200,7 +200,7 @@ export default function GauntletQuestionStage({
         return (
           <div className="gauntlet-map-question boss-question-stage relative grid size-full place-items-center">
             <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-              <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">{boss.prompt}</small>
+              <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">{boss.prompt}</small>
               <strong className="font-serif text-[23px]">{boss.value}</strong>
             </div>
             <GauntletNationalMap
@@ -243,7 +243,7 @@ export default function GauntletQuestionStage({
       return s.nationalMap && d.currentCity ? (
         <div className="gauntlet-map-question relative grid size-full place-items-center">
           <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-            <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">点击它所属的省级行政区</small>
+            <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">点击它所属的省级行政区</small>
             <strong className="font-serif text-[23px]">{d.currentCity.city}</strong>
           </div>
           <GauntletNationalMap
@@ -262,7 +262,7 @@ export default function GauntletQuestionStage({
       return s.nationalMap ? (
         <div className="gauntlet-map-question relative grid size-full place-items-center">
           <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
-            <small className="block text-[9px] font-extrabold tracking-[.12em] text-stone-600">当前省份</small>
+            <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">当前省份</small>
             <strong className="font-serif text-[23px]">
               {PROVINCE_BY_CODE.get(s.routeCodes.at(-1) ?? "")?.name ?? "载入中…"}
             </strong>
@@ -285,7 +285,7 @@ export default function GauntletQuestionStage({
     }
     if (s.level === LEVEL.PLATE_COMPLETION) {
       return (
-        <ChoiceQuestion className="city-question plate-fill-question" badge="补" badgeClassName="bg-city-500" prompt="补出这个城市或地区的全部车牌字母" value={d.currentCity?.city ?? "载入中…"} valueClassName="text-[clamp(44px,6vw,78px)]" hint={<>
+        <ChoiceQuestion className="city-question plate-fill-question" badge="补" badgeClassName="bg-city-500" prompt="补出这个城市或地区的全部车牌字母" value={d.currentCity?.city ?? "载入中…"} hint={<>
           <span className="plate-blank inline-block min-w-[150px] rounded-[9px] border-[3px] border-white bg-navy-600 px-[22px] py-[10px] font-mono text-[34px] tracking-[.16em] text-white shadow-plate-field">
             {d.currentCity
               ? `${d.currentCity.plate.slice(0, 1)} ${d.currentCity.plates.map(
@@ -309,7 +309,7 @@ export default function GauntletQuestionStage({
         badgeClassName={s.level === LEVEL.PLATE_PLACE ? "bg-navy-500" : "bg-city-500"}
         prompt={s.level === LEVEL.PLATE_PLACE ? "这组车牌属于哪里？" : "这个城市或地区属于哪里？"}
         value={(s.level === LEVEL.PLATE_PLACE ? d.currentCity?.plate : d.currentCity?.city) ?? "载入中…"}
-        valueClassName={s.level === LEVEL.PLATE_PLACE ? "min-w-[230px] rounded-xl border-4 border-white bg-navy-600 px-[26px] py-[15px] font-mono text-[clamp(48px,6vw,76px)] tracking-[.12em] text-white shadow-plate-field-lg max-sm:min-w-0 max-sm:px-4 max-sm:text-[38px]" : "text-[clamp(44px,6vw,78px)]"}
+        valueClassName={s.level === LEVEL.PLATE_PLACE ? "min-w-[230px] rounded-xl border-4 border-white bg-navy-600 px-[26px] py-3 font-mono tracking-[.12em] text-white shadow-plate-field-lg max-sm:min-w-0 max-sm:px-4" : ""}
         hint={s.level === LEVEL.PLATE_PLACE ? "请在一个输入框中连写省份和城市/地区" : undefined}
       />
     );
