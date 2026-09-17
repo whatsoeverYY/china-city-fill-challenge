@@ -83,4 +83,5 @@ pnpm test:pages
 - 原生 SVG 地图渲染
 - Cloudflare Workers 兼容构建
 
-地图数据仅用于地理学习与游戏展示。新疆地图已更新为 27 个区块，包含新星市、白杨市和草湖市；边界数据参考 [GeoJSON.CN](https://geojson.cn/data/atlas/china) 与 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。
+地图数据仅用于地理学习与游戏展示。
+边界数据参考 [GeoJSON.CN](https://geojson.cn/data/atlas/china) 与 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。
