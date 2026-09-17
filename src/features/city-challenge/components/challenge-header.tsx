@@ -22,7 +22,7 @@ export default function ChallengeHeader({
 
   return (
     <>
-      <header className={`site-header flex min-h-[62px] items-center justify-between border-b border-black/[.13] pb-[22px] max-[1050px]:flex-wrap max-[1050px]:gap-[14px] max-md:ml-[calc((100%-100vw)/2)] max-md:w-screen max-md:bg-card/95 max-md:px-3 ${province ? "max-md:sticky max-md:top-0 max-md:z-40 max-md:gap-0 max-md:pb-0 max-md:backdrop-blur-xl" : "max-md:gap-5 max-md:pb-4"}`}>
+      <header className={`site-header flex min-h-[62px] items-center justify-between border-b border-black/[.13] pb-[22px] max-[1050px]:flex-wrap max-[1050px]:gap-[14px] max-md:ml-[calc((100%-100vw)/2)] max-md:w-screen max-md:bg-card/95 max-md:px-3 max-md:pt-2 ${province ? "max-md:sticky max-md:top-0 max-md:z-40 max-md:gap-0 max-md:pb-0 max-md:backdrop-blur-xl" : "max-md:gap-5 max-md:pb-4"}`}>
         <div className="brand inline-flex min-h-11 min-w-0 items-center gap-[13px] text-left text-ink">
           <span className="brand-seal grid size-[45px] shrink-0 -rotate-2 place-items-center rounded-[9px_9px_9px_3px] bg-city-500 font-serif text-[25px] font-bold text-gold-100 shadow-[inset_0_0_0_2px_rgba(255,248,231,.24)] max-md:size-[39px]" aria-hidden="true">城</span>
           {province ? (

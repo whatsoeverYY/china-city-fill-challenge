@@ -207,6 +207,7 @@ test("major modules keep intentional mobile layouts", async () => {
       "max-md:hidden",
       "max-md:ml-[calc((100%-100vw)/2)]",
       "max-md:w-screen",
+      "max-md:pt-2",
       "max-sm:flex-col",
       "max-sm:rounded-xl",
       "font-sans text-[10px] font-bold leading-none tracking-normal",
