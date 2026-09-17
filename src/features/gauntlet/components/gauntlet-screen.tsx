@@ -65,8 +65,8 @@ export default function GauntletScreen({
   }, [actions, d, initialLevel, s.nationalError, s.nationalMap, s.provinceScopeReady]);
 
   return (
-    <main className={`game-shell gauntlet-shell mx-auto min-h-dvh w-[min(1460px,calc(100%_-_48px))] pb-10 pt-7 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pb-24 max-md:pt-[15px] ${displayedLevel ? "is-round-active" : ""}`}>
-      <header className="site-header gauntlet-header flex min-h-[62px] items-center border-b border-black/[.13] pb-[22px] max-md:sticky max-md:top-0 max-md:z-40 max-md:mb-4 max-md:min-h-14 max-md:rounded-b-[13px] max-md:bg-card/95 max-md:px-2 max-md:pb-0 max-md:shadow-[0_9px_24px_rgba(57,46,31,.1)] max-md:backdrop-blur-xl">
+    <main className={`game-shell gauntlet-shell mx-auto min-h-dvh w-[min(1460px,calc(100%_-_48px))] pb-10 pt-7 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pb-24 max-md:pt-0 ${displayedLevel ? "is-round-active" : ""}`}>
+      <header className="site-header gauntlet-header flex min-h-[62px] items-center border-b border-black/[.13] pb-[22px] max-md:sticky max-md:top-0 max-md:z-40 max-md:ml-[calc((100%-100vw)/2)] max-md:min-h-14 max-md:w-screen max-md:bg-card/95 max-md:px-3 max-md:pb-0 max-md:backdrop-blur-xl">
         <div className="brand inline-flex min-h-11 min-w-0 items-center gap-[13px] text-left">
           <span className="brand-seal gauntlet-brand-seal grid size-[45px] -rotate-2 place-items-center rounded-[9px_9px_9px_3px] bg-gold-600 font-serif text-[25px] font-bold text-gold-100 shadow-[inset_0_0_0_2px_rgba(255,248,231,.24)] max-md:size-[39px]" aria-hidden="true">关</span>
           <PageBreadcrumbs
@@ -90,7 +90,7 @@ export default function GauntletScreen({
           正在准备关卡…
         </section>
       ) : initializationBlocked ? (
-        <section className="mx-auto mt-12 grid min-h-[360px] max-w-[680px] place-content-center justify-items-center gap-4 rounded-[24px_24px_24px_8px] border border-city-500/20 bg-card/90 p-8 text-center">
+        <section className="mx-auto mt-12 grid min-h-[360px] max-w-[680px] place-content-center justify-items-center gap-4 rounded-[24px_24px_24px_8px] border border-city-500/20 bg-card/90 p-8 text-center max-md:mt-5">
           <h1 className="m-0 font-serif text-section">当前设置无法开始这一关</h1>
           <p className="m-0 text-body text-ink-soft">{d.provinceScopeIssue(initialLevel!) ?? "关卡所需地图暂时无法载入。"}</p>
           <a className="inline-flex min-h-11 items-center rounded-full bg-city-500 px-5 py-2.5 text-compact font-black text-white no-underline" href={routePath("/gauntlet")}>返回选关</a>

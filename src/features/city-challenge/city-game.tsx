@@ -290,7 +290,7 @@ export default function CityGame({
   const activeMap = province ? detailMap : nationalMap;
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
   return (
-    <main className="game-shell mx-auto min-h-dvh w-[min(1460px,calc(100%_-_48px))] pb-10 pt-7 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pb-24 max-md:pt-[15px]">
+    <main className="game-shell mx-auto min-h-dvh w-[min(1460px,calc(100%_-_48px))] pb-10 pt-7 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pb-24 max-md:pt-0">
       <ChallengeHeader
         province={province}
         neighborMode={neighborMode}

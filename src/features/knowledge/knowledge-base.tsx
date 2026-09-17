@@ -319,7 +319,7 @@ export default function KnowledgeBase({
 
   return (
     <main className="knowledge-shell min-h-dvh bg-paper-400 [background-image:radial-gradient(circle_at_8%_5%,rgba(255,255,255,.96),transparent_27rem),radial-gradient(circle_at_90%_13%,rgba(110,78,128,.08),transparent_26rem),linear-gradient(rgba(53,66,56,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(53,66,56,.03)_1px,transparent_1px)] [background-size:auto,auto,30px_30px,30px_30px] text-ink">
-      <header className="knowledge-header sticky top-0 z-40 flex min-h-[78px] items-center justify-between gap-6 border-b border-black/[.14] bg-card/95 px-[max(24px,calc((100vw_-_1380px)/2))] py-3 shadow-[0_8px_30px_rgba(58,47,32,.06)] backdrop-blur-xl max-sm:min-h-16 max-sm:gap-2 max-sm:px-3 max-sm:py-2">
+      <header className="knowledge-header sticky top-0 z-40 flex min-h-[78px] items-center justify-between gap-6 border-b border-black/[.14] bg-card/95 px-[max(24px,calc((100vw_-_1380px)/2))] py-3 shadow-[0_8px_30px_rgba(58,47,32,.06)] backdrop-blur-xl max-sm:min-h-16 max-sm:gap-2 max-sm:px-3 max-sm:py-2 max-sm:shadow-none">
         <div className="knowledge-brand flex min-w-0 items-center gap-3 text-left">
           <span className="grid size-[46px] place-items-center rounded-[14px_14px_14px_5px] bg-scholar-500 font-serif text-[22px] font-black text-gold-100 shadow-[inset_0_0_0_3px_rgba(255,255,255,.13)] max-sm:size-10 max-sm:text-xl" aria-hidden="true">知</span>
           <PageBreadcrumbs
@@ -342,7 +342,7 @@ export default function KnowledgeBase({
         <KnowledgeCatalog />
       ) : (
         <>
-          <section className={`knowledge-detail-hero mx-auto grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[84px_minmax(0,1fr)_minmax(280px,360px)] items-center gap-5 border-b pb-[30px] pt-10 max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:gap-3 max-sm:pb-5 max-sm:pt-6 ${DETAIL_TONE_CLASSES[activeCategory.tone].border}`}>
+          <section className={`knowledge-detail-hero mx-auto grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[84px_minmax(0,1fr)_minmax(280px,360px)] items-center gap-5 border-b pb-[30px] pt-10 max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:gap-3 max-sm:pb-5 max-sm:pt-4 ${DETAIL_TONE_CLASSES[activeCategory.tone].border}`}>
             <span className={`grid size-[84px] place-items-center rounded-[24px_24px_24px_7px] font-serif text-[38px] font-black text-white shadow-[inset_0_0_0_5px_rgba(255,255,255,.12)] max-sm:size-14 max-sm:rounded-[17px_17px_17px_5px] max-sm:text-2xl ${DETAIL_TONE_CLASSES[activeCategory.tone].icon}`} aria-hidden="true">{activeCategory.icon}</span>
             <div>
               <p className={`m-0 text-[10px] font-black ${DETAIL_TONE_CLASSES[activeCategory.tone].text}`}>{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>

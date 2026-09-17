@@ -39,7 +39,7 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
 
   if (d.hasTimedOut || d.hasLostBoss) {
     return (
-      <section className="gauntlet-passed gauntlet-timeout mx-auto mt-14 grid min-h-[460px] max-w-[760px] content-center justify-items-center gap-4 rounded-[26px] border border-city-500/25 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_50%_0%,rgba(213,169,69,.18),transparent_24rem)] p-12 text-center shadow-[0_30px_70px_rgba(57,46,31,.1)] max-sm:mt-8 max-sm:min-h-[420px] max-sm:p-[30px_20px]" aria-live="polite">
+      <section className="gauntlet-passed gauntlet-timeout mx-auto mt-14 grid min-h-[460px] max-w-[760px] content-center justify-items-center gap-4 rounded-[26px] border border-city-500/25 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_50%_0%,rgba(213,169,69,.18),transparent_24rem)] p-12 text-center shadow-[0_30px_70px_rgba(57,46,31,.1)] max-sm:mt-5 max-sm:min-h-[420px] max-sm:p-[30px_20px]" aria-live="polite">
         <span className="gauntlet-pass-seal mb-5 grid size-[88px] -rotate-4 place-items-center rounded-full bg-city-500 font-serif text-[40px] font-black text-gold-100 shadow-[inset_0_0_0_5px_rgba(255,248,231,.24),0_18px_42px_rgba(114,48,40,.2)]" aria-hidden="true">
           {d.hasLostBoss ? "败" : "时"}
         </span>
@@ -67,7 +67,7 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
 
   if (!s.passedLevel) return null;
   return (
-    <section className="gauntlet-passed mx-auto mt-14 grid min-h-[460px] max-w-[760px] content-center justify-items-center gap-4 rounded-[26px] border border-jade-500/25 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_50%_0%,rgba(213,169,69,.18),transparent_24rem)] p-12 text-center shadow-[0_30px_70px_rgba(57,46,31,.1)] max-sm:mt-8 max-sm:min-h-[420px] max-sm:p-[30px_20px]" aria-live="polite">
+    <section className="gauntlet-passed mx-auto mt-14 grid min-h-[460px] max-w-[760px] content-center justify-items-center gap-4 rounded-[26px] border border-jade-500/25 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_50%_0%,rgba(213,169,69,.18),transparent_24rem)] p-12 text-center shadow-[0_30px_70px_rgba(57,46,31,.1)] max-sm:mt-5 max-sm:min-h-[420px] max-sm:p-[30px_20px]" aria-live="polite">
       <span className="gauntlet-pass-seal mb-5 grid size-[88px] -rotate-4 place-items-center rounded-full bg-jade-500 font-serif text-[40px] font-black text-gold-100 shadow-[inset_0_0_0_5px_rgba(255,248,231,.24),0_18px_42px_rgba(29,87,64,.2)]" aria-hidden="true">胜</span>
       <p className="eyebrow m-0 text-xs font-black tracking-[0.18em] text-city-500">第 {displayNumber} 关 · 挑战达成</p>
       <h1 className="m-0 font-serif text-page font-bold max-sm:text-page-mobile">{activeConfig?.title}，过关！</h1>

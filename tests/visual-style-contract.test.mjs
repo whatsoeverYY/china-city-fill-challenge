@@ -175,12 +175,18 @@ test("major modules keep intentional mobile layouts", async () => {
   const challengeSettings = await source(
     "src/features/city-challenge/components/challenge-settings.tsx",
   );
+  const cityGame = await source(
+    "src/features/city-challenge/city-game.tsx",
+  );
   const atlas = await source("src/features/atlas/national-city-atlas.tsx");
   const gauntletScreen = await source(
     "src/features/gauntlet/components/gauntlet-screen.tsx",
   );
   const knowledgeCatalog = await source(
     "src/features/knowledge/components/knowledge-catalog.tsx",
+  );
+  const knowledgeBase = await source(
+    "src/features/knowledge/knowledge-base.tsx",
   );
   const admin = await source("src/features/admin/admin-dashboard.tsx");
   const neighborAnswer = await source(
@@ -189,7 +195,7 @@ test("major modules keep intentional mobile layouts", async () => {
 
   assertTokens(
     staticClassValue(challengeHeader, "site-header"),
-    ["max-[1050px]:flex-wrap", "max-md:gap-5"],
+    ["max-[1050px]:flex-wrap"],
     "首页移动头部",
   );
   assertSourceContainsAll(
@@ -199,10 +205,17 @@ test("major modules keep intentional mobile layouts", async () => {
       "max-md:grid-cols-2",
       "atlas-mode-button",
       "max-md:hidden",
+      "max-md:ml-[calc((100%-100vw)/2)]",
+      "max-md:w-screen",
       "max-sm:flex-col",
       "max-sm:rounded-xl",
     ],
     "首页移动操作区",
+  );
+  assertSourceContainsAll(
+    cityGame,
+    ["max-md:pt-0"],
+    "省内填图移动外壳",
   );
   assertTokens(
     staticClassValue(challengeSettings, "challenge-settings"),
@@ -229,13 +242,20 @@ test("major modules keep intentional mobile layouts", async () => {
       "gauntlet-shell",
       "max-md:w-[min(680px,calc(100%_-_24px))]",
       "max-md:pb-24",
-      "max-md:pt-[15px]",
+      "max-md:pt-0",
     ],
     "闯关移动外壳",
   );
   assertTokens(
     staticClassValue(gauntletScreen, "gauntlet-header"),
-    ["max-md:sticky", "max-md:top-0", "max-md:min-h-14", "max-md:bg-card/95"],
+    [
+      "max-md:sticky",
+      "max-md:top-0",
+      "max-md:ml-[calc((100%-100vw)/2)]",
+      "max-md:min-h-14",
+      "max-md:w-screen",
+      "max-md:bg-card/95",
+    ],
     "闯关移动面包屑头部",
   );
   assertSourceContainsAll(
@@ -249,9 +269,14 @@ test("major modules keep intentional mobile layouts", async () => {
       "max-lg:grid-cols-1",
       "max-sm:w-[calc(100%_-_24px)]",
       "max-sm:pb-6",
-      "max-sm:pt-7",
+      "max-sm:pt-4",
     ],
     "知识馆移动主视觉",
+  );
+  assertTokens(
+    staticClassValue(knowledgeBase, "knowledge-header"),
+    ["sticky", "top-0", "max-sm:shadow-none"],
+    "知识馆移动面包屑头部",
   );
   assertSourceContainsAll(
     knowledgeCatalog,

@@ -50,7 +50,7 @@ const KNOWLEDGE_TONE_CLASSES: Record<KnowledgeTone, {
 export default function KnowledgeCatalog() {
   return (
     <>
-      <section className="knowledge-home-hero mx-auto grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[minmax(0,1.55fr)_minmax(280px,.45fr)] items-end gap-[clamp(32px,4vw,60px)] pb-11 pt-[clamp(40px,4vw,64px)] max-lg:grid-cols-1 max-sm:w-[calc(100%_-_24px)] max-sm:gap-4 max-sm:pb-6 max-sm:pt-7">
+      <section className="knowledge-home-hero mx-auto grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[minmax(0,1.55fr)_minmax(280px,.45fr)] items-end gap-[clamp(32px,4vw,60px)] pb-11 pt-[clamp(40px,4vw,64px)] max-lg:grid-cols-1 max-sm:w-[calc(100%_-_24px)] max-sm:gap-4 max-sm:pb-6 max-sm:pt-4">
         <div>
           <p className="eyebrow m-0 text-[11px] font-black tracking-[0.16em] text-city-500 max-sm:text-[10px]">把答案串成真正记得住的知识</p>
           <h1 className="mb-4 mt-3 max-w-[900px] font-serif text-display font-black tracking-[-0.03em] max-sm:my-3 max-sm:text-display-mobile">先理解，再挑战。<br /><span className="text-scholar-500">让每个答案都有位置。</span></h1>

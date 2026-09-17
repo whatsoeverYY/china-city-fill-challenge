@@ -31,7 +31,7 @@ export default function GauntletRoundHeader() {
   const activeConfig = GAUNTLET_LEVEL_BY_ID.get(s.level) ?? null;
   const displayNumber = gauntletLevelNumber(s.level);
   return (
-    <section className="gauntlet-round-heading grid grid-cols-[1fr_auto] items-end gap-8 px-1 pb-5 pt-9 max-lg:grid-cols-1 max-lg:gap-2 max-md:pt-5">
+    <section className="gauntlet-round-heading grid grid-cols-[1fr_auto] items-end gap-8 px-1 pb-5 pt-9 max-lg:grid-cols-1 max-lg:gap-2 max-md:pt-4">
       <div>
         <p className="eyebrow mb-2 mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500">第 {displayNumber} 关 · {activeConfig?.title}</p>
         <h1 className="m-0 font-serif text-page font-bold max-md:text-page-mobile">{GAUNTLET_ROUND_HEADINGS[s.level]}</h1>

@@ -106,7 +106,6 @@ export function useCityChallengeControls(options: Options) {
         ? `已切换到以${province.shortName}为起点的邻省连城挑战`
         : `已切换回${province.shortName}单省挑战`
       : nationalChallengeMessage(hardMode, next));
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const resetProvince = () => {

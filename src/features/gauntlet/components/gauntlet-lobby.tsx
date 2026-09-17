@@ -27,7 +27,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
 
   return (
     <>
-      <section className="gauntlet-intro px-1 pb-7 pt-[52px] max-sm:pb-5 max-sm:pt-7">
+      <section className="gauntlet-intro px-1 pb-7 pt-[52px] max-sm:pb-5 max-sm:pt-5">
         <p className="eyebrow mb-3 mt-0 text-[11px] font-extrabold tracking-[0.24em] text-city-500 max-sm:text-[10px]">过关斩将 · 全关卡试炼</p>
         <h1 className="mb-3 mt-0 max-w-[850px] font-serif text-page font-bold tracking-[-0.025em] max-sm:text-page-mobile">从轮廓到终极混战，<span className="text-city-500">把中国地理练成直觉</span></h1>
         <p className="lede m-0 max-w-[850px] text-body text-ink-soft max-sm:text-body-mobile">
