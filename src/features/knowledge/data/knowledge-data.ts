@@ -71,8 +71,8 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     id: "neighbors",
     icon: "邻",
     title: "陆地邻省关系",
-    subtitle: "点一个省，看它的邻省像星座一样围成一圈",
-    memoryStyle: "星图联想",
+    subtitle: "点一个省，在局部地图上看清真实接壤与方位",
+    memoryStyle: "邻接地图",
     levelRefs: [
       GAUNTLET_LEVEL_ID.PROVINCE_NEIGHBORS,
       GAUNTLET_LEVEL_ID.NEIGHBOR_CHAIN,

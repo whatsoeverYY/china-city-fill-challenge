@@ -324,6 +324,36 @@ test("presentation colors follow stable ids instead of labels or positions", asy
   assert.ok(knowledgeData.includes('tone: "purple"'));
 });
 
+test("neighbor knowledge renders only the selected province cluster", async () => {
+  const knowledgeBase = await source(
+    "src/features/knowledge/knowledge-base.tsx",
+  );
+  const neighborMap = await source(
+    "src/features/knowledge/components/province-neighbor-map.tsx",
+  );
+
+  assert.ok(knowledgeBase.includes("<ProvinceNeighborMap"));
+  assert.ok(knowledgeBase.includes('aria-label="选择中心省份"'));
+  assert.ok(knowledgeBase.includes("max-sm:hidden"));
+  assert.ok(neighborMap.includes("new Set([centerProvince.code, ...neighborCodes])"));
+  assert.ok(neighborMap.includes("visibleCodes.has(province.code)"));
+  assert.ok(neighborMap.includes("focusProvinceFeature(feature)"));
+  assert.ok(neighborMap.includes("makeProjection(features)"));
+  assert.ok(!neighborMap.includes("nationalMap.features.map"));
+  assertSourceContainsAll(
+    neighborMap,
+    [
+      "knowledge-neighbor-map",
+      "max-sm:min-h-[300px]",
+      "MAP_COLORS.neighborCenterFill",
+      "MAP_COLORS.neighborFill",
+      "onSelectProvince(province.code)",
+      'role="group"',
+    ],
+    "邻省知识局部地图",
+  );
+});
+
 test("project colors use named Tailwind palettes", async () => {
   const tailwindConfig = await source("tailwind.config.ts");
   const globals = await source("src/app/globals.css");

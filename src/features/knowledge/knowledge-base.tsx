@@ -14,6 +14,7 @@ import { PROVINCE_CITY_COUNT_DATA } from "@/domain/geography/data/province-city-
 import CityPlatePanel from "@/features/knowledge/components/city-plate-panel";
 import KnowledgeCatalog from "@/features/knowledge/components/knowledge-catalog";
 import KnowledgeSearchEmpty from "@/features/knowledge/components/knowledge-search-empty";
+import ProvinceNeighborMap from "@/features/knowledge/components/province-neighbor-map";
 import ProvinceProfilePanel from "@/features/knowledge/components/province-profile-panel";
 import UniversityPanel from "@/features/knowledge/components/university-panel";
 import { matchesSearch, plainPlaceName } from "@/features/knowledge/model/knowledge-format";
@@ -97,7 +98,17 @@ export default function KnowledgeBase({
         <div className="knowledge-neighbor-layout grid min-h-[650px] grid-cols-[260px_minmax(0,1fr)] overflow-hidden rounded-[22px] border border-jade-500/20 bg-paper-100/85 max-lg:grid-cols-1">
           <aside className="border-r border-jade-500/15 bg-jade-200 px-5 py-6 max-lg:border-b max-lg:border-r-0">
             <p className="mb-3.5 mt-0 text-meta font-black tracking-[.1em] text-moss-500">选择中心省份</p>
-            <div className="knowledge-province-selector grid grid-cols-3 gap-1.5 max-lg:grid-cols-6 max-sm:grid-cols-4">
+            <select
+              className="block min-h-11 w-full rounded-xl border border-jade-500/25 bg-paper-100 px-3 text-compact font-bold text-ink sm:hidden"
+              aria-label="选择中心省份"
+              value={selectedNeighborProvince?.code}
+              onChange={(event) => setSelectedNeighborCode(event.target.value)}
+            >
+              {provinces.map((province) => (
+                <option key={province.code} value={province.code}>{province.name}</option>
+              ))}
+            </select>
+            <div className="knowledge-province-selector grid grid-cols-3 gap-1.5 max-lg:grid-cols-6 max-sm:hidden">
               {provinces.map((province) => (
                 <button
                   key={province.code}
@@ -110,35 +121,15 @@ export default function KnowledgeBase({
               ))}
             </div>
           </aside>
-          <section className="knowledge-neighbor-stage grid place-content-center place-items-center gap-[34px] [background-image:radial-gradient(circle_at_center,rgba(45,125,95,.1),transparent_20rem),linear-gradient(rgba(53,66,56,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(53,66,56,.025)_1px,transparent_1px)] [background-size:auto,25px_25px,25px_25px] p-10 max-md:p-6">
-            <div className="neighbor-orbit grid w-[min(740px,100%)] place-items-center gap-[30px]" aria-label={`${selectedNeighborProvince?.name}的陆地邻省`}>
-              <article className="neighbor-center grid size-[155px] place-content-center place-items-center rounded-[50%_50%_50%_20%] border-[5px] border-double border-white/45 bg-jade-500 text-center text-white shadow-[0_20px_40px_rgba(23,84,62,.2)]">
-                <span className="font-serif text-sm opacity-70">{provincePlatePrefixes[selectedNeighborProvince?.code]}</span>
-                <h3 className="my-1 font-serif text-section">{selectedNeighborProvince?.shortName}</h3>
-                <p className="m-0 text-meta opacity-80">{plainPlaceName(provinceCapitals[selectedNeighborProvince?.code])}</p>
-              </article>
-              <div className="neighbor-satellites flex flex-wrap justify-center gap-[9px]">
-                {selectedNeighborCodes.length > 0 ? selectedNeighborCodes.map((code, index) => {
-                  const neighbor = provinceByCode.get(code);
-                  if (!neighbor) return null;
-                  return (
-                    <button
-                      key={code}
-                      className="grid min-w-[105px] grid-cols-[auto_1fr] items-center gap-x-2 gap-y-[3px] rounded-[11px] border border-jade-500/25 bg-paper-100/90 px-[11px] py-[9px] text-left transition hover:-translate-y-0.5 hover:border-jade-500"
-                      type="button"
-                      onClick={() => setSelectedNeighborCode(code)}
-                    >
-                      <span className="row-span-2 grid size-[22px] place-items-center rounded-full bg-jade-300 font-numeric text-meta text-jade-700">{index + 1}</span>
-                      <strong className="text-[11px]">{neighbor.shortName}</strong>
-                      <small className="text-meta text-stone-500">{plainPlaceName(provinceCapitals[code])}</small>
-                    </button>
-                  );
-                }) : (
-                  <p className="knowledge-empty-note text-sm text-ink-soft">没有陆地相邻的省级行政区</p>
-                )}
-              </div>
-            </div>
-            <div className="knowledge-neighbor-mnemonic flex w-[min(600px,100%)] items-center gap-[13px] rounded-[13px] border border-jade-500/20 bg-jade-200/90 px-[18px] py-3.5">
+          <section className="knowledge-neighbor-stage grid content-center place-items-center gap-6 [background-image:radial-gradient(circle_at_center,rgba(45,125,95,.1),transparent_20rem),linear-gradient(rgba(53,66,56,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(53,66,56,.025)_1px,transparent_1px)] [background-size:auto,25px_25px,25px_25px] p-8 max-md:p-4">
+            {selectedNeighborProvince ? (
+              <ProvinceNeighborMap
+                centerProvince={selectedNeighborProvince}
+                neighborCodes={selectedNeighborCodes}
+                onSelectProvince={setSelectedNeighborCode}
+              />
+            ) : null}
+            <div className="knowledge-neighbor-mnemonic flex w-full max-w-[600px] items-center gap-[13px] rounded-[13px] border border-jade-500/20 bg-jade-200/90 px-[18px] py-3.5">
               <span className="grid size-9 place-items-center rounded-full bg-jade-500 font-serif text-white">围</span>
               <p className="m-0 grid gap-1 text-meta text-ink-600">
                 <strong className="text-[11px] text-jade-700">{selectedNeighborProvince?.shortName}有 {selectedNeighborCodes.length} 个陆地邻省</strong>
