@@ -209,6 +209,7 @@ test("major modules keep intentional mobile layouts", async () => {
       "max-md:w-screen",
       "max-sm:flex-col",
       "max-sm:rounded-xl",
+      "font-sans text-[10px] font-bold leading-none tracking-normal",
     ],
     "首页移动操作区",
   );
