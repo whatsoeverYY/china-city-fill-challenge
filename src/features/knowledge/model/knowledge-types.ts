@@ -6,12 +6,11 @@ export type KnowledgeProvince = {
 };
 
 export type KnowledgeBaseProps = {
+  categoryId: import("@/features/knowledge/data/knowledge-data").KnowledgeCategoryId | null;
   provinces: KnowledgeProvince[];
   provinceCapitals: Record<string, string>;
   provinceNeighbors: Record<string, string[]>;
   provincePlatePrefixes: Record<string, string>;
   provinceGroups: ProvinceGroup[];
-  onExit: () => void;
-  onOpenAtlas: () => void;
 };
 import type { ProvinceGroup } from "@/domain/geography/data/geographic-groups";

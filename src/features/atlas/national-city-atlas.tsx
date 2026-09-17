@@ -26,17 +26,17 @@ import {
   createProvinceFillColors,
 } from "@/features/atlas/model/atlas-drawings";
 import { DESKTOP_ATLAS_VIEW, initialAtlasView } from "@/features/atlas/model/atlas-view";
+import PageBreadcrumbs from "@/shared/components/page-breadcrumbs";
+import { routePath } from "@/shared/lib/app-path";
 
 export default function NationalCityAtlas({
   map,
   nationalMap,
   error,
-  onExit,
 }: {
   map: MapData | null;
   nationalMap: MapData | null;
   error: boolean;
-  onExit: () => void;
 }) {
   const [view, setView] = useState<AtlasView>(DESKTOP_ATLAS_VIEW);
   const [dragging, setDragging] = useState(false);
@@ -284,22 +284,23 @@ export default function NationalCityAtlas({
 
   return (
     <main className="city-atlas-shell fixed inset-0 z-[1500] grid h-dvh w-screen grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-paper-600 text-ink">
-      <header className="city-atlas-header z-[3] grid min-h-[82px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-7 border-b border-black/[.16] bg-card/95 px-[22px] py-3 shadow-[0_7px_25px_rgba(57,46,31,.08)] max-lg:gap-4 max-md:min-h-[74px] max-md:grid-cols-[minmax(0,1fr)_auto] max-md:px-[13px] max-md:py-2.5">
+      <header className="city-atlas-header z-[3] grid min-h-[82px] grid-cols-[minmax(0,1fr)_auto] items-center gap-7 border-b border-black/[.16] bg-card/95 px-[22px] py-3 shadow-[0_7px_25px_rgba(57,46,31,.08)] max-lg:gap-4 max-md:min-h-[74px] max-md:grid-cols-1 max-md:px-[13px] max-md:py-2.5">
         <div className="city-atlas-title flex items-center gap-3">
           <span className="grid size-11 place-items-center rounded-[13px_13px_13px_4px] bg-atlas-500 font-serif text-[21px] font-black text-white max-md:size-[38px]" aria-hidden="true">图</span>
-          <div>
-            <p className="m-0 text-meta font-extrabold tracking-[0.12em] text-ink-500 max-sm:hidden">可缩放全国城市参考地图</p>
-            <h1 className="m-0 font-serif text-section max-sm:text-card-title-mobile">全国车牌图鉴</h1>
-          </div>
+          <PageBreadcrumbs
+            className="max-w-[min(700px,60vw)] max-md:max-w-[calc(100vw_-_82px)]"
+            items={[
+              { label: "首页", href: routePath("/") },
+              { label: "全国车牌图鉴", mobileLabel: "车牌图鉴" },
+            ]}
+          />
+          <h1 className="sr-only">全国车牌图鉴</h1>
         </div>
         <div className="city-atlas-summary flex justify-center gap-[clamp(12px,3vw,42px)] text-[10px] font-extrabold tracking-wide text-ink-600 max-lg:gap-3 max-md:hidden" aria-label="图鉴数据范围">
           <span className="whitespace-nowrap"><strong className="mr-[3px] font-numeric text-lg text-city-500">{PROVINCES.length}</strong> 省级行政区</span>
           <span className="whitespace-nowrap"><strong className="mr-[3px] font-numeric text-lg text-city-500">{map?.features.length ?? "…"}</strong> 市级 / 区县区块</span>
           <span className="whitespace-nowrap"><strong className="mr-[3px] font-numeric text-lg text-city-500">{CITY_PLATE_PREFIX_COUNT}</strong> 个区域车牌前缀</span>
         </div>
-        <button className="city-atlas-exit min-h-10 cursor-pointer rounded-full border-0 bg-city-900 px-[15px] py-2.5 text-compact font-black text-white hover:bg-city-500 max-md:min-h-11 max-sm:px-2.5 max-sm:text-meta" type="button" onClick={onExit}>
-          <span aria-hidden="true">←</span> 返回挑战首页
-        </button>
       </header>
 
       <section className="city-atlas-workspace relative min-h-0 overflow-hidden">

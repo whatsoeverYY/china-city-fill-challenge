@@ -8,6 +8,7 @@ import {
   STORAGE_KEY,
   type ProgressStorage,
 } from "@/infrastructure/storage/progress-storage";
+import { challengeSettingsFromSearch } from "@/features/city-challenge/config/city-challenge-routes";
 
 export function nationalChallengeMessage(
   hardMode: boolean,
@@ -21,9 +22,11 @@ export function nationalChallengeMessage(
 export function useCityProgress(
   progressStorage: ProgressStorage,
   setMessage: (message: string) => void,
+  routeControlsSettings: boolean,
 ) {
   const [hardMode, setHardMode] = useState(false);
   const [neighborMode, setNeighborMode] = useState(false);
+  const [progressReady, setProgressReady] = useState(false);
   const [completedProvinceCodes, setCompletedProvinceCodes] = useState<Set<string>>(
     new Set(),
   );
@@ -41,17 +44,27 @@ export function useCityProgress(
         const saved = JSON.parse(
           progressStorage.getItem(STORAGE_KEY) ?? "{}",
         ) as Record<string, string[]>;
-        const savedHardMode = progressStorage.getItem(HARD_MODE_KEY) === "true";
-        const savedNeighborMode =
-          progressStorage.getItem(NEIGHBOR_MODE_KEY) === "true";
+        const savedSettings = {
+          hardMode: progressStorage.getItem(HARD_MODE_KEY) === "true",
+          neighborMode: progressStorage.getItem(NEIGHBOR_MODE_KEY) === "true",
+        };
+        const activeSettings = challengeSettingsFromSearch(
+          window.location.search,
+          routeControlsSettings
+            ? { hardMode: false, neighborMode: false }
+            : savedSettings,
+        );
         const savedNeighborProgress = JSON.parse(
           progressStorage.getItem(NEIGHBOR_PROGRESS_KEY) ?? "{}",
         ) as Record<string, string[]>;
         progressRef.current = saved;
         neighborProgressRef.current = savedNeighborProgress;
-        setHardMode(savedHardMode);
-        setNeighborMode(savedNeighborMode);
-        setMessage(nationalChallengeMessage(savedHardMode, savedNeighborMode));
+        setHardMode(activeSettings.hardMode);
+        setNeighborMode(activeSettings.neighborMode);
+        setMessage(nationalChallengeMessage(
+          activeSettings.hardMode,
+          activeSettings.neighborMode,
+        ));
         setCompletedProvinceCodes(
           new Set(
             PROVINCES.filter(
@@ -70,12 +83,14 @@ export function useCityProgress(
       } catch {
         progressRef.current = {};
         neighborProgressRef.current = {};
+      } finally {
+        setProgressReady(true);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [progressStorage, setMessage]);
+  }, [progressStorage, routeControlsSettings, setMessage]);
 
   const saveProgress = useCallback(
     (code: string, regionIds: Set<string>, complete: boolean, joined: boolean) => {
@@ -98,6 +113,7 @@ export function useCityProgress(
     neighborMode,
     neighborProgressRef,
     progressRef,
+    progressReady,
     saveProgress,
     setCompletedNeighborCodes,
     setCompletedProvinceCodes,

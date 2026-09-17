@@ -11,9 +11,9 @@ import {
 } from "@/features/knowledge/config/knowledge-catalog-config";
 import {
   KNOWLEDGE_CATEGORIES,
-  type KnowledgeCategoryId,
   type KnowledgeTone,
 } from "@/features/knowledge/data/knowledge-data";
+import { knowledgeCategoryPath } from "@/features/knowledge/config/knowledge-routes";
 
 const KNOWLEDGE_TONE_CLASSES: Record<KnowledgeTone, {
   accent: string;
@@ -47,17 +47,13 @@ const KNOWLEDGE_TONE_CLASSES: Record<KnowledgeTone, {
   },
 };
 
-export default function KnowledgeCatalog({
-  onOpenCategory,
-}: {
-  onOpenCategory: (categoryId: KnowledgeCategoryId) => void;
-}) {
+export default function KnowledgeCatalog() {
   return (
     <>
       <section className="knowledge-home-hero mx-auto grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[minmax(0,1.55fr)_minmax(280px,.45fr)] items-end gap-[clamp(32px,4vw,60px)] pb-11 pt-[clamp(40px,4vw,64px)] max-lg:grid-cols-1 max-sm:w-[calc(100%_-_24px)] max-sm:gap-4 max-sm:pb-6 max-sm:pt-7">
         <div>
           <p className="eyebrow m-0 text-[11px] font-black tracking-[0.16em] text-city-500 max-sm:text-[10px]">把答案串成真正记得住的知识</p>
-          <h2 className="mb-4 mt-3 max-w-[900px] font-serif text-display font-black tracking-[-0.03em] max-sm:my-3 max-sm:text-display-mobile">先理解，再挑战。<br /><span className="text-scholar-500">让每个答案都有位置。</span></h2>
+          <h1 className="mb-4 mt-3 max-w-[900px] font-serif text-display font-black tracking-[-0.03em] max-sm:my-3 max-sm:text-display-mobile">先理解，再挑战。<br /><span className="text-scholar-500">让每个答案都有位置。</span></h1>
           <p className="m-0 max-w-[780px] text-body text-ink-600 max-sm:text-body-mobile">
             覆盖全部关卡会用到的省份、城市、车牌、名校、邻省和疆域知识，并加入长江黄河、易混城市与读图方法。
           </p>
@@ -96,11 +92,10 @@ export default function KnowledgeCatalog({
         </div>
         <div className="knowledge-category-grid grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
           {KNOWLEDGE_CATEGORIES.map((category, index) => (
-            <button
-              className={`knowledge-category-card relative grid min-h-[220px] cursor-pointer grid-cols-[58px_minmax(0,1fr)] content-start gap-5 overflow-hidden rounded-[20px_20px_20px_7px] border p-[22px] text-left shadow-[0_15px_35px_rgba(59,48,34,.06)] transition hover:-translate-y-1 max-sm:min-h-0 max-sm:grid-cols-[44px_minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-3 max-sm:rounded-[15px_15px_15px_5px] max-sm:p-3 ${KNOWLEDGE_TONE_CLASSES[category.tone].card}`}
+            <a
+              className={`knowledge-category-card relative grid min-h-[220px] cursor-pointer grid-cols-[58px_minmax(0,1fr)] content-start gap-5 overflow-hidden rounded-[20px_20px_20px_7px] border p-[22px] text-left text-ink no-underline shadow-[0_15px_35px_rgba(59,48,34,.06)] transition hover:-translate-y-1 max-sm:min-h-0 max-sm:grid-cols-[44px_minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-3 max-sm:rounded-[15px_15px_15px_5px] max-sm:p-3 ${KNOWLEDGE_TONE_CLASSES[category.tone].card}`}
+              href={knowledgeCategoryPath(category.id)}
               key={category.id}
-              type="button"
-              onClick={() => onOpenCategory(category.id)}
             >
               <span className={`knowledge-category-number absolute right-[18px] top-[17px] font-numeric text-sm font-bold opacity-30 max-sm:hidden ${KNOWLEDGE_TONE_CLASSES[category.tone].accent}`}>
                 {String(index + 1).padStart(2, "0")}
@@ -121,7 +116,7 @@ export default function KnowledgeCatalog({
                 </span>
                 <i className={`text-[19px] not-italic ${KNOWLEDGE_TONE_CLASSES[category.tone].accent}`}>→</i>
               </footer>
-            </button>
+            </a>
           ))}
         </div>
       </section>

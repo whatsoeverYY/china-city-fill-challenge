@@ -5,6 +5,7 @@ import ChallengeAnswerDock from "@/features/city-challenge/components/challenge-
 import ChallengeFooterAndOverlays from "@/features/city-challenge/components/challenge-footer-and-overlays";
 import ChallengeHeader from "@/features/city-challenge/components/challenge-header";
 import ChallengeMapPanel from "@/features/city-challenge/components/challenge-map-panel";
+import ChallengeSettings from "@/features/city-challenge/components/challenge-settings";
 import { provinceForFeature } from "@/features/map/lib/map-geometry";
 import {
   mapFeatureId,
@@ -15,7 +16,6 @@ import {
 import { usePlayerData } from "@/features/player/player-data-context";
 import { useCityProgress } from "@/features/city-challenge/model/use-city-progress";
 import { useCityMapView } from "@/features/city-challenge/model/use-city-map-view";
-import { MAP_COMPLETION_MARKER } from "@/infrastructure/storage/progress-storage";
 import { placeNameMatches } from "@/shared/lib/place-name";
 import { deterministicShuffle } from "@/shared/lib/random";
 import { WRONG_REGION_FEEDBACK_MS } from "@/features/city-challenge/config/city-challenge-config";
@@ -25,9 +25,14 @@ import type {
 } from "@/features/city-challenge/model/city-challenge-types";
 import { useCityChallengeControls } from "@/features/city-challenge/model/use-city-challenge-controls";
 import { createCityAnswers, normalizeStoredRegionIds } from "@/features/city-challenge/model/city-answer-model";
-export default function CityGame() {
+import { useCityChallengeNavigation } from "@/features/city-challenge/hooks/use-city-challenge-navigation";
+
+export default function CityGame({
+  initialProvinceCode = null,
+}: {
+  initialProvinceCode?: string | null;
+}) {
   const { identity, progressStorage, syncStatus } = usePlayerData();
-  const [province, setProvince] = useState<Province | null>(null);
   const [showAllProvinceNames, setShowAllProvinceNames] = useState(false);
   const [showAllCityNames, setShowAllCityNames] = useState(false);
   const [hiddenProvinceCodes, setHiddenProvinceCodes] = useState<Set<string>>(
@@ -45,12 +50,27 @@ export default function CityGame() {
     neighborMode,
     neighborProgressRef,
     progressRef,
+    progressReady,
     saveProgress,
     setCompletedNeighborCodes,
     setCompletedProvinceCodes,
     setHardMode,
     setNeighborMode,
-  } = useCityProgress(progressStorage, setMessage);
+  } = useCityProgress(
+    progressStorage,
+    setMessage,
+    initialProvinceCode !== null,
+  );
+  const { enterProvince, province } = useCityChallengeNavigation({
+    initialProvinceCode,
+    hardMode,
+    neighborMode,
+    progressReady,
+    neighborProgressRef,
+    progressRef,
+    setCompletedRegionIds,
+    setMessage,
+  });
   const [attempts, setAttempts] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [showAllProvinces, setShowAllProvinces] = useState(false);
@@ -107,38 +127,6 @@ export default function CityGame() {
   const activeCompletedProvinceCodes = neighborMode
     ? completedNeighborCodes
     : completedProvinceCodes;
-
-  const enterProvince = useCallback(
-    (nextProvince: Province) => {
-      setProvince(nextProvince);
-      const saved = (
-        neighborMode ? neighborProgressRef.current : progressRef.current
-      )[nextProvince.code] ?? [];
-      setCompletedRegionIds(
-        new Set(saved.filter((regionId) => regionId !== MAP_COMPLETION_MARKER)),
-      );
-      setSelectedAnswerId(null);
-      setHoveredFeature(null);
-      setWrongRegionId(null);
-      setShowAllCityNames(false);
-      setHiddenProvinceCodes(new Set());
-      setAttempts(0);
-      setMistakes(0);
-      setMessage(
-        hardMode
-          ? neighborMode
-            ? "邻省连城：点击联合地图区块并输入名称"
-            : "难度提升：点击地图区块并输入名称"
-          : neighborMode
-          ? `把${nextProvince.shortName}及所有邻省的城市名称送回正确位置`
-          : nextProvince.kind === "直辖市"
-          ? `把区县名称放到${nextProvince.shortName}地图上的正确位置`
-          : `把行政区名称放到${nextProvince.shortName}地图上的正确位置`,
-      );
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    },
-    [hardMode, neighborMode, neighborProgressRef, progressRef],
-  );
 
   useEffect(() => {
     if (!province || !detailMap) return;
@@ -274,7 +262,6 @@ export default function CityGame() {
   };
 
   const {
-    backToNational,
     resetProvince,
     toggleHardMode,
     toggleNeighborMode,
@@ -285,7 +272,7 @@ export default function CityGame() {
     setAttempts, setCompletedNeighborCodes, setCompletedProvinceCodes,
     setCompletedRegionIds, setHardMode, setHiddenProvinceCodes, setHoveredFeature,
     setManualAnswer, setManualError, setMessage, setMistakes, setNeighborMode,
-    setPendingFeature, setProvince, setSelectedAnswerId, setShowAllCityNames,
+    setPendingFeature, setSelectedAnswerId, setShowAllCityNames,
     setShowAllProvinceNames,
   });
 
@@ -302,7 +289,6 @@ export default function CityGame() {
   const mapError = province ? detailError : nationalError;
   const activeMap = province ? detailMap : nationalMap;
   const accuracy = attempts === 0 ? 100 : Math.round(((attempts - mistakes) / attempts) * 100);
-
   return (
     <main className="game-shell mx-auto min-h-dvh w-[min(1460px,calc(100%_-_48px))] pb-10 pt-7 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pb-24 max-md:pt-[15px]">
       <ChallengeHeader
@@ -312,7 +298,11 @@ export default function CityGame() {
         completedProvinceCodes={activeCompletedProvinceCodes}
         challengeProvinces={challengeProvinces}
         answerCount={answers.length}
-        onBack={backToNational}
+      />
+
+      <ChallengeSettings
+        neighborMode={neighborMode}
+        hardMode={hardMode}
         onToggleNeighborMode={toggleNeighborMode}
         onToggleHardMode={toggleHardMode}
       />
@@ -347,7 +337,6 @@ export default function CityGame() {
         answerCount={answers.length}
         accuracy={accuracy}
         message={message}
-        onBack={backToNational}
         onReset={resetProvince}
         onToggleProvinceVisibility={toggleProvinceVisibility}
         onMapRegion={handleMapRegion}

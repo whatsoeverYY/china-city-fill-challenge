@@ -29,12 +29,17 @@ src/
 | URL | 路由文件 | 功能入口 |
 | --- | --- | --- |
 | `/` | `src/app/page.tsx` | `features/city-challenge/game-root.tsx` |
+| `/city-fill/[provinceCode]` | `src/app/city-fill/[provinceCode]/page.tsx` | 省内填图独立页，使用行政区划代码作为稳定路由参数 |
 | `/atlas` | `src/app/atlas/page.tsx` | `features/atlas/atlas-route.tsx` |
 | `/gauntlet` | `src/app/gauntlet/page.tsx` | `features/gauntlet/gauntlet-route.tsx` |
+| `/gauntlet/[levelId]` | `src/app/gauntlet/[levelId]/page.tsx` | 单关卡独立页，使用稳定英文关卡 ID |
 | `/knowledge` | `src/app/knowledge/page.tsx` | `features/knowledge/knowledge-route.tsx` |
+| `/knowledge/[categoryId]` | `src/app/knowledge/[categoryId]/page.tsx` | 单知识专题独立页，使用稳定英文专题 ID |
 | `/admin` | `src/app/admin/page.tsx` | `features/admin/admin-dashboard.tsx` |
 
 地理主数据与跨模块使用的城市车牌数据位于 `src/domain/geography/data/`，关卡 ID、关卡目录与错题规则位于 `src/domain/game/`。仅供单个功能使用的题库才放在对应 feature 的 `data/` 目录。
+
+多层页面统一在左上角使用 `shared/components/page-breadcrumbs.tsx`，不在页头右侧重复放置返回按钮。省内填图的挑战范围和作答方式通过查询参数表达，路由生成统一经过各 feature 的 `config/*-routes.ts`，并最终调用 `shared/lib/app-path.ts` 兼容站点根路径与 GitHub Pages base path。
 
 ## 编码约定
 

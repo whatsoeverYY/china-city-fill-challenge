@@ -4,17 +4,17 @@ import { getProvinceAdministrativeProfile } from "@/domain/geography/data/provin
 import { PROVINCE_CITY_COUNT_DATA } from "@/domain/geography/data/province-city-counts";
 import { UNIVERSITY_QUIZ_DATA } from "@/domain/geography/data/universities";
 import { PROFILE_BATCH_SIZE } from "@/features/knowledge/config/knowledge-catalog-config";
-import { KNOWLEDGE_CATEGORIES, type KnowledgeCategoryId } from "@/features/knowledge/data/knowledge-data";
+import { KNOWLEDGE_CATEGORIES } from "@/features/knowledge/data/knowledge-data";
 import { compactSearch, matchesSearch } from "@/features/knowledge/model/knowledge-format";
 import type { KnowledgeBaseProps } from "@/features/knowledge/model/knowledge-types";
 
 export const DEFAULT_NEIGHBOR_PROVINCE_CODE = "410000";
 
 export function useKnowledgeCatalog({
+  categoryId,
   provinces,
   provinceNeighbors,
-}: Pick<KnowledgeBaseProps, "provinces" | "provinceNeighbors">) {
-  const [activeCategoryId, setActiveCategoryId] = useState<KnowledgeCategoryId | null>(null);
+}: Pick<KnowledgeBaseProps, "categoryId" | "provinces" | "provinceNeighbors">) {
   const [query, setQuery] = useState("");
   const [selectedProvinceCodes, setSelectedProvinceCodes] = useState<Set<string>>(
     () => new Set(),
@@ -53,7 +53,7 @@ export function useKnowledgeCatalog({
     return result;
   }, []);
   const activeCategory = KNOWLEDGE_CATEGORIES.find(
-    (category) => category.id === activeCategoryId,
+    (category) => category.id === categoryId,
   );
   const normalizedQuery = compactSearch(query);
 
@@ -62,17 +62,6 @@ export function useKnowledgeCatalog({
     setSelectedProvinceCodes(new Set());
     setVisibleProfileCount(PROFILE_BATCH_SIZE);
   };
-  const openCategory = (categoryId: KnowledgeCategoryId) => {
-    setActiveCategoryId(categoryId);
-    clearProvinceFilters();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const backToCatalog = () => {
-    setActiveCategoryId(null);
-    clearProvinceFilters();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const filteredProvinces = provinces.filter(
     (province) => matchesSearch(normalizedQuery, province.name, province.shortName) &&
       (selectedProvinceCodes.size === 0 || selectedProvinceCodes.has(province.code)),
@@ -111,9 +100,9 @@ export function useKnowledgeCatalog({
     : [];
 
   return {
-    activeCategory, activeCategoryId, administrativeProfileByCode, backToCatalog,
+    activeCategory, activeCategoryId: categoryId, administrativeProfileByCode,
     cityCountByCode, cityGroups, clearProvinceFilters, filteredProvinces,
-    hasActiveProvinceFilter, normalizedQuery, openCategory, provinceByCode,
+    hasActiveProvinceFilter, normalizedQuery, provinceByCode,
     query, quizCityCountByProvince, selectedNeighborCodes, selectedNeighborProvince,
     selectedProvinceCodes, setQuery, setSelectedNeighborCode, setVisibleProfileCount,
     toggleProvince, universityCountByProvince, universityGroups, visibleProfileProvinces,

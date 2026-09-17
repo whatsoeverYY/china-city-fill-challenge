@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { appPath } from "../../../shared/lib/app-path.ts";
 
 export type Position = [number, number];
 
@@ -80,7 +81,7 @@ function normalizeMap(data: MapData, code: string): MapData {
 }
 
 function mapDataUrl(code: string) {
-  return new URL(`data/maps/${code}.json`, document.baseURI).toString();
+  return new URL(appPath(`/data/maps/${code}.json`), document.baseURI).toString();
 }
 
 export function fetchMapData(code: string) {

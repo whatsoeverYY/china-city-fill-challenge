@@ -10,11 +10,13 @@ async function source(relativePath) {
 
 function staticClassValue(fileSource, semanticClass) {
   const escapedClass = semanticClass.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-  const pattern = new RegExp(
+  const match = fileSource.match(new RegExp(
     `className="([^"]*\\b${escapedClass}\\b[^"]*)"`,
     "u",
-  );
-  const match = fileSource.match(pattern);
+  )) ?? fileSource.match(new RegExp(
+    "className=\\{`([^`]*\\b" + escapedClass + "\\b[^`]*)`\\}",
+    "u",
+  ));
   assert.ok(match, `找不到 ${semanticClass} 的静态 className`);
   return match[1].split(/\s+/u);
 }
@@ -94,7 +96,7 @@ test("desktop visual foundations remain stable during refactors", async () => {
     [
       "grid",
       "min-h-[82px]",
-      "grid-cols-[auto_minmax(0,1fr)_auto]",
+      "grid-cols-[minmax(0,1fr)_auto]",
       "gap-7",
       "px-[22px]",
       "py-3",
@@ -170,6 +172,9 @@ test("major modules keep intentional mobile layouts", async () => {
   const challengeHeader = await source(
     "src/features/city-challenge/components/challenge-header.tsx",
   );
+  const challengeSettings = await source(
+    "src/features/city-challenge/components/challenge-settings.tsx",
+  );
   const atlas = await source("src/features/atlas/national-city-atlas.tsx");
   const gauntletScreen = await source(
     "src/features/gauntlet/components/gauntlet-screen.tsx",
@@ -191,11 +196,22 @@ test("major modules keep intentional mobile layouts", async () => {
     challengeHeader,
     [
       "max-md:grid",
-      'province ? "max-md:grid-cols-2" : "max-md:grid-cols-5"',
+      "max-md:grid-cols-2",
+      "atlas-mode-button",
+      "max-md:hidden",
       "max-sm:flex-col",
       "max-sm:rounded-xl",
     ],
     "首页移动操作区",
+  );
+  assertTokens(
+    staticClassValue(challengeSettings, "challenge-settings"),
+    [
+      "grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)]",
+      "max-[820px]:grid-cols-[auto_minmax(0,1fr)]",
+      "max-sm:px-3",
+    ],
+    "省内挑战设置",
   );
   assertTokens(
     staticClassValue(atlas, "city-atlas-summary"),
@@ -218,9 +234,14 @@ test("major modules keep intentional mobile layouts", async () => {
     "闯关移动外壳",
   );
   assertTokens(
-    staticClassValue(gauntletScreen, "gauntlet-mobile-nav"),
-    ["hidden", "max-md:grid", "grid-cols-[82px_minmax(0,1fr)_82px]"],
-    "闯关移动导航",
+    staticClassValue(gauntletScreen, "gauntlet-header"),
+    ["max-md:sticky", "max-md:top-0", "max-md:min-h-14", "max-md:bg-card/95"],
+    "闯关移动面包屑头部",
+  );
+  assertSourceContainsAll(
+    gauntletScreen,
+    ["PageBreadcrumbs", '{ label: "首页"', '{ label: "过关斩将"'],
+    "闯关页面面包屑",
   );
   assertTokens(
     staticClassValue(knowledgeCatalog, "knowledge-home-hero"),

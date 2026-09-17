@@ -5,11 +5,13 @@ import type { CityAnswer } from "@/features/city-challenge/model/city-challenge-
 import { nationalChallengeMessage } from "@/features/city-challenge/model/use-city-progress";
 import {
   HARD_MODE_KEY,
+  MAP_COMPLETION_MARKER,
   NEIGHBOR_MODE_KEY,
   NEIGHBOR_PROGRESS_KEY,
   STORAGE_KEY,
   type ProgressStorage,
 } from "@/infrastructure/storage/progress-storage";
+import { replaceChallengeSettingsInUrl } from "@/features/city-challenge/config/city-challenge-routes";
 
 type Options = {
   answerById: Map<string, CityAnswer>;
@@ -35,7 +37,6 @@ type Options = {
   setMistakes: Dispatch<SetStateAction<number>>;
   setNeighborMode: Dispatch<SetStateAction<boolean>>;
   setPendingFeature: Dispatch<SetStateAction<MapFeature | null>>;
-  setProvince: Dispatch<SetStateAction<Province | null>>;
   setSelectedAnswerId: Dispatch<SetStateAction<string | null>>;
   setShowAllCityNames: Dispatch<SetStateAction<boolean>>;
   setShowAllProvinceNames: Dispatch<SetStateAction<boolean>>;
@@ -48,26 +49,19 @@ export function useCityChallengeControls(options: Options) {
     setAttempts, setCompletedNeighborCodes, setCompletedProvinceCodes,
     setCompletedRegionIds, setHardMode, setHiddenProvinceCodes, setHoveredFeature,
     setManualAnswer, setManualError, setMessage, setMistakes, setNeighborMode,
-    setPendingFeature, setProvince, setSelectedAnswerId, setShowAllCityNames,
+    setPendingFeature, setSelectedAnswerId, setShowAllCityNames,
     setShowAllProvinceNames,
   } = options;
-
-  const clearProvinceView = () => {
-    setProvince(null);
-    setSelectedAnswerId(null);
-    setHoveredFeature(null);
-    setPendingFeature(null);
-    setManualAnswer("");
-    setManualError("");
-    setShowAllCityNames(false);
-    setHiddenProvinceCodes(new Set());
-  };
 
   const toggleHardMode = () => {
     const next = !hardMode;
     setHardMode(next);
     if (next) setShowAllProvinceNames(false);
     progressStorage.setItem(HARD_MODE_KEY, String(next));
+    replaceChallengeSettingsInUrl(province?.code ?? null, {
+      hardMode: next,
+      neighborMode,
+    });
     setPendingFeature(null);
     setManualAnswer("");
     setManualError("");
@@ -88,11 +82,30 @@ export function useCityChallengeControls(options: Options) {
     const next = !neighborMode;
     setNeighborMode(next);
     progressStorage.setItem(NEIGHBOR_MODE_KEY, String(next));
-    clearProvinceView();
-    setCompletedRegionIds(new Set());
+    replaceChallengeSettingsInUrl(province?.code ?? null, {
+      hardMode,
+      neighborMode: next,
+    });
+    setSelectedAnswerId(null);
+    setHoveredFeature(null);
+    setPendingFeature(null);
+    setManualAnswer("");
+    setManualError("");
+    setShowAllCityNames(false);
+    setHiddenProvinceCodes(new Set());
+    const saved = province
+      ? (next ? neighborProgressRef.current : progressRef.current)[province.code] ?? []
+      : [];
+    setCompletedRegionIds(new Set(
+      saved.filter((regionId) => regionId !== MAP_COMPLETION_MARKER),
+    ));
     setAttempts(0);
     setMistakes(0);
-    setMessage(nationalChallengeMessage(hardMode, next));
+    setMessage(province
+      ? next
+        ? `已切换到以${province.shortName}为起点的邻省连城挑战`
+        : `已切换回${province.shortName}单省挑战`
+      : nationalChallengeMessage(hardMode, next));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -126,12 +139,6 @@ export function useCityChallengeControls(options: Options) {
       : `已重置${province.shortName}，重新开始吧`);
   };
 
-  const backToNational = () => {
-    clearProvinceView();
-    setMessage(nationalChallengeMessage(hardMode, neighborMode));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const toggleProvinceVisibility = (item: Province) => {
     const isHidden = hiddenProvinceCodes.has(item.code);
     if (!isHidden && challengeCodes.length - hiddenProvinceCodes.size <= 1) {
@@ -154,7 +161,6 @@ export function useCityChallengeControls(options: Options) {
   };
 
   return {
-    backToNational,
     resetProvince,
     toggleHardMode,
     toggleNeighborMode,

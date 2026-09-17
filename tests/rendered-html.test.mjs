@@ -33,3 +33,20 @@ test("server-renders the protected administrator route", async () => {
   assert.match(html, /管理员后台｜中国城市填充挑战/);
   assert.match(html, /正在确认管理员身份|请先登录管理员账号/);
 });
+
+test("server-renders independently addressable nested routes", async () => {
+  const cases = [
+    ["/city-fill/440000", /广东城市填图｜中国城市填充挑战/, /广东城市填图/],
+    ["/gauntlet/province-shape", /辨形识省｜过关斩将｜中国城市填充挑战/, /第 1 关/],
+    ["/knowledge/province-profile", /省份全景名片｜地理知识馆｜中国城市填充挑战/, /省份全景名片/],
+  ];
+
+  for (const [path, title, content] of cases) {
+    const response = await render(path);
+    assert.equal(response.status, 200, `${path} should render successfully`);
+    const html = await response.text();
+    assert.match(html, title);
+    assert.match(html, content);
+    assert.match(html, /面包屑导航/);
+  }
+});

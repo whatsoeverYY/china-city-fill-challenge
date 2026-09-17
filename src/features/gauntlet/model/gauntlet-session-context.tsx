@@ -42,11 +42,9 @@ import { usePlayerData } from "@/features/player/player-data-context";
 function useGauntletSessionValue({
   nationalMap,
   nationalError,
-  onExit,
 }: {
   nationalMap: MapData | null;
   nationalError: boolean;
-  onExit: () => void;
 }) {
   const { identity, progressStorage } = usePlayerData();
   const [level, setLevel] = useState<GauntletLevel | null>(null);
@@ -120,7 +118,7 @@ function useGauntletSessionValue({
     confusableOrder, draftShapeProvinceCodes,
     dualIntruderOrder, feedback, feedbackType, groupOrder, identity, level,
     mapRegionOrder, mapSelections, mistakeOrder, mistakes, mistakeSessionTotal,
-    nationalError, nationalMap, onExit, passedLevel, plateAnswer,
+    nationalError, nationalMap, passedLevel, plateAnswer,
     plateCityMapFocusedProvinceCode, plateCityMapHistoryRef, plateFaultOrder,
     progressStorage, provinceAnswer, provinceChallengeOrder, provinceCityCountOrder,
     provinceInputRef, provinceOrder, provincePickerOpen, provinceScopeMessage,
@@ -154,7 +152,6 @@ export function GauntletSessionProvider({
   children: ReactNode;
   nationalMap: MapData | null;
   nationalError: boolean;
-  onExit: () => void;
 }) {
   return (
     <GauntletSessionContext.Provider value={useGauntletSessionValue(props)}>

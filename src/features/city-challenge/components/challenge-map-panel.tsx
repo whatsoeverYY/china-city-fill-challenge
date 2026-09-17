@@ -24,7 +24,6 @@ export default function ChallengeMapPanel({
   answerCount,
   accuracy,
   message,
-  onBack,
   onReset,
   onToggleProvinceVisibility,
   onMapRegion,
@@ -51,7 +50,6 @@ export default function ChallengeMapPanel({
   answerCount: number;
   accuracy: number;
   message: string;
-  onBack: () => void;
   onReset: () => void;
   onToggleProvinceVisibility: (province: Province) => void;
   onMapRegion: (feature: MapFeature, draggedAnswer?: string) => void;
@@ -64,9 +62,9 @@ export default function ChallengeMapPanel({
       <div className="map-toolbar grid min-h-[62px] grid-cols-[1fr_minmax(280px,1.4fr)_1fr] items-center border-b border-black/[.13] bg-paper-100/70 px-[23px] max-md:grid-cols-[1fr_auto] max-md:px-[15px]">
         <div>
           {province ? (
-            <button className="back-button inline-flex min-h-11 cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0 text-xs font-bold text-city-900" type="button" onClick={onBack}>
-              <span aria-hidden="true">←</span> 返回全国地图
-            </button>
+            <span className="map-step text-[11px] font-bold uppercase tracking-[0.12em] text-ink-500">
+              {neighborMode ? "联合区域地图" : `${province.shortName}行政区地图`}
+            </span>
           ) : (
             <span className="map-step text-[11px] font-bold uppercase tracking-[0.12em] text-ink-500">
               {hardMode

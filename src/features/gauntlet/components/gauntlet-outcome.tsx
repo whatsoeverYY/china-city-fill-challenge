@@ -14,6 +14,8 @@ import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
 import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-actions";
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
+import { gauntletLevelPath } from "@/features/gauntlet/config/gauntlet-routes";
+import { routePath } from "@/shared/lib/app-path";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -55,9 +57,9 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
           <button className="min-h-11 cursor-pointer rounded-full border-0 bg-city-500 px-5 py-2.5 text-compact font-black text-white" type="button" onClick={() => actions.startLevel(s.level!)}>
             重新挑战
           </button>
-          <button type="button" className="min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 py-2.5 text-compact font-black text-ink" onClick={actions.returnToLevels}>
+          <a className="inline-flex min-h-11 items-center rounded-full border-0 bg-ink/10 px-5 py-2.5 text-compact font-black text-ink no-underline" href={routePath("/gauntlet")}>
             返回选关
-          </button>
+          </a>
         </div>
       </section>
     );
@@ -75,9 +77,9 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
         : null}
       <div className="flex flex-wrap justify-center gap-2">
         {nextLevel ? (
-          <button className="min-h-11 cursor-pointer rounded-full border-0 bg-city-500 px-5 py-2.5 text-compact font-black text-white" type="button" onClick={() => actions.startLevel(nextLevel.id)}>
+          <a className="inline-flex min-h-11 items-center rounded-full border-0 bg-city-500 px-5 py-2.5 text-compact font-black text-white no-underline" href={gauntletLevelPath(nextLevel.id)}>
             挑战下一关
-          </button>
+          </a>
         ) : null}
         <button
           type="button"
@@ -86,9 +88,9 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
         >
           再来一次
         </button>
-        <button type="button" className="min-h-11 cursor-pointer rounded-full border-0 bg-ink/10 px-5 py-2.5 text-compact font-black text-ink" onClick={actions.returnToLevels}>
+        <a className="inline-flex min-h-11 items-center rounded-full border-0 bg-ink/10 px-5 py-2.5 text-compact font-black text-ink no-underline" href={routePath("/gauntlet")}>
           返回选关
-        </button>
+        </a>
       </div>
     </section>
   );

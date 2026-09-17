@@ -29,25 +29,26 @@ import {
   RIVER_TONE_CLASSES,
 } from "@/features/knowledge/config/knowledge-tone-style";
 import { useKnowledgeCatalog } from "@/features/knowledge/model/use-knowledge-catalog";
+import PageBreadcrumbs from "@/shared/components/page-breadcrumbs";
+import { routePath } from "@/shared/lib/app-path";
 
 
 export default function KnowledgeBase({
+  categoryId,
   provinces,
   provinceCapitals,
   provinceNeighbors,
   provincePlatePrefixes,
   provinceGroups,
-  onExit,
-  onOpenAtlas,
 }: KnowledgeBaseProps) {
   const {
-    activeCategory, activeCategoryId, administrativeProfileByCode, backToCatalog,
+    activeCategory, activeCategoryId, administrativeProfileByCode,
     cityCountByCode, cityGroups, clearProvinceFilters, filteredProvinces,
-    hasActiveProvinceFilter, normalizedQuery, openCategory, provinceByCode,
+    hasActiveProvinceFilter, normalizedQuery, provinceByCode,
     query, quizCityCountByProvince, selectedNeighborCodes, selectedNeighborProvince,
     selectedProvinceCodes, setQuery, setSelectedNeighborCode, setVisibleProfileCount,
     toggleProvince, universityCountByProvince, universityGroups, visibleProfileProvinces,
-  } = useKnowledgeCatalog({ provinces, provinceNeighbors });
+  } = useKnowledgeCatalog({ categoryId, provinces, provinceNeighbors });
 
   const renderDetailContent = () => {
     if (!activeCategoryId) return null;
@@ -83,7 +84,6 @@ export default function KnowledgeBase({
           query={query}
           provinceCapitals={provinceCapitals}
           provincePlatePrefixes={provincePlatePrefixes}
-          onOpenAtlas={onOpenAtlas}
         />
       );
     }
@@ -298,7 +298,7 @@ export default function KnowledgeBase({
           <span className="text-meta font-black tracking-[.14em]">读图五步法</span>
           <h3 className="my-4 font-serif text-section">大范围 → 小范围<br />位置 → 边界 → 路线</h3>
           <p className="m-0 text-compact opacity-85">地图题不是只靠死记轮廓。把观察顺序固定下来，陌生题也能用排除法解决。</p>
-          <button className="mt-6 min-h-10 cursor-pointer rounded-[10px] border-0 bg-gold-200 px-3.5 py-2 text-compact font-black text-gold-800 max-md:min-h-11" type="button" onClick={onOpenAtlas}>打开全国车牌图鉴练读图</button>
+          <a className="mt-6 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[10px] border-0 bg-gold-200 px-3.5 py-2 text-center text-compact font-black text-gold-800 no-underline max-md:hidden" href={routePath("/atlas")}>打开全国车牌图鉴练读图</a>
         </section>
         <ol className="knowledge-tip-list m-0 grid list-none gap-3 p-0">
           {MAP_READING_TIPS.map((tip, index) => (
@@ -320,30 +320,33 @@ export default function KnowledgeBase({
   return (
     <main className="knowledge-shell min-h-dvh bg-paper-400 [background-image:radial-gradient(circle_at_8%_5%,rgba(255,255,255,.96),transparent_27rem),radial-gradient(circle_at_90%_13%,rgba(110,78,128,.08),transparent_26rem),linear-gradient(rgba(53,66,56,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(53,66,56,.03)_1px,transparent_1px)] [background-size:auto,auto,30px_30px,30px_30px] text-ink">
       <header className="knowledge-header sticky top-0 z-40 flex min-h-[78px] items-center justify-between gap-6 border-b border-black/[.14] bg-card/95 px-[max(24px,calc((100vw_-_1380px)/2))] py-3 shadow-[0_8px_30px_rgba(58,47,32,.06)] backdrop-blur-xl max-sm:min-h-16 max-sm:gap-2 max-sm:px-3 max-sm:py-2">
-        <button className="knowledge-brand flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left" type="button" onClick={backToCatalog}>
+        <div className="knowledge-brand flex min-w-0 items-center gap-3 text-left">
           <span className="grid size-[46px] place-items-center rounded-[14px_14px_14px_5px] bg-scholar-500 font-serif text-[22px] font-black text-gold-100 shadow-[inset_0_0_0_3px_rgba(255,255,255,.13)] max-sm:size-10 max-sm:text-xl" aria-hidden="true">知</span>
-          <div>
-            <p className="m-0 text-meta font-black tracking-[0.16em] text-scholar-500 max-sm:hidden">CHINA GEO KNOWLEDGE</p>
-            <h1 className="m-0 font-serif text-card-title max-sm:text-card-title-mobile">中国地理知识馆</h1>
-          </div>
-        </button>
-        <div className="knowledge-header-actions flex gap-2">
-          {activeCategory ? (
-            <button className="min-h-10 cursor-pointer rounded-full border border-black/20 bg-white px-3.5 py-2 text-compact font-black max-md:min-h-11" type="button" onClick={backToCatalog}>← 返回分类</button>
-          ) : null}
-          <button className="knowledge-exit min-h-10 cursor-pointer rounded-full border border-city-900 bg-city-900 px-3.5 py-2 text-compact font-black text-white max-md:min-h-11" type="button" onClick={onExit}>返回游戏</button>
+          <PageBreadcrumbs
+            className="max-w-[min(780px,72vw)] max-sm:max-w-[calc(100vw_-_76px)]"
+            items={activeCategory
+              ? [
+                  { label: "首页", href: routePath("/") },
+                  { label: "地理知识馆", mobileLabel: "知识", href: routePath("/knowledge") },
+                  { label: activeCategory.title },
+                ]
+              : [
+                  { label: "首页", href: routePath("/") },
+                  { label: "地理知识馆", mobileLabel: "知识" },
+                ]}
+          />
         </div>
       </header>
 
       {!activeCategory ? (
-        <KnowledgeCatalog onOpenCategory={openCategory} />
+        <KnowledgeCatalog />
       ) : (
         <>
           <section className={`knowledge-detail-hero mx-auto grid w-[min(1380px,calc(100%_-_48px))] grid-cols-[84px_minmax(0,1fr)_minmax(280px,360px)] items-center gap-5 border-b pb-[30px] pt-10 max-md:grid-cols-[auto_1fr] max-sm:w-[calc(100%_-_24px)] max-sm:gap-3 max-sm:pb-5 max-sm:pt-6 ${DETAIL_TONE_CLASSES[activeCategory.tone].border}`}>
             <span className={`grid size-[84px] place-items-center rounded-[24px_24px_24px_7px] font-serif text-[38px] font-black text-white shadow-[inset_0_0_0_5px_rgba(255,255,255,.12)] max-sm:size-14 max-sm:rounded-[17px_17px_17px_5px] max-sm:text-2xl ${DETAIL_TONE_CLASSES[activeCategory.tone].icon}`} aria-hidden="true">{activeCategory.icon}</span>
             <div>
               <p className={`m-0 text-[10px] font-black ${DETAIL_TONE_CLASSES[activeCategory.tone].text}`}>{activeCategory.memoryStyle} · {CATEGORY_TOTAL_LABELS[activeCategory.id]}</p>
-              <h2 className="mb-0 mt-[7px] font-serif text-page max-sm:text-page-mobile">{activeCategory.title}</h2>
+              <h1 className="mb-0 mt-[7px] font-serif text-page max-sm:text-page-mobile">{activeCategory.title}</h1>
               <strong className="mt-[9px] block text-xs font-medium text-ink-600 max-sm:text-[11px]">{activeCategory.subtitle}</strong>
               <div className="mt-3.5 flex flex-wrap gap-1.5">{activeCategory.levelRefs.map((levelId) => {
                 const levelNumber = gauntletLevelNumber(levelId);
@@ -367,7 +370,7 @@ export default function KnowledgeBase({
           </section>
           <section className="knowledge-detail-content mx-auto min-h-[520px] w-[min(1380px,calc(100%_-_48px))] pb-[52px] pt-[30px] max-sm:w-[calc(100%_-_24px)] max-sm:pb-8 max-sm:pt-5">{renderDetailContent()}</section>
           <footer className="knowledge-page-footer mx-auto flex w-[min(1380px,calc(100%_-_48px))] items-center justify-between gap-5 border-t border-black/[.13] pb-[42px] pt-6 max-sm:w-[calc(100%_-_24px)] max-sm:flex-col">
-            <button className="min-h-10 cursor-pointer rounded-full border border-scholar-500/25 bg-scholar-100 px-[13px] py-2 text-compact font-black text-scholar-600 max-md:min-h-11" type="button" onClick={backToCatalog}>← 继续浏览其他知识专题</button>
+            <a className="inline-flex min-h-10 items-center rounded-full border border-scholar-500/25 bg-scholar-100 px-[13px] py-2 text-compact font-black text-scholar-600 no-underline max-md:min-h-11" href={routePath("/knowledge")}>继续浏览其他知识专题</a>
             <span className="text-meta text-stone-500">知识来自当前关卡题库及注明的权威公开资料</span>
           </footer>
         </>

@@ -299,19 +299,11 @@ export function useGauntletRoundActions() {
     });
   };
 
-  const returnToLevels = () => {
-    s.setLevel(null);
-    s.setPassedLevel(null);
-    s.setAnswerReview(null);
-    s.setProvincePickerOpen(false);
-    s.setFeedbackType("idle");
-  };
-
   return {
     applyProvinceSelection, clearPickerProvinces, finishLevel,
     focusProvinceInput, masterMistake, openProvincePicker, recordMistake,
-    returnToLevels, selectAllPickerProvinces, startLevel,
-    showCityNeighborHint, toggleDraftProvince,
+    selectAllPickerProvinces, startLevel, showCityNeighborHint,
+    toggleDraftProvince,
   };
 }
 
