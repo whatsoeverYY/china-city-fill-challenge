@@ -98,9 +98,10 @@ export function useCityProgress(
       progress[code] = complete
         ? [MAP_COMPLETION_MARKER, ...Array.from(regionIds)]
         : Array.from(regionIds);
-      progressStorage.setItem(
+      progressStorage.setMapProgress(
         joined ? NEIGHBOR_PROGRESS_KEY : STORAGE_KEY,
-        JSON.stringify(progress),
+        code,
+        progress[code],
       );
     },
     [progressStorage],

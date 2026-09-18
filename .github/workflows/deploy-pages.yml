@@ -37,11 +37,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install browser for end-to-end tests
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Lint and type-check
         run: pnpm lint && pnpm typecheck
 
       - name: Run unit and server-render tests
         run: pnpm test
+
+      - name: Run browser regression tests
+        run: pnpm test:e2e
 
       - name: Build and verify static site
         run: pnpm test:pages

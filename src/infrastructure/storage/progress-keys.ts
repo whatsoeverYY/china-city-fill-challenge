@@ -28,6 +28,7 @@ export const PROGRESS_STORAGE_KEYS = [
 ] as const;
 
 export type ProgressStorageKey = (typeof PROGRESS_STORAGE_KEYS)[number];
+export type MapProgressKey = typeof STORAGE_KEY | typeof NEIGHBOR_PROGRESS_KEY;
 
 export const MAP_PROGRESS_KEYS = new Set<string>([
   STORAGE_KEY,

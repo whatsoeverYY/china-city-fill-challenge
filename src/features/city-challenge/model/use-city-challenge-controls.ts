@@ -118,7 +118,7 @@ export function useCityChallengeControls(options: Options) {
         return next;
       });
       neighborProgressRef.current[province.code] = [];
-      progressStorage.setItem(NEIGHBOR_PROGRESS_KEY, JSON.stringify(neighborProgressRef.current));
+      progressStorage.setMapProgress(NEIGHBOR_PROGRESS_KEY, province.code, []);
     } else {
       setCompletedProvinceCodes((current) => {
         const next = new Set(current);
@@ -126,7 +126,7 @@ export function useCityChallengeControls(options: Options) {
         return next;
       });
       progressRef.current[province.code] = [];
-      progressStorage.setItem(STORAGE_KEY, JSON.stringify(progressRef.current));
+      progressStorage.setMapProgress(STORAGE_KEY, province.code, []);
     }
     setSelectedAnswerId(null);
     setShowAllCityNames(false);

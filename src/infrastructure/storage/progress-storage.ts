@@ -1,6 +1,8 @@
 import {
+  MAP_COMPLETION_MARKER,
   MAP_PROGRESS_KEYS,
   PROGRESS_STORAGE_KEYS,
+  type MapProgressKey,
 } from "./progress-keys.ts";
 import { CURRENT_PROGRESS_SCHEMA_VERSION } from "./progress-config.ts";
 import {
@@ -26,6 +28,11 @@ export type { ProgressSnapshot } from "./progress-snapshot.ts";
 export type ProgressStorage = {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
+  setMapProgress: (
+    key: MapProgressKey,
+    provinceCode: string,
+    regionIds: string[],
+  ) => void;
 };
 
 const USER_NAMESPACE = "china-city-fill-user-v1";
@@ -37,6 +44,48 @@ function userPrefix(userId: string) {
 
 function userKey(userId: string, key: string) {
   return `${userPrefix(userId)}${key}`;
+}
+
+export function isUserProgressStorageKey(
+  userId: string,
+  storageKey: string | null,
+) {
+  return storageKey !== null && PROGRESS_STORAGE_KEYS.some(
+    (key) => storageKey === userKey(userId, key),
+  );
+}
+
+function mergeProvinceProgressWrite(
+  previousValue: string | null,
+  provinceCode: string,
+  nextRegionIds: string[],
+  observedRegionIds: string[],
+) {
+  const previous = parseMapProgress(previousValue);
+  if (nextRegionIds.length === 0) {
+    return JSON.stringify({ ...previous, [provinceCode]: [] });
+  }
+
+  const observedIds = new Set(observedRegionIds.filter(
+    (id) => id === MAP_COMPLETION_MARKER || /^\d+$/.test(id),
+  ));
+  const addedRegionIds = nextRegionIds.filter(
+    (id) => !observedIds.has(id),
+  );
+  const combinedRegionIds = Array.from(new Set([
+    ...(previous[provinceCode] ?? []),
+    ...addedRegionIds,
+  ])).filter(
+    (id) => id === MAP_COMPLETION_MARKER || /^\d+$/.test(id),
+  );
+  const regionIds = combinedRegionIds.includes(MAP_COMPLETION_MARKER)
+    ? [
+        MAP_COMPLETION_MARKER,
+        ...combinedRegionIds.filter((id) => id !== MAP_COMPLETION_MARKER),
+      ]
+    : combinedRegionIds;
+
+  return JSON.stringify({ ...previous, [provinceCode]: regionIds });
 }
 
 function updateMetadataForWrite(
@@ -72,32 +121,79 @@ export function createTrialProgressStorage(memory: Map<string, string>): Progres
     setItem: (key, value) => {
       memory.set(key, value);
     },
+    setMapProgress: (key, provinceCode, regionIds) => {
+      memory.set(
+        key,
+        mergeProvinceProgressWrite(
+          memory.get(key) ?? null,
+          provinceCode,
+          regionIds,
+          parseMapProgress(memory.get(key) ?? null)[provinceCode] ?? [],
+        ),
+      );
+    },
   };
 }
 
 export function createUserProgressStorage(
   userId: string,
 ): ProgressStorage {
+  const observedMaps = new Map<
+    MapProgressKey,
+    Record<string, string[]>
+  >();
+  const writeItem = (
+    key: string,
+    resolveValue: (previousValue: string | null) => string,
+  ) => {
+    const scopedStorageKey = userKey(userId, key);
+    const previousValue = localStorage.getItem(scopedStorageKey);
+    const nextValue = resolveValue(previousValue);
+    if (previousValue === nextValue) return nextValue;
+    localStorage.setItem(scopedStorageKey, nextValue);
+    const metaKey = userKey(userId, SYNC_META_KEY);
+    const meta = parseProgressMeta(localStorage.getItem(metaKey));
+    updateMetadataForWrite(
+      meta,
+      key,
+      previousValue,
+      nextValue,
+      new Date().toISOString(),
+    );
+    localStorage.setItem(metaKey, JSON.stringify(meta));
+    window.dispatchEvent(
+      new CustomEvent(PROGRESS_STORAGE_EVENT, { detail: { userId } }),
+    );
+    return nextValue;
+  };
+
+  const observeMapValue = (key: string, value: string | null) => {
+    if (MAP_PROGRESS_KEYS.has(key)) {
+      observedMaps.set(key as MapProgressKey, parseMapProgress(value));
+    }
+    return value;
+  };
+
   return {
-    getItem: (key) => localStorage.getItem(userKey(userId, key)),
+    getItem: (key) => observeMapValue(
+      key,
+      localStorage.getItem(userKey(userId, key)),
+    ),
     setItem: (key, value) => {
-      const storageKey = userKey(userId, key);
-      const previousValue = localStorage.getItem(storageKey);
-      if (previousValue === value) return;
-      localStorage.setItem(storageKey, value);
-      const metaKey = userKey(userId, SYNC_META_KEY);
-      const meta = parseProgressMeta(localStorage.getItem(metaKey));
-      updateMetadataForWrite(
-        meta,
+      observeMapValue(key, writeItem(key, () => value));
+    },
+    setMapProgress: (key, provinceCode, regionIds) => {
+      const observedRegionIds = observedMaps.get(key)?.[provinceCode] ?? [];
+      const nextValue = writeItem(
         key,
-        previousValue,
-        value,
-        new Date().toISOString(),
+        (previousValue) => mergeProvinceProgressWrite(
+          previousValue,
+          provinceCode,
+          regionIds,
+          observedRegionIds,
+        ),
       );
-      localStorage.setItem(metaKey, JSON.stringify(meta));
-      window.dispatchEvent(
-        new CustomEvent(PROGRESS_STORAGE_EVENT, { detail: { userId } }),
-      );
+      observeMapValue(key, nextValue);
     },
   };
 }

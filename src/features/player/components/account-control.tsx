@@ -81,7 +81,7 @@ export default function AccountControl() {
   return (
     <>
       <button
-        className="account-fab fixed bottom-5 right-5 z-[1400] grid min-h-12 cursor-pointer grid-cols-[30px_auto_8px] items-center gap-2 rounded-full border border-white/30 bg-ink/95 py-2 pl-2 pr-3 text-white shadow-xl backdrop-blur-xl max-sm:bottom-3 max-sm:right-3 max-sm:grid-cols-[30px_8px]"
+        className="account-fab fixed bottom-5 right-5 z-[1400] grid min-h-12 cursor-pointer grid-cols-[30px_auto_8px] items-center gap-2 rounded-full border border-white/30 bg-ink/95 py-2 pl-2 pr-3 text-white shadow-xl backdrop-blur-xl max-sm:bottom-auto max-sm:right-3 max-sm:top-2 max-sm:grid-cols-[30px] max-sm:px-2"
         type="button"
         onClick={() => setOpen(true)}
         aria-label={identity ? `账户：${identity.email}` : "登录并保存游戏进度"}
@@ -90,7 +90,7 @@ export default function AccountControl() {
           {identity ? identity.email.slice(0, 1).toUpperCase() : "存"}
         </span>
         <b className="text-[11px] tracking-wide max-sm:hidden">{identity ? (offlineIdentity ? "离线存档" : "我的存档") : "登录保存"}</b>
-        <i className={`block size-2 rounded-full ${syncStatus === "synced" ? "bg-status-success" : syncStatus === "offline" ? "bg-status-offline" : syncStatus === "error" ? "bg-status-error" : syncStatus === "pending" || syncStatus === "syncing" || syncStatus === "loading" ? "bg-gold-500" : "bg-status-idle"}`} aria-hidden="true" />
+        <i className={`block size-2 rounded-full max-sm:absolute max-sm:bottom-1 max-sm:right-1 max-sm:ring-2 max-sm:ring-ink ${syncStatus === "synced" ? "bg-status-success" : syncStatus === "offline" ? "bg-status-offline" : syncStatus === "error" ? "bg-status-error" : syncStatus === "pending" || syncStatus === "syncing" || syncStatus === "loading" ? "bg-gold-500" : "bg-status-idle"}`} aria-hidden="true" />
       </button>
 
       {open ? (

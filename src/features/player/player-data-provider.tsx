@@ -31,6 +31,7 @@ import {
   createUserProgressStorage,
   PROGRESS_STORAGE_EVENT,
 } from "@/infrastructure/storage/progress-storage";
+import { useProgressStorageListener } from "@/features/player/model/use-progress-storage-listener";
 import { operationErrorMessage } from "@/shared/lib/error";
 import { getSupabaseClient, isSupabaseConfigured } from "@/infrastructure/supabase/client";
 
@@ -183,14 +184,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     [identity, trialProgressStorage],
   );
 
-  useEffect(() => {
-    const handleProgressChange = (event: Event) => {
-      const userId = (event as CustomEvent<{ userId?: string }>).detail?.userId;
-      if (userId === activeUserRef.current) markProgressDirty();
-    };
-    window.addEventListener(PROGRESS_STORAGE_EVENT, handleProgressChange);
-    return () => window.removeEventListener(PROGRESS_STORAGE_EVENT, handleProgressChange);
-  }, [markProgressDirty]);
+  useProgressStorageListener(activeUserRef, markProgressDirty);
 
   const loadProfile = useCallback(async (nextSession: Session) => {
     setProfile(await loadPlayerProfile(nextSession));
