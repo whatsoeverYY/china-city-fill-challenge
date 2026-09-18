@@ -38,18 +38,26 @@ function focusProvinceFeature(feature: MapFeature) {
 }
 
 export default function ProvinceNeighborMap({
-  centerProvince,
+  centerProvinces,
   neighborCodes,
-  onSelectProvince,
+  onToggleProvince,
 }: {
-  centerProvince: KnowledgeProvince;
+  centerProvinces: KnowledgeProvince[];
   neighborCodes: string[];
-  onSelectProvince: (provinceCode: string) => void;
+  onToggleProvince: (provinceCode: string) => void;
 }) {
   const { data: nationalMap, error } = useMapData(NATIONAL_MAP_CODE);
+  const centerProvinceCodes = useMemo(
+    () => centerProvinces.map((province) => province.code),
+    [centerProvinces],
+  );
+  const centerCodeSet = useMemo(
+    () => new Set(centerProvinceCodes),
+    [centerProvinceCodes],
+  );
   const visibleCodes = useMemo(
-    () => new Set([centerProvince.code, ...neighborCodes]),
-    [centerProvince.code, neighborCodes],
+    () => new Set([...centerProvinceCodes, ...neighborCodes]),
+    [centerProvinceCodes, neighborCodes],
   );
   const features = useMemo(
     () => nationalMap?.features
@@ -59,11 +67,11 @@ export default function ProvinceNeighborMap({
       })
       .map((feature) => neighborCodes.length === 0 ? focusProvinceFeature(feature) : feature)
       .sort((left, right) => {
-        const leftIsCenter = provinceForFeature(left)?.code === centerProvince.code;
-        const rightIsCenter = provinceForFeature(right)?.code === centerProvince.code;
+        const leftIsCenter = centerCodeSet.has(provinceForFeature(left)?.code ?? "");
+        const rightIsCenter = centerCodeSet.has(provinceForFeature(right)?.code ?? "");
         return Number(leftIsCenter) - Number(rightIsCenter);
       }) ?? [],
-    [centerProvince.code, nationalMap?.features, neighborCodes.length, visibleCodes],
+    [centerCodeSet, nationalMap?.features, neighborCodes.length, visibleCodes],
   );
   const project = useMemo(
     () => features.length > 0 ? makeProjection(features) : null,
@@ -93,12 +101,13 @@ export default function ProvinceNeighborMap({
             className="block h-auto max-h-[450px] w-full overflow-visible drop-shadow-[0_12px_12px_rgba(33,77,58,0.12)]"
             viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
             role="group"
-            aria-label={`${centerProvince.name}及其${neighborCodes.length}个陆地邻省的局部地图`}
+            aria-label={`${centerProvinces.map((province) => province.name).join("、")}及其${neighborCodes.length}个陆地邻省的局部地图`}
           >
             {features.map((feature) => {
               const province = provinceForFeature(feature);
               if (!province) return null;
-              const isCenter = province.code === centerProvince.code;
+              const isCenter = centerCodeSet.has(province.code);
+              const onlyCenter = isCenter && centerProvinceCodes.length === 1;
               return (
                 <path
                   key={province.code}
@@ -112,12 +121,12 @@ export default function ProvinceNeighborMap({
                   strokeWidth={isCenter ? 3.4 : 2.2}
                   tabIndex={0}
                   vectorEffect="non-scaling-stroke"
-                  aria-current={isCenter ? "true" : undefined}
-                  aria-label={`${province.name}${isCenter ? "，当前中心省份" : "，陆地邻省，点击设为中心省份"}`}
-                  onClick={() => onSelectProvince(province.code)}
+                  aria-pressed={isCenter}
+                  aria-label={`${province.name}${onlyCenter ? "，当前唯一中心省份" : isCenter ? "，已选中心省份，点击取消" : "，陆地邻省，点击加入中心省份"}`}
+                  onClick={() => onToggleProvince(province.code)}
                   onKeyDown={(event) => handleKeyboardActivation(
                     event,
-                    () => onSelectProvince(province.code),
+                    () => onToggleProvince(province.code),
                   )}
                 />
               );
@@ -125,19 +134,22 @@ export default function ProvinceNeighborMap({
             {features.map((feature) => {
               const province = provinceForFeature(feature);
               if (!province) return null;
-              const isCenter = province.code === centerProvince.code;
+              const isCenter = centerCodeSet.has(province.code);
               const [x, y] = featureLabelPosition(feature, project);
               const labelSizeClass = province.shortName.length > 3
                 ? "text-[22px] sm:text-[12px]"
                 : isCenter
                   ? "text-[34px] sm:text-[18px]"
                   : "text-[28px] sm:text-[15px]";
+              const mobileVisibilityClass = !isCenter && centerProvinceCodes.length > 1
+                ? "max-sm:hidden"
+                : "";
               return (
                 <text
                   key={`neighbor-label-${province.code}`}
                   x={x}
                   y={y}
-                  className={`pointer-events-none font-sans font-black [paint-order:stroke] [stroke-linejoin:round] ${labelSizeClass}`}
+                  className={`pointer-events-none font-sans font-black [paint-order:stroke] [stroke-linejoin:round] ${labelSizeClass} ${mobileVisibilityClass}`}
                   fill={isCenter ? MAP_COLORS.neighborCenterLabel : MAP_COLORS.neighborLabel}
                   stroke={isCenter ? MAP_COLORS.neighborCenterStroke : MAP_COLORS.neighborLabelOutline}
                   strokeWidth={isCenter ? 4 : 3.5}
@@ -156,8 +168,10 @@ export default function ProvinceNeighborMap({
       </div>
       <p className="m-0 text-center text-meta text-ink-soft">
         {neighborCodes.length > 0
-          ? "点击任一邻省，可将它切换为新的中心省份"
-          : "该省暂无陆地邻省，地图仅显示中心省份"}
+          ? "点击浅绿色邻省可加入选择；点击深绿色中心省可取消"
+          : centerProvinces.length > 1
+            ? "所选省份暂无额外陆地邻省，地图仅显示中心省份"
+            : "该省暂无陆地邻省，地图仅显示中心省份"}
       </p>
     </div>
   );

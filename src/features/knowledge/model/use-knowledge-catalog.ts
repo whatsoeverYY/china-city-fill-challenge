@@ -6,6 +6,10 @@ import { UNIVERSITY_QUIZ_DATA } from "@/domain/geography/data/universities";
 import { PROFILE_BATCH_SIZE } from "@/features/knowledge/config/knowledge-catalog-config";
 import { KNOWLEDGE_CATEGORIES } from "@/features/knowledge/data/knowledge-data";
 import { compactSearch, matchesSearch } from "@/features/knowledge/model/knowledge-format";
+import {
+  collectNeighborProvinceCodes,
+  toggleNeighborCenterCode,
+} from "@/features/knowledge/model/neighbor-selection";
 import type { KnowledgeBaseProps } from "@/features/knowledge/model/knowledge-types";
 
 export const DEFAULT_NEIGHBOR_PROVINCE_CODE = "410000";
@@ -20,8 +24,8 @@ export function useKnowledgeCatalog({
     () => new Set(),
   );
   const [visibleProfileCount, setVisibleProfileCount] = useState(PROFILE_BATCH_SIZE);
-  const [selectedNeighborCode, setSelectedNeighborCode] = useState(
-    DEFAULT_NEIGHBOR_PROVINCE_CODE,
+  const [selectedNeighborCenterCodes, setSelectedNeighborCenterCodes] = useState<Set<string>>(
+    () => new Set([DEFAULT_NEIGHBOR_PROVINCE_CODE]),
   );
   const provinceByCode = useMemo(
     () => new Map(provinces.map((province) => [province.code, province])),
@@ -94,17 +98,30 @@ export function useKnowledgeCatalog({
     province,
     items: filteredUniversities.filter((item) => item.provinceCode === province.code),
   })).filter((group) => group.items.length > 0);
-  const selectedNeighborProvince = provinceByCode.get(selectedNeighborCode) ?? provinces[0];
-  const selectedNeighborCodes = selectedNeighborProvince
-    ? provinceNeighbors[selectedNeighborProvince.code] ?? []
-    : [];
+  const selectedNeighborProvinces = useMemo(
+    () => provinces.filter((province) => selectedNeighborCenterCodes.has(province.code)),
+    [provinces, selectedNeighborCenterCodes],
+  );
+  const neighborProvinceCodes = useMemo(
+    () => collectNeighborProvinceCodes(
+      new Set(selectedNeighborProvinces.map((province) => province.code)),
+      provinceNeighbors,
+    ),
+    [provinceNeighbors, selectedNeighborProvinces],
+  );
+  const toggleNeighborCenter = (provinceCode: string) => {
+    setSelectedNeighborCenterCodes((current) => (
+      toggleNeighborCenterCode(current, provinceCode)
+    ));
+  };
 
   return {
     activeCategory, activeCategoryId: categoryId, administrativeProfileByCode,
     cityCountByCode, cityGroups, clearProvinceFilters, filteredProvinces,
     hasActiveProvinceFilter, normalizedQuery, provinceByCode,
-    query, quizCityCountByProvince, selectedNeighborCodes, selectedNeighborProvince,
-    selectedProvinceCodes, setQuery, setSelectedNeighborCode, setVisibleProfileCount,
-    toggleProvince, universityCountByProvince, universityGroups, visibleProfileProvinces,
+    neighborProvinceCodes, query, quizCityCountByProvince,
+    selectedNeighborCenterCodes, selectedNeighborProvinces, selectedProvinceCodes,
+    setQuery, setVisibleProfileCount, toggleNeighborCenter, toggleProvince,
+    universityCountByProvince, universityGroups, visibleProfileProvinces,
   };
 }

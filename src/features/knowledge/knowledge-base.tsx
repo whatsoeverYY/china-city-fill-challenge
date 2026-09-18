@@ -15,6 +15,7 @@ import CityPlatePanel from "@/features/knowledge/components/city-plate-panel";
 import KnowledgeCatalog from "@/features/knowledge/components/knowledge-catalog";
 import KnowledgeSearchEmpty from "@/features/knowledge/components/knowledge-search-empty";
 import ProvinceNeighborMap from "@/features/knowledge/components/province-neighbor-map";
+import ProvinceNeighborSelector from "@/features/knowledge/components/province-neighbor-selector";
 import ProvinceProfilePanel from "@/features/knowledge/components/province-profile-panel";
 import UniversityPanel from "@/features/knowledge/components/university-panel";
 import { matchesSearch, plainPlaceName } from "@/features/knowledge/model/knowledge-format";
@@ -46,9 +47,10 @@ export default function KnowledgeBase({
     activeCategory, activeCategoryId, administrativeProfileByCode,
     cityCountByCode, cityGroups, clearProvinceFilters, filteredProvinces,
     hasActiveProvinceFilter, normalizedQuery, provinceByCode,
-    query, quizCityCountByProvince, selectedNeighborCodes, selectedNeighborProvince,
-    selectedProvinceCodes, setQuery, setSelectedNeighborCode, setVisibleProfileCount,
-    toggleProvince, universityCountByProvince, universityGroups, visibleProfileProvinces,
+    neighborProvinceCodes, query, quizCityCountByProvince,
+    selectedNeighborCenterCodes, selectedNeighborProvinces, selectedProvinceCodes,
+    setQuery, setVisibleProfileCount, toggleNeighborCenter, toggleProvince,
+    universityCountByProvince, universityGroups, visibleProfileProvinces,
   } = useKnowledgeCatalog({ categoryId, provinces, provinceNeighbors });
 
   const renderDetailContent = () => {
@@ -97,43 +99,31 @@ export default function KnowledgeBase({
       return (
         <div className="knowledge-neighbor-layout grid min-h-[650px] grid-cols-[260px_minmax(0,1fr)] overflow-hidden rounded-[22px] border border-jade-500/20 bg-paper-100/85 max-lg:grid-cols-1">
           <aside className="border-r border-jade-500/15 bg-jade-200 px-5 py-6 max-lg:border-b max-lg:border-r-0">
-            <p className="mb-3.5 mt-0 text-meta font-black tracking-[.1em] text-moss-500">选择中心省份</p>
-            <select
-              className="block min-h-11 w-full rounded-xl border border-jade-500/25 bg-paper-100 px-3 text-compact font-bold text-ink sm:hidden"
-              aria-label="选择中心省份"
-              value={selectedNeighborProvince?.code}
-              onChange={(event) => setSelectedNeighborCode(event.target.value)}
-            >
-              {provinces.map((province) => (
-                <option key={province.code} value={province.code}>{province.name}</option>
-              ))}
-            </select>
-            <div className="knowledge-province-selector grid grid-cols-3 gap-1.5 max-lg:grid-cols-6 max-sm:hidden">
-              {provinces.map((province) => (
-                <button
-                  key={province.code}
-                  type="button"
-                  className={`min-h-[38px] cursor-pointer rounded-lg border px-2 py-1.5 text-meta ${province.code === selectedNeighborProvince?.code ? "border-jade-500 bg-jade-500 font-black text-white" : "border-jade-500/15 bg-white/55 text-ink-600"}`}
-                  onClick={() => setSelectedNeighborCode(province.code)}
-                >
-                  {province.shortName}
-                </button>
-              ))}
-            </div>
+            <ProvinceNeighborSelector
+              provinces={provinces}
+              selectedCodes={selectedNeighborCenterCodes}
+              onToggleProvince={toggleNeighborCenter}
+            />
           </aside>
           <section className="knowledge-neighbor-stage grid content-center place-items-center gap-6 [background-image:radial-gradient(circle_at_center,rgba(45,125,95,.1),transparent_20rem),linear-gradient(rgba(53,66,56,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(53,66,56,.025)_1px,transparent_1px)] [background-size:auto,25px_25px,25px_25px] p-8 max-md:p-4">
-            {selectedNeighborProvince ? (
+            {selectedNeighborProvinces.length > 0 ? (
               <ProvinceNeighborMap
-                centerProvince={selectedNeighborProvince}
-                neighborCodes={selectedNeighborCodes}
-                onSelectProvince={setSelectedNeighborCode}
+                centerProvinces={selectedNeighborProvinces}
+                neighborCodes={neighborProvinceCodes}
+                onToggleProvince={toggleNeighborCenter}
               />
             ) : null}
             <div className="knowledge-neighbor-mnemonic flex w-full max-w-[600px] items-center gap-[13px] rounded-[13px] border border-jade-500/20 bg-jade-200/90 px-[18px] py-3.5">
               <span className="grid size-9 place-items-center rounded-full bg-jade-500 font-serif text-white">围</span>
               <p className="m-0 grid gap-1 text-meta text-ink-600">
-                <strong className="text-[11px] text-jade-700">{selectedNeighborProvince?.shortName}有 {selectedNeighborCodes.length} 个陆地邻省</strong>
-                {selectedNeighborCodes.map((code) => provinceByCode.get(code)?.shortName).filter(Boolean).join("、") || "孤悬海上，记作零邻省"}
+                <strong className="text-[11px] text-jade-700">
+                  {selectedNeighborProvinces.length === 1
+                    ? `${selectedNeighborProvinces[0].shortName}有 ${neighborProvinceCodes.length} 个陆地邻省`
+                    : `已选 ${selectedNeighborProvinces.length} 个中心省，去重后另有 ${neighborProvinceCodes.length} 个陆地邻省`}
+                </strong>
+                {selectedNeighborProvinces.length > 1
+                  ? `中心：${selectedNeighborProvinces.map((province) => province.shortName).join("、")}；邻省并集：${neighborProvinceCodes.map((code) => provinceByCode.get(code)?.shortName).filter(Boolean).join("、") || "无"}`
+                  : neighborProvinceCodes.map((code) => provinceByCode.get(code)?.shortName).filter(Boolean).join("、") || "孤悬海上，记作零邻省"}
               </p>
             </div>
           </section>

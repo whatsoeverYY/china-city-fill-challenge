@@ -331,11 +331,16 @@ test("neighbor knowledge renders only the selected province cluster", async () =
   const neighborMap = await source(
     "src/features/knowledge/components/province-neighbor-map.tsx",
   );
+  const neighborSelector = await source(
+    "src/features/knowledge/components/province-neighbor-selector.tsx",
+  );
 
   assert.ok(knowledgeBase.includes("<ProvinceNeighborMap"));
-  assert.ok(knowledgeBase.includes('aria-label="选择中心省份"'));
-  assert.ok(knowledgeBase.includes("max-sm:hidden"));
-  assert.ok(neighborMap.includes("new Set([centerProvince.code, ...neighborCodes])"));
+  assert.ok(knowledgeBase.includes("<ProvinceNeighborSelector"));
+  assert.ok(neighborSelector.includes("max-sm:hidden"));
+  assert.ok(neighborSelector.includes("<details"));
+  assert.ok(neighborSelector.includes("aria-pressed={selected}"));
+  assert.ok(neighborMap.includes("new Set([...centerProvinceCodes, ...neighborCodes])"));
   assert.ok(neighborMap.includes("visibleCodes.has(province.code)"));
   assert.ok(neighborMap.includes("focusProvinceFeature(feature)"));
   assert.ok(neighborMap.includes("makeProjection(features)"));
@@ -347,7 +352,7 @@ test("neighbor knowledge renders only the selected province cluster", async () =
       "max-sm:min-h-[300px]",
       "MAP_COLORS.neighborCenterFill",
       "MAP_COLORS.neighborFill",
-      "onSelectProvince(province.code)",
+      "onToggleProvince(province.code)",
       'role="group"',
     ],
     "邻省知识局部地图",

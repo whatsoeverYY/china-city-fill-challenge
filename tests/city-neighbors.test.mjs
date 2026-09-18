@@ -7,6 +7,10 @@ import {
   cityNeighborAnswerMatches,
   createCityNeighborQuestionIndex,
 } from "../src/features/gauntlet/model/city-neighbor-question.ts";
+import {
+  collectNeighborProvinceCodes,
+  toggleNeighborCenterCode,
+} from "../src/features/knowledge/model/neighbor-selection.ts";
 
 function feature(id, name, coordinates) {
   return {
@@ -45,6 +49,30 @@ test("city neighbor answers must contain the exact normalized name set", () => {
   assert.equal(cityNeighborAnswerMatches("没有", []), true);
   assert.equal(cityNeighborAnswerMatches("不填", []), true);
   assert.equal(cityNeighborAnswerMatches("南京", []), false);
+});
+
+test("knowledge neighbor centers support non-empty multi-selection", () => {
+  const initial = new Set(["A"]);
+  const added = toggleNeighborCenterCode(initial, "B");
+  const removed = toggleNeighborCenterCode(added, "A");
+  const retained = toggleNeighborCenterCode(removed, "B");
+
+  assert.deepEqual([...initial], ["A"]);
+  assert.deepEqual([...added], ["A", "B"]);
+  assert.deepEqual([...removed], ["B"]);
+  assert.deepEqual([...retained], ["B"]);
+});
+
+test("knowledge neighbor unions exclude centers and remove duplicates", () => {
+  const neighbors = {
+    A: ["B", "C", "D"],
+    B: ["A", "C", "E"],
+  };
+
+  assert.deepEqual(
+    collectNeighborProvinceCodes(new Set(["A", "B"]), neighbors),
+    ["C", "D", "E"],
+  );
 });
 
 test("every map region, including zero-neighbor and autonomous areas, enters the quiz", async () => {
