@@ -3,6 +3,15 @@ import { CITY_MAP_RECENT_QUESTION_LIMIT } from "../../domain/game/gauntlet-rules
 import { normalizeMistakeList } from "../../domain/game/mistakes.ts";
 import { CURRENT_PROGRESS_SCHEMA_VERSION } from "./progress-config.ts";
 import {
+  emptyProgressMeta,
+  latestProgressIso,
+  parseProgressMeta,
+  progressScope,
+  progressTimestamp,
+  type SyncMeta,
+} from "./progress-metadata.ts";
+import { mergeMistakeProgress } from "./mistake-progress.ts";
+import {
   GAUNTLET_MISTAKES_KEY,
   GAUNTLET_PROGRESS_KEY,
   GAUNTLET_PROVINCE_SCOPE_KEY,
@@ -17,12 +26,14 @@ import {
   type ProgressStorageKey,
 } from "./progress-keys.ts";
 
-export type SyncMeta = {
-  keys: Record<string, string>;
-  scopes: Record<string, string>;
-  resets: Record<string, string>;
-  resetAll?: string;
-};
+export {
+  emptyProgressMeta,
+  latestProgressIso,
+  parseProgressMeta,
+  progressScope,
+  progressTimestamp,
+} from "./progress-metadata.ts";
+export type { SyncMeta } from "./progress-metadata.ts";
 
 export type ProgressSnapshot = {
   schemaVersion: number;
@@ -32,28 +43,6 @@ export type ProgressSnapshot = {
     Record<string, string | undefined>;
   meta: SyncMeta;
 };
-
-export function emptyProgressMeta(): SyncMeta {
-  return { keys: {}, scopes: {}, resets: {} };
-}
-
-export function parseProgressMeta(raw: string | null): SyncMeta {
-  if (!raw) return emptyProgressMeta();
-  try {
-    const parsed = JSON.parse(raw) as Partial<SyncMeta>;
-    return {
-      keys: parsed.keys && typeof parsed.keys === "object" ? parsed.keys : {},
-      scopes:
-        parsed.scopes && typeof parsed.scopes === "object" ? parsed.scopes : {},
-      resets:
-        parsed.resets && typeof parsed.resets === "object" ? parsed.resets : {},
-      resetAll:
-        typeof parsed.resetAll === "string" ? parsed.resetAll : undefined,
-    };
-  } catch {
-    return emptyProgressMeta();
-  }
-}
 
 export function parseMapProgress(raw: string | null) {
   if (!raw) return {} as Record<string, string[]>;
@@ -70,20 +59,6 @@ export function parseMapProgress(raw: string | null) {
   } catch {
     return {};
   }
-}
-
-export function progressTimestamp(value: string | undefined) {
-  const parsed = value ? Date.parse(value) : 0;
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-export function latestProgressIso(...values: Array<string | undefined>) {
-  const latest = Math.max(...values.map(progressTimestamp), 0);
-  return latest ? new Date(latest).toISOString() : new Date(0).toISOString();
-}
-
-export function progressScope(key: string, provinceCode: string) {
-  return `${key}:${provinceCode}`;
 }
 
 function parseStringList(raw: string | undefined) {
@@ -344,6 +319,8 @@ export function mergeProgressSnapshots(
     ).sort(),
   );
 
+  values[GAUNTLET_MISTAKES_KEY] = mergeMistakeProgress(local, remote, meta);
+
   for (const key of HISTORY_KEYS) {
     const typedKey = key as ProgressStorageKey;
     const localIsNewer = progressTimestamp(local.meta.keys[key]) >=
@@ -358,7 +335,6 @@ export function mergeProgressSnapshots(
   for (const key of [
     HARD_MODE_KEY,
     NEIGHBOR_MODE_KEY,
-    GAUNTLET_MISTAKES_KEY,
     GAUNTLET_PROVINCE_SCOPE_KEY,
   ] as const) {
     const localTime = progressTimestamp(local.meta.keys[key]);

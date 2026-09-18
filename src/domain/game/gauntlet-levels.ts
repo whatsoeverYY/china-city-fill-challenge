@@ -176,10 +176,10 @@ export const GAUNTLET_LEVELS: readonly GauntletLevelDefinition[] = [
     id: GAUNTLET_LEVEL_ID.PLATE_CITY_MAP,
     title: "车牌落城",
     badge: "牌位",
-    description: "根据随机车牌，在所选省份地图墙中点击对应的城市或地区区块。",
+    description: "根据随机车牌，先在全国地图选择省份，再点击对应的城市或地区区块。",
     target: "连续答对 30 题",
-    openingFeedback: "根据车牌，在所选省份地图墙中点击对应城市或地区",
-    roundHeading: "看车牌，在多省地图墙中精准落点",
+    openingFeedback: "根据车牌，先选省份，再在省内地图点击对应城市或地区",
+    roundHeading: "看车牌，分两步精准落到城市",
   },
   {
     id: GAUNTLET_LEVEL_ID.MISTAKE_REVENGE,

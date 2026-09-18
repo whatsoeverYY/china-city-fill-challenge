@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { usePlayerData } from "@/features/player/player-data-context";
+import { useModalDialog } from "@/shared/hooks/use-modal-dialog";
 import { adminPath } from "@/shared/lib/app-path";
 
 const ACCOUNT_ACTION_BUTTON_CLASS = "min-h-10 cursor-pointer rounded-xl border border-black/15 bg-white/70 px-3 py-2 text-compact font-extrabold disabled:cursor-wait disabled:opacity-60 max-sm:min-h-11";
@@ -31,6 +32,19 @@ export default function AccountControl() {
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const closeAccount = () => {
+    setOpen(false);
+    setDeleteConfirmOpen(false);
+    setFormError("");
+    setFormMessage("");
+  };
+  const accountDialogRef = useModalDialog(open, () => {
+    if (deleteConfirmOpen) {
+      setDeleteConfirmOpen(false);
+      return;
+    }
+    closeAccount();
+  });
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,13 +66,6 @@ export default function AccountControl() {
 
   const switchMode = (nextMode: "signin" | "signup") => {
     setMode(nextMode);
-    setFormError("");
-    setFormMessage("");
-  };
-
-  const closeAccount = () => {
-    setOpen(false);
-    setDeleteConfirmOpen(false);
     setFormError("");
     setFormMessage("");
   };
@@ -96,6 +103,8 @@ export default function AccountControl() {
       {open ? (
         <div className="account-dialog-backdrop fixed inset-0 z-[1600] grid place-items-center bg-ink-900/55 p-5 backdrop-blur-md" role="presentation">
           <section
+            ref={accountDialogRef}
+            tabIndex={-1}
             className="account-dialog relative max-h-[calc(100dvh_-_44px)] w-full max-w-[460px] overflow-auto rounded-[24px_24px_24px_7px] border border-black/10 bg-card p-8 shadow-2xl max-sm:p-5"
             role="dialog"
             aria-modal="true"
@@ -214,7 +223,7 @@ export default function AccountControl() {
                 <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-city-500">云存档</p>
                 <h2 className="mb-3 mt-0 text-section font-black max-md:text-section-mobile" id="account-dialog-title">登录后，进度真正属于你</h2>
                 <p className="account-dialog-lede text-[13px] leading-6 text-ink-soft">
-                  游客可以完整试玩，但刷新页面后不会保留进度。登录后支持跨设备同步；曾在线登录过的设备，断网时也能继续玩。
+                  游客可以完整试玩，但刷新页面后不会保留进度。登录后支持跨设备同步；当前页面断网后，进度会暂存在本机，重新打开或切换页面仍需要网络。
                 </p>
                 <div className="account-tabs my-5 grid grid-cols-2 rounded-xl bg-paper-deep p-1" role="tablist" aria-label="账户操作">
                   <button
@@ -241,6 +250,7 @@ export default function AccountControl() {
                   <input
                     className={ACCOUNT_INPUT_CLASS}
                     id="account-email"
+                    data-autofocus
                     type="email"
                     value={email}
                     autoComplete="email"

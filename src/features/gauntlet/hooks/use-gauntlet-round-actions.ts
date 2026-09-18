@@ -37,6 +37,7 @@ import {
   GAUNTLET_MISTAKES_KEY,
   GAUNTLET_PROGRESS_KEY,
   GAUNTLET_PROVINCE_SCOPE_KEY,
+  parseMistakeProgress,
 } from "@/infrastructure/storage/progress-storage";
 import { randomShuffle } from "@/shared/lib/random";
 
@@ -157,6 +158,7 @@ export function useGauntletRoundActions() {
     s.setProvinceCityCountOrder([]);
     s.setBossLives(FINAL_BOSS_LIFE_COUNT);
     s.setBossStats(createEmptyBossStats());
+    s.setPlateCityMapFocusedProvinceCode(null);
 
     if (nextLevel === LEVEL.PROVINCE_SHAPE && s.nationalMap) {
       s.setProvinceOrder(randomShuffle(s.nationalMap.features.filter((feature) => {
@@ -284,19 +286,23 @@ export function useGauntletRoundActions() {
   };
 
   const recordMistake = (seed: MistakeSeed) => {
-    s.setMistakes((current) => {
-      const next = upsertMistake(current, seed);
-      s.progressStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
-      return next;
-    });
+    const nextValue = s.progressStorage.updateItem(
+      GAUNTLET_MISTAKES_KEY,
+      (previousValue) => JSON.stringify(
+        upsertMistake(parseMistakeProgress(previousValue), seed),
+      ),
+    );
+    s.setMistakes(parseMistakeProgress(nextValue));
   };
 
   const masterMistake = (id: string) => {
-    s.setMistakes((current) => {
-      const next = current.filter((item) => item.id !== id);
-      s.progressStorage.setItem(GAUNTLET_MISTAKES_KEY, JSON.stringify(next));
-      return next;
-    });
+    const nextValue = s.progressStorage.updateItem(
+      GAUNTLET_MISTAKES_KEY,
+      (previousValue) => JSON.stringify(
+        parseMistakeProgress(previousValue).filter((item) => item.id !== id),
+      ),
+    );
+    s.setMistakes(parseMistakeProgress(nextValue));
   };
 
   return {

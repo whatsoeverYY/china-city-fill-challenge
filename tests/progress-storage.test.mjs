@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   HARD_MODE_KEY,
+  GAUNTLET_MISTAKES_KEY,
   MAP_COMPLETION_MARKER,
   NEIGHBOR_PROGRESS_KEY,
   STORAGE_KEY,
@@ -191,6 +192,37 @@ test("non-map settings retain normal last-write behavior", () => {
     storage.setItem(HARD_MODE_KEY, "false");
 
     assert.equal(storage.getItem(HARD_MODE_KEY), "false");
+  } finally {
+    restore();
+  }
+});
+
+test("functional writes preserve concurrent mistake records", () => {
+  const restore = installBrowserStorage();
+  try {
+    const firstTab = createUserProgressStorage("player-1");
+    const secondTab = createUserProgressStorage("player-1");
+    const addMistake = (id) => (raw) => JSON.stringify([
+      ...JSON.parse(raw ?? "[]"),
+      {
+        id,
+        category: "城市",
+        prompt: id,
+        answers: [id],
+        correctAnswer: id,
+        explanation: id,
+        wrongCount: 1,
+      },
+    ]);
+
+    firstTab.updateItem(GAUNTLET_MISTAKES_KEY, addMistake("first"));
+    secondTab.updateItem(GAUNTLET_MISTAKES_KEY, addMistake("second"));
+
+    assert.deepEqual(
+      JSON.parse(firstTab.getItem(GAUNTLET_MISTAKES_KEY) ?? "[]")
+        .map((item) => item.id),
+      ["first", "second"],
+    );
   } finally {
     restore();
   }

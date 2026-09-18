@@ -3,6 +3,7 @@
 import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-actions";
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
+import { useModalDialog } from "@/shared/hooks/use-modal-dialog";
 
 export default function ProvincePickerDialog({
   actions,
@@ -11,11 +12,17 @@ export default function ProvincePickerDialog({
 }) {
   const s = useGauntletSession();
   const d = useGauntletDerived();
+  const dialogRef = useModalDialog(
+    s.provincePickerOpen,
+    () => s.setProvincePickerOpen(false),
+  );
   if (!s.provincePickerOpen) return null;
 
   return (
     <div className="province-picker-overlay fixed inset-0 z-[1600] grid place-items-center bg-[rgba(24,31,27,.5)] p-6 backdrop-blur-[7px] max-sm:p-3" role="presentation">
       <section
+        ref={dialogRef}
+        tabIndex={-1}
         className="province-picker-dialog relative max-h-[min(760px,calc(100dvh-48px))] w-[min(860px,100%)] overflow-auto rounded-[22px] border border-jade-500/25 bg-card [background-image:radial-gradient(circle_at_100%_0%,rgba(45,125,95,.11),transparent_22rem)] p-[34px] shadow-[0_30px_90px_rgba(23,29,25,.32)] max-sm:max-h-[calc(100dvh-24px)] max-sm:p-5"
         role="dialog"
         aria-modal="true"

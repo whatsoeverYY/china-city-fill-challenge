@@ -148,49 +148,66 @@ export default function GauntletQuestionStage({
         ) : <LoadingMap />;
     }
     if (s.level === LEVEL.PLATE_CITY_MAP) {
+      if (!d.currentCity) return <LoadingMap />;
+      if (!d.plateCityMapFocusedProvince) {
+        return s.nationalMap ? (
+          <div className="gauntlet-map-question plate-city-map-question relative grid size-full place-items-center">
+            <div className="map-question-banner plate-city-map-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
+              <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">
+                先选择一个高亮省份，省份选择不会判错
+              </small>
+              <strong className="font-serif text-[23px]">{d.currentCity.plate}</strong>
+            </div>
+            <GauntletNationalMap
+              map={s.nationalMap}
+              selectedCodes={d.selectedQuizProvinces}
+              routeCodes={[]}
+              originCode={null}
+              showLabels={false}
+              onProvince={(province) => {
+                if (d.selectedQuizProvinces.has(province.code)) {
+                  s.setPlateCityMapFocusedProvinceCode(province.code);
+                  return;
+                }
+                s.setFeedback("该省份不在当前题目范围内，请选择高亮省份");
+              }}
+            />
+          </div>
+        ) : <LoadingMap />;
+      }
       if (d.gauntletDetailError) {
         return <p className="map-error grid min-h-48 place-items-center p-8 text-center text-sm font-bold text-city-900">所选省份地图载入失败，请重试本关</p>;
       }
-      return d.gauntletDetailMap && d.gauntletDetailReady && d.currentCity ? (
+      return d.gauntletDetailMap && d.gauntletDetailReady ? (
         <div className="gauntlet-map-question plate-city-map-question relative grid size-full place-items-center">
           <div className="map-question-banner plate-city-map-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
             <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">
-              {d.plateCityMapFocusedProvince
-                ? "已放大一张省级地图，点击城市区块后才会判题"
-                : "可以直接点击城市，也可以先选择一张省级地图放大"}
+              {s.answerReview
+                ? "已切换到正确省份，正确城市已在地图中高亮"
+                : "省内地图已载入，点击城市区块后才会判题"}
             </small>
             <strong className="font-serif text-[23px]">{d.currentCity.plate}</strong>
           </div>
-          {d.plateCityMapFocusedProvince ? (
-            <div className="gauntlet-focused-province-map grid size-full grid-rows-[auto_1fr] gap-3">
-              <div className="gauntlet-focused-province-toolbar flex items-center justify-between gap-3 rounded-xl bg-card p-3 text-xs">
-                <span className="text-ink-soft">省份选择不会判错，城市落点后才计算答案</span>
-                <button
-                  className="min-h-10 cursor-pointer rounded-full border border-black/15 bg-white px-3 py-2 text-compact font-black max-md:min-h-11"
-                  type="button"
-                  onClick={() => s.setPlateCityMapFocusedProvinceCode(null)}
-                >
-                  ← 返回重新选省
-                </button>
-              </div>
-              <GauntletProvinceMapWall
-                map={d.gauntletDetailMap}
-                provinces={[d.plateCityMapFocusedProvince]}
-                onRegion={actions.handleDetailRegion}
-                correctRegionId={s.answerReview?.highlightRegionId}
-                readOnly={Boolean(s.answerReview)}
-              />
+          <div className="gauntlet-focused-province-map grid size-full grid-rows-[auto_1fr] gap-3">
+            <div className="gauntlet-focused-province-toolbar flex items-center justify-between gap-3 rounded-xl bg-card p-3 text-xs">
+              <span className="text-ink-soft">省份选择不会判错，城市落点后才计算答案</span>
+              <button
+                className="min-h-10 cursor-pointer rounded-full border border-black/15 bg-white px-3 py-2 text-compact font-black disabled:cursor-not-allowed disabled:opacity-40 max-md:min-h-11"
+                type="button"
+                disabled={Boolean(s.answerReview)}
+                onClick={() => s.setPlateCityMapFocusedProvinceCode(null)}
+              >
+                ← 返回全国地图
+              </button>
             </div>
-          ) : (
             <GauntletProvinceMapWall
               map={d.gauntletDetailMap}
-              provinces={d.selectedCityMapProvinces}
+              provinces={[d.plateCityMapFocusedProvince]}
               onRegion={actions.handleDetailRegion}
-              onProvinceFocus={s.setPlateCityMapFocusedProvinceCode}
               correctRegionId={s.answerReview?.highlightRegionId}
               readOnly={Boolean(s.answerReview)}
             />
-          )}
+          </div>
         </div>
       ) : <LoadingMap />;
     }

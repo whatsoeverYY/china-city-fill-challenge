@@ -9,6 +9,7 @@ import {
 } from "@/domain/game/gauntlet-levels";
 import { PROVINCES } from "@/domain/geography/data/provinces";
 import { usePlayerData } from "@/features/player/player-data-context";
+import { useModalDialog } from "@/shared/hooks/use-modal-dialog";
 import {
   EMPTY_DASHBOARD_STATS,
   type AdminPlayerRow,
@@ -86,6 +87,16 @@ export default function AdminDashboard() {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const loadSequenceRef = useRef(0);
   const detailSequenceRef = useRef(0);
+  const closePlayerDetails = () => {
+    detailSequenceRef.current += 1;
+    setSelectedPlayer(null);
+    setSelectedProgress(null);
+    setDeleteTarget(null);
+  };
+  const detailDialogRef = useModalDialog(Boolean(selectedPlayer), () => {
+    if (deleteTarget) setDeleteTarget(null);
+    else closePlayerDetails();
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -203,8 +214,8 @@ export default function AdminDashboard() {
       <main className="admin-state-page grid min-h-dvh place-content-center justify-items-center p-7 text-center">
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-city-500 font-serif text-xl font-black text-white" aria-hidden="true">离</span>
         <h1 className="mb-2 mt-3.5 font-serif text-page font-bold max-md:text-page-mobile">管理员后台需要联网</h1>
-        <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">游戏仍可离线继续；连接网络后刷新此页面即可查看玩家数据。</p>
-        <a className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>返回离线游戏</a>
+        <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">当前已打开的游戏页面仍可继续操作；重新打开或切换页面可能需要网络。连接网络后刷新此页面即可查看玩家数据。</p>
+        <a className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>返回游戏首页</a>
       </main>
     );
   }
@@ -322,13 +333,8 @@ export default function AdminDashboard() {
 
       {selectedPlayer ? (
         <div className="admin-detail-backdrop fixed inset-0 z-[1600] grid place-items-center bg-ink-900/55 p-5 backdrop-blur-md" role="presentation">
-          <section className="admin-detail-dialog relative max-h-[calc(100dvh_-_44px)] w-full max-w-[760px] overflow-auto rounded-[22px_22px_22px_7px] bg-card p-8 shadow-2xl max-sm:p-5" role="dialog" aria-modal="true" aria-labelledby="admin-detail-title">
-            <button className="dialog-close absolute right-4 top-4 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-black/5 text-xl" type="button" aria-label="关闭玩家详情" onClick={() => {
-              detailSequenceRef.current += 1;
-              setSelectedPlayer(null);
-              setSelectedProgress(null);
-              setDeleteTarget(null);
-            }}>×</button>
+          <section ref={detailDialogRef} tabIndex={-1} className="admin-detail-dialog relative max-h-[calc(100dvh_-_44px)] w-full max-w-[760px] overflow-auto rounded-[22px_22px_22px_7px] bg-card p-8 shadow-2xl max-sm:p-5" role="dialog" aria-modal="true" aria-labelledby="admin-detail-title">
+            <button className="dialog-close absolute right-4 top-4 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-black/5 text-xl" type="button" aria-label="关闭玩家详情" onClick={closePlayerDetails}>×</button>
             <p className="eyebrow m-0 text-xs font-black tracking-[0.16em] text-city-500">PLAYER DETAIL</p>
             <h2 className="mb-5 mt-0 break-words font-serif text-section font-bold max-sm:text-section-mobile" id="admin-detail-title">{selectedPlayer.email}</h2>
             <div className="admin-detail-metrics grid grid-cols-4 gap-2 max-sm:grid-cols-2">

@@ -1,3 +1,5 @@
+"use client";
+
 import type {
   Dispatch,
   FormEventHandler,
@@ -7,6 +9,7 @@ import type {
 import type { MapFeature } from "@/features/map/model/map-data";
 import type { SyncStatus } from "@/features/player/model/player-types";
 import type { CityDragGhost } from "@/features/city-challenge/model/city-challenge-types";
+import { useModalDialog } from "@/shared/hooks/use-modal-dialog";
 
 export default function ChallengeFooterAndOverlays({
   signedIn,
@@ -35,6 +38,13 @@ export default function ChallengeFooterAndOverlays({
   setManualError: Dispatch<SetStateAction<string>>;
   onSubmitManualAnswer: FormEventHandler<HTMLFormElement>;
 }) {
+  const closeManualAnswer = () => {
+    setPendingFeature(null);
+    setManualAnswer("");
+    setManualError("");
+  };
+  const answerDialogRef = useModalDialog(Boolean(pendingFeature), closeManualAnswer);
+
   return (
     <>
       <footer className="mt-6 flex flex-wrap justify-center gap-x-4 text-center text-xs leading-6 text-ink-soft">
@@ -52,7 +62,7 @@ export default function ChallengeFooterAndOverlays({
         <span>
           {signedIn
             ? syncStatus === "offline"
-              ? "离线进度已保存在本机，联网后自动同步"
+              ? "当前页面进度已保存在本机，联网后自动同步"
               : syncStatus === "synced"
                 ? "进度已按账号保存并同步到云端"
                 : syncStatus === "error"
@@ -65,6 +75,8 @@ export default function ChallengeFooterAndOverlays({
       {pendingFeature ? (
         <div className="answer-dialog-backdrop fixed inset-0 z-50 grid place-items-center bg-black/35 p-4 backdrop-blur-sm" role="presentation">
           <section
+            ref={answerDialogRef}
+            tabIndex={-1}
             className={`answer-dialog relative w-full max-w-md rounded-3xl bg-card p-6 shadow-2xl ${manualError ? "animate-[dialog-shake_300ms_ease]" : ""}`}
             role="dialog"
             aria-modal="true"
@@ -74,11 +86,7 @@ export default function ChallengeFooterAndOverlays({
               className="dialog-close absolute right-4 top-4 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-black/5 text-xl"
               type="button"
               aria-label="关闭输入框"
-              onClick={() => {
-                setPendingFeature(null);
-                setManualAnswer("");
-                setManualError("");
-              }}
+              onClick={closeManualAnswer}
             >
               ×
             </button>
@@ -96,6 +104,7 @@ export default function ChallengeFooterAndOverlays({
               <div className="manual-answer-row mt-2 flex gap-2">
                 <input
                   id="manual-answer"
+                  data-autofocus
                   ref={manualAnswerInputRef}
                   value={manualAnswer}
                   autoComplete="off"

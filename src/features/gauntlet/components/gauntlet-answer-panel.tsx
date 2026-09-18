@@ -210,15 +210,15 @@ export default function GauntletAnswerPanel({
         <>
           <h2 className={ANSWER_TITLE_CLASS}>
             {d.plateCityMapFocusedProvince
-              ? "在放大地图中选择城市"
-              : "直接选城市，或先放大省份"}
+              ? "在省内地图中选择城市"
+              : "先选省份，再选择城市"}
           </h2>
           <p className={SUMMARY_CLASS}>
-            点击城市区块会立即判题；点击每张地图右上角的“放大”只会进入该省，不会判错。
+            先在全国地图选择高亮省份，这一步不会判错；进入省内地图后，点击城市区块才会立即判题。
           </p>
           {d.plateCityMapFocusedProvince ? (
             <p className={SUMMARY_CLASS}>
-              如果省份没选对，可以返回地图墙重新选择，期间不会影响连胜。
+              如果省份没选对，可以返回全国地图重新选择，期间不会影响连胜。
             </p>
           ) : null}
           <p className={SUMMARY_CLASS}>

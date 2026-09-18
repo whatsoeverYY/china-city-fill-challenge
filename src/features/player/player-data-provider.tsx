@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { PlayerDataContext } from "@/features/player/player-data-context";
+import PlayerInitializationGate from "@/features/player/components/player-initialization-gate";
 import type {
   PlayerDataContextValue,
   PlayerIdentity,
@@ -70,7 +71,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     }
     if (!navigator.onLine) {
       setSyncStatus("offline");
-      setSyncMessage("离线游玩中，联网后会自动同步");
+      setSyncMessage("网络已断开，当前页面进度暂存在本机");
       return;
     }
     syncingRef.current = true;
@@ -165,7 +166,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     if (!activeUserRef.current) return;
     setSyncStatus(navigator.onLine ? "pending" : "offline");
     setSyncMessage(
-      navigator.onLine ? "新进度等待同步" : "离线进度已保存在本机",
+      navigator.onLine ? "新进度等待同步" : "当前页面进度已保存在本机",
     );
     if (syncTimerRef.current !== null) {
       window.clearTimeout(syncTimerRef.current);
@@ -211,7 +212,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
             );
             setOfflineIdentity(true);
             setSyncStatus("offline");
-            setSyncMessage("离线存档已载入，联网后会恢复同步");
+            setSyncMessage("已读取本机存档，联网后会恢复同步");
             if (readyUserRef.current !== cached.id) {
               readyUserRef.current = cached.id;
               setProgressEpoch((value) => value + 1);
@@ -245,6 +246,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
         return;
       }
 
+      setInitialized(false);
       setSyncStatus("loading");
       setSyncMessage("正在载入你的存档…");
       await Promise.all([loadProfile(nextSession), syncProgress(nextIdentity.id)]);
@@ -260,9 +262,13 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     if (!supabaseConfigured) return;
     const supabase = getSupabaseClient();
     let disposed = false;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!disposed) void activateSession(data.session);
-    });
+    void supabase.auth.getSession()
+      .then(({ data }) => {
+        if (!disposed) void activateSession(data.session);
+      })
+      .catch(() => {
+        if (!disposed) void activateSession(null);
+      });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!disposed) {
         window.setTimeout(() => void activateSession(nextSession), AUTH_EVENT_DEFER_MS);
@@ -286,7 +292,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     const handleOffline = () => {
       if (!activeUserRef.current) return;
       setSyncStatus("offline");
-      setSyncMessage("离线游玩中，进度保存在本机");
+      setSyncMessage("网络已断开，当前页面进度保存在本机");
     };
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") void syncNow();
@@ -379,7 +385,9 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
 
   return (
     <PlayerDataContext.Provider value={value}>
-      {children}
+      <PlayerInitializationGate initialized={initialized}>
+        {children}
+      </PlayerInitializationGate>
     </PlayerDataContext.Provider>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Province } from "@/domain/geography/data/provinces";
 import { GAUNTLET_LEVEL_ID } from "@/domain/game/gauntlet-level-ids";
 import type { MapRegionQuizItem } from "@/features/gauntlet/data/map-region-quiz-data";
 import type { GauntletLevel } from "@/features/gauntlet/model/gauntlet-types";
@@ -11,11 +10,11 @@ const LEVEL = GAUNTLET_LEVEL_ID;
 export function useGauntletDetailMap({
   currentMapRegion,
   level,
-  selectedCityMapProvinces,
+  plateCityMapFocusedProvinceCode,
 }: {
   currentMapRegion: MapRegionQuizItem | null;
   level: GauntletLevel | null;
-  selectedCityMapProvinces: Province[];
+  plateCityMapFocusedProvinceCode: string | null;
 }) {
   const detailProvinceCode =
     (level === LEVEL.REGION_MAP || level === LEVEL.CITY_NEIGHBORS) &&
@@ -23,7 +22,9 @@ export function useGauntletDetailMap({
     ? currentMapRegion.provinceCode
     : null;
   const detailProvinceCodes = level === LEVEL.PLATE_CITY_MAP
-    ? selectedCityMapProvinces.map((province) => province.code)
+    ? plateCityMapFocusedProvinceCode
+      ? [plateCityMapFocusedProvinceCode]
+      : []
     : detailProvinceCode
       ? [detailProvinceCode]
       : [];

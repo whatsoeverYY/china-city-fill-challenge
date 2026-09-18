@@ -1,9 +1,11 @@
 import {
+  GAUNTLET_MISTAKES_KEY,
   MAP_COMPLETION_MARKER,
   MAP_PROGRESS_KEYS,
   PROGRESS_STORAGE_KEYS,
   type MapProgressKey,
 } from "./progress-keys.ts";
+import { parseMistakeProgress } from "./mistake-progress.ts";
 import { CURRENT_PROGRESS_SCHEMA_VERSION } from "./progress-config.ts";
 import {
   latestProgressIso,
@@ -23,11 +25,16 @@ export {
   normalizeProgressSnapshot,
   progressPayloadByteLength,
 } from "./progress-snapshot.ts";
+export { parseMistakeProgress } from "./mistake-progress.ts";
 export type { ProgressSnapshot } from "./progress-snapshot.ts";
 
 export type ProgressStorage = {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
+  updateItem: (
+    key: string,
+    resolveValue: (previousValue: string | null) => string,
+  ) => string;
   setMapProgress: (
     key: MapProgressKey,
     provinceCode: string,
@@ -96,22 +103,37 @@ function updateMetadataForWrite(
   now: string,
 ) {
   meta.keys[key] = now;
-  if (!MAP_PROGRESS_KEYS.has(key)) return;
+  if (MAP_PROGRESS_KEYS.has(key)) {
+    const previous = parseMapProgress(previousValue);
+    const next = parseMapProgress(nextValue);
+    for (const provinceCode of new Set([
+      ...Object.keys(previous),
+      ...Object.keys(next),
+    ])) {
+      if (JSON.stringify(previous[provinceCode] ?? []) === JSON.stringify(next[provinceCode] ?? [])) {
+        continue;
+      }
+      const scope = progressScope(key, provinceCode);
+      meta.scopes[scope] = now;
+      if ((previous[provinceCode]?.length ?? 0) > 0 && (next[provinceCode]?.length ?? 0) === 0) {
+        meta.resets[scope] = now;
+      }
+    }
+    return;
+  }
+  if (key !== GAUNTLET_MISTAKES_KEY) return;
 
-  const previous = parseMapProgress(previousValue);
-  const next = parseMapProgress(nextValue);
-  for (const provinceCode of new Set([
-    ...Object.keys(previous),
-    ...Object.keys(next),
-  ])) {
-    if (JSON.stringify(previous[provinceCode] ?? []) === JSON.stringify(next[provinceCode] ?? [])) {
-      continue;
-    }
-    const scope = progressScope(key, provinceCode);
+  const previous = new Map(
+    parseMistakeProgress(previousValue).map((item) => [item.id, item]),
+  );
+  const next = new Map(
+    parseMistakeProgress(nextValue).map((item) => [item.id, item]),
+  );
+  for (const id of new Set([...previous.keys(), ...next.keys()])) {
+    if (JSON.stringify(previous.get(id)) === JSON.stringify(next.get(id))) continue;
+    const scope = progressScope(key, id);
     meta.scopes[scope] = now;
-    if ((previous[provinceCode]?.length ?? 0) > 0 && (next[provinceCode]?.length ?? 0) === 0) {
-      meta.resets[scope] = now;
-    }
+    if (previous.has(id) && !next.has(id)) meta.resets[scope] = now;
   }
 }
 
@@ -120,6 +142,11 @@ export function createTrialProgressStorage(memory: Map<string, string>): Progres
     getItem: (key) => memory.get(key) ?? null,
     setItem: (key, value) => {
       memory.set(key, value);
+    },
+    updateItem: (key, resolveValue) => {
+      const nextValue = resolveValue(memory.get(key) ?? null);
+      memory.set(key, nextValue);
+      return nextValue;
     },
     setMapProgress: (key, provinceCode, regionIds) => {
       memory.set(
@@ -181,6 +208,11 @@ export function createUserProgressStorage(
     ),
     setItem: (key, value) => {
       observeMapValue(key, writeItem(key, () => value));
+    },
+    updateItem: (key, resolveValue) => {
+      const nextValue = writeItem(key, resolveValue);
+      observeMapValue(key, nextValue);
+      return nextValue;
     },
     setMapProgress: (key, provinceCode, regionIds) => {
       const observedRegionIds = observedMaps.get(key)?.[provinceCode] ?? [];

@@ -237,7 +237,7 @@ function useGauntletDerivedValue() {
     useGauntletDetailMap({
       currentMapRegion,
       level,
-      selectedCityMapProvinces,
+      plateCityMapFocusedProvinceCode,
     });
   const selectedQuizItems = useMemo(
     () => CITY_QUIZ_DATA.filter(

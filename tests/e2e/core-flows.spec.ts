@@ -72,3 +72,77 @@ test("mobile account control does not cover the primary answer action", async ({
   );
   expect(overlapWidth * overlapHeight).toBe(0);
 });
+
+test("account dialog focuses content, closes with Escape, and restores focus", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const accountButton = page.locator(".account-fab");
+  await expect(page.locator('svg path[role="button"]')).toHaveCount(34);
+  await accountButton.click();
+  const dialog = page.getByRole("dialog", { name: /登录后|欢迎回来/ });
+  await expect(dialog).toBeVisible();
+
+  const emailInput = page.locator("#account-email");
+  if (await emailInput.count()) {
+    await expect(emailInput).toBeFocused();
+  } else {
+    await expect(dialog.getByRole("button", { name: "关闭账户面板" }))
+      .toBeFocused();
+  }
+
+  const closeButton = dialog.getByRole("button", { name: "关闭账户面板" });
+  await closeButton.focus();
+  await page.keyboard.press("Shift+Tab");
+  expect(await dialog.evaluate((element) =>
+    element.contains(document.activeElement)
+  )).toBe(true);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(accountButton).toBeFocused();
+});
+
+test("plate city map loads only the selected province detail map", async ({
+  page,
+}) => {
+  const detailMapCodes: string[] = [];
+  page.on("request", (request) => {
+    const code = request.url().match(/\/data\/maps\/(\d{6})\.json(?:\?|$)/)?.[1];
+    if (code && code !== "100000") detailMapCodes.push(code);
+  });
+
+  await page.goto("/gauntlet/plate-city-map");
+  await expect(page.getByText("先选择一个高亮省份，省份选择不会判错"))
+    .toBeVisible();
+  expect(detailMapCodes).toEqual([]);
+
+  await page.getByRole("button", { name: "江苏省，已选择" }).click();
+  await expect(page.getByText("省内地图已载入，点击城市区块后才会判题"))
+    .toBeVisible();
+  expect(new Set(detailMapCodes)).toEqual(new Set(["320000"]));
+});
+
+test("Escape closes only the topmost stacked dialog", async ({ page }) => {
+  await page.goto("/city-fill/320000?answer=manual");
+  await page.getByRole("button", { name: "待填充区域" }).first().click();
+
+  const answerDialog = page.getByRole("dialog", {
+    name: "这里是什么城市或区县？",
+  });
+  await expect(answerDialog).toBeVisible();
+  await page.locator(".account-fab").click();
+  const accountDialog = page.getByRole("dialog", { name: /登录后|欢迎回来/ });
+  await expect(accountDialog).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(accountDialog).toBeHidden();
+  await expect(answerDialog).toBeVisible();
+  await expect(page.locator("#manual-answer")).toBeFocused();
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.keyboard.press("Escape");
+  await expect(answerDialog).toBeHidden();
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe("");
+});

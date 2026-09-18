@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  GAUNTLET_MISTAKES_KEY,
   GAUNTLET_PROVINCE_SCOPE_KEY,
   GAUNTLET_PROGRESS_KEY,
   GAUNTLET_REGION_MAP_HISTORY_KEY,
@@ -16,6 +17,18 @@ import { GAUNTLET_LEVEL_ID } from "../src/domain/game/gauntlet-level-ids.ts";
 const BEFORE_RESET = "2026-08-27T00:00:00.000Z";
 const RESET_AT = "2026-08-27T01:00:00.000Z";
 const AFTER_RESET = "2026-08-27T02:00:00.000Z";
+
+function mistake(id, wrongCount = 1) {
+  return {
+    id,
+    category: "城市",
+    prompt: `题目 ${id}`,
+    answers: [id],
+    correctAnswer: id,
+    explanation: `解释 ${id}`,
+    wrongCount,
+  };
+}
 
 function staleSnapshot(savedAt = BEFORE_RESET) {
   return {
@@ -164,6 +177,61 @@ test("gauntlet progress merges current stable IDs and rejects unknown IDs", () =
   assert.deepEqual(
     JSON.parse(merged.values[GAUNTLET_PROGRESS_KEY] ?? "[]"),
     [GAUNTLET_LEVEL_ID.CITY_PROVINCE, GAUNTLET_LEVEL_ID.PROVINCE_SHAPE].sort(),
+  );
+});
+
+test("mistakes from different devices merge by question id", () => {
+  const local = staleSnapshot(BEFORE_RESET);
+  local.values[GAUNTLET_MISTAKES_KEY] = JSON.stringify([mistake("local")]);
+  local.meta.keys[GAUNTLET_MISTAKES_KEY] = BEFORE_RESET;
+  const remote = staleSnapshot(AFTER_RESET);
+  remote.values[GAUNTLET_MISTAKES_KEY] = JSON.stringify([mistake("remote")]);
+  remote.meta.keys[GAUNTLET_MISTAKES_KEY] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(local, remote);
+
+  assert.deepEqual(
+    JSON.parse(merged.values[GAUNTLET_MISTAKES_KEY] ?? "[]").map((item) => item.id),
+    ["local", "remote"],
+  );
+});
+
+test("the newest version of one mistake wins without replacing other mistakes", () => {
+  const local = staleSnapshot(BEFORE_RESET);
+  local.values[GAUNTLET_MISTAKES_KEY] = JSON.stringify([
+    mistake("shared"),
+    mistake("local"),
+  ]);
+  local.meta.keys[GAUNTLET_MISTAKES_KEY] = BEFORE_RESET;
+  const remote = staleSnapshot(AFTER_RESET);
+  remote.values[GAUNTLET_MISTAKES_KEY] = JSON.stringify([
+    mistake("shared", 3),
+  ]);
+  remote.meta.keys[GAUNTLET_MISTAKES_KEY] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(local, remote);
+  const mistakes = JSON.parse(merged.values[GAUNTLET_MISTAKES_KEY] ?? "[]");
+
+  assert.equal(mistakes.find((item) => item.id === "shared")?.wrongCount, 3);
+  assert.ok(mistakes.some((item) => item.id === "local"));
+});
+
+test("mastering a mistake creates a tombstone that beats stale devices", () => {
+  const local = staleSnapshot(BEFORE_RESET);
+  local.values[GAUNTLET_MISTAKES_KEY] = JSON.stringify([mistake("mastered")]);
+  local.meta.keys[GAUNTLET_MISTAKES_KEY] = BEFORE_RESET;
+  const remote = staleSnapshot(AFTER_RESET);
+  remote.values[GAUNTLET_MISTAKES_KEY] = "[]";
+  remote.meta.keys[GAUNTLET_MISTAKES_KEY] = AFTER_RESET;
+  remote.meta.scopes[`${GAUNTLET_MISTAKES_KEY}:mastered`] = AFTER_RESET;
+  remote.meta.resets[`${GAUNTLET_MISTAKES_KEY}:mastered`] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(local, remote);
+
+  assert.deepEqual(JSON.parse(merged.values[GAUNTLET_MISTAKES_KEY] ?? "[]"), []);
+  assert.equal(
+    merged.meta.resets[`${GAUNTLET_MISTAKES_KEY}:mastered`],
+    AFTER_RESET,
   );
 });
 

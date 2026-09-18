@@ -194,8 +194,10 @@ export function useGauntletSelectionActions(
     }
     const city = d.currentCity;
     if (s.level !== LEVEL.PLATE_CITY_MAP || !city || s.answerReview) return;
-    s.setPlateCityMapFocusedProvinceCode(null);
     const correct = regionId === city.regionCode;
+    s.setPlateCityMapFocusedProvinceCode(
+      correct ? null : city.provinceCode,
+    );
     advance.rememberCityMapQuestion(LEVEL.PLATE_CITY_MAP, city);
     advance.advanceStreakChallenge(
       LEVEL.PLATE_CITY_MAP,

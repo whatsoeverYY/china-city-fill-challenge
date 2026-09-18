@@ -203,6 +203,9 @@ export function useGauntletAdvanceActions(round: GauntletRoundActions) {
       s.setCityNeighborHintVisible(false);
       s.setCityNeighborRetry(false);
     }
+    if (reviewedLevel === LEVEL.PLATE_CITY_MAP) {
+      s.setPlateCityMapFocusedProvinceCode(null);
+    }
     if (nextAction === "finish") {
       round.finishLevel(reviewedLevel);
       return;
