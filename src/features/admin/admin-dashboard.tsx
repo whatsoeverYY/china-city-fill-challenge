@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { appPath } from "@/shared/lib/app-path";
+import AppLink from "@/shared/components/app-link";
 import { operationErrorMessage } from "@/shared/lib/error";
 import {
   GAUNTLET_LEVEL_COUNT,
@@ -195,7 +196,7 @@ export default function AdminDashboard() {
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-city-500 font-serif text-xl font-black text-white" aria-hidden="true">锁</span>
         <h1 className="mb-2 mt-3.5 font-serif text-page font-bold max-md:text-page-mobile">请先登录管理员账号</h1>
         <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">回到游戏首页，点击右下角“登录保存”完成登录。</p>
-        <a className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>返回游戏首页</a>
+        <AppLink className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>返回游戏首页</AppLink>
       </main>
     );
   }
@@ -205,7 +206,7 @@ export default function AdminDashboard() {
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-city-500 font-serif text-xl font-black text-white" aria-hidden="true">止</span>
         <h1 className="mb-2 mt-3.5 font-serif text-page font-bold max-md:text-page-mobile">当前账号没有管理员权限</h1>
         <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">{identity.email} 可以正常游戏，但不能查看其他玩家数据。</p>
-        <a className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>继续游戏</a>
+        <AppLink className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>继续游戏</AppLink>
       </main>
     );
   }
@@ -215,7 +216,7 @@ export default function AdminDashboard() {
         <span className="admin-state-mark grid size-16 place-items-center rounded-[20px_20px_20px_5px] bg-city-500 font-serif text-xl font-black text-white" aria-hidden="true">离</span>
         <h1 className="mb-2 mt-3.5 font-serif text-page font-bold max-md:text-page-mobile">管理员后台需要联网</h1>
         <p className="mb-5 max-w-lg text-xs leading-6 text-ink-soft">当前已打开的游戏页面仍可继续操作；重新打开或切换页面可能需要网络。连接网络后刷新此页面即可查看玩家数据。</p>
-        <a className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>返回游戏首页</a>
+        <AppLink className="inline-flex min-h-10 items-center justify-center rounded-xl bg-jade-500 px-4 py-2.5 text-compact font-extrabold text-white no-underline max-sm:min-h-11" href={appPath("/")}>返回游戏首页</AppLink>
       </main>
     );
   }
@@ -231,7 +232,7 @@ export default function AdminDashboard() {
           <p className="mb-0 text-compact text-ink-soft">查看玩家账号、活跃时间、地图完成度、闯关进度与完整云存档。</p>
         </div>
         <div className="admin-header-actions flex gap-2.5 max-sm:grid max-sm:grid-cols-2">
-          <a className="grid min-h-11 place-items-center rounded-xl border border-black/15 bg-card px-3.5 py-2 text-compact font-extrabold no-underline" href={appPath("/")}>← 返回游戏</a>
+          <AppLink className="grid min-h-11 place-items-center rounded-xl border border-black/15 bg-card px-3.5 py-2 text-compact font-extrabold no-underline" href={appPath("/")}>← 返回游戏</AppLink>
           <button className="min-h-11 cursor-pointer rounded-xl border border-black/15 bg-card px-3.5 py-2 text-compact font-extrabold" type="button" onClick={() => void loadPlayers()} disabled={loading}>
             {loading ? "刷新中…" : "刷新数据"}
           </button>

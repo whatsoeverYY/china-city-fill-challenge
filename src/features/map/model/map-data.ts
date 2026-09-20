@@ -49,6 +49,8 @@ export function normalizeMapRegionName(name: string, code: string) {
 }
 
 const mapPromiseCache = new Map<string, Promise<MapData>>();
+const mapDataCache = new Map<string, MapData>();
+const mapCollectionCache = new Map<string, MapData>();
 
 function isMapData(value: unknown): value is MapData {
   if (!value || typeof value !== "object") return false;
@@ -84,7 +86,40 @@ function mapDataUrl(code: string) {
   return new URL(appPath(`/data/maps/${code}.json`), document.baseURI).toString();
 }
 
+function createMapCollection(codes: string[], maps: MapData[]): MapData {
+  const codeKey = codes.join(",");
+  const cached = mapCollectionCache.get(codeKey);
+  if (cached) return cached;
+
+  const collection: MapData = {
+    type: "FeatureCollection",
+    features: maps.flatMap((map, index) => {
+      const code = codes[index];
+      return map.features.map((feature) => ({
+        ...feature,
+        properties: { ...feature.properties, provinceCode: code },
+      }));
+    }),
+  };
+  mapCollectionCache.set(codeKey, collection);
+  return collection;
+}
+
+function getCachedMapCollection(codes: string[]) {
+  if (codes.length === 0) return null;
+
+  const cachedCollection = mapCollectionCache.get(codes.join(","));
+  if (cachedCollection) return cachedCollection;
+
+  const maps = codes.map((code) => mapDataCache.get(code));
+  if (!maps.every((map): map is MapData => Boolean(map))) return null;
+  return createMapCollection(codes, maps);
+}
+
 export function fetchMapData(code: string) {
+  const cachedData = mapDataCache.get(code);
+  if (cachedData) return Promise.resolve(cachedData);
+
   const cached = mapPromiseCache.get(code);
   if (cached) return cached;
 
@@ -93,7 +128,9 @@ export function fetchMapData(code: string) {
       if (!response.ok) throw new Error(`地图载入失败（${response.status}）`);
       const value: unknown = await response.json();
       if (!isMapData(value)) throw new Error("地图数据格式无效");
-      return normalizeMap(value, code);
+      const data = normalizeMap(value, code);
+      mapDataCache.set(code, data);
+      return data;
     })
     .catch((error) => {
       mapPromiseCache.delete(code);
@@ -114,8 +151,14 @@ export function useMapCollection(codes: string[]) {
     data: MapData | null;
     error: boolean;
   }>({ key: "", data: null, error: false });
-  const data = result.key === codeKey ? result.data : null;
-  const error = result.key === codeKey ? result.error : false;
+  const requestedCodes = codeKey ? codeKey.split(",") : [];
+  const cachedData = getCachedMapCollection(requestedCodes);
+  const data = result.key === codeKey ? result.data ?? cachedData : cachedData;
+  const error = cachedData
+    ? false
+    : result.key === codeKey
+      ? result.error
+      : false;
 
   useEffect(() => {
     let cancelled = false;
@@ -124,22 +167,18 @@ export function useMapCollection(codes: string[]) {
     };
 
     const requestedCodes = codeKey.split(",");
+    const cachedCollection = getCachedMapCollection(requestedCodes);
+    if (cachedCollection) return () => {
+      cancelled = true;
+    };
+
     Promise.all(requestedCodes.map(fetchMapData))
       .then((maps) => {
         if (cancelled) return;
         setResult({
           key: codeKey,
           error: false,
-          data: {
-            type: "FeatureCollection",
-            features: maps.flatMap((map, index) => {
-              const code = requestedCodes[index];
-              return map.features.map((feature) => ({
-                ...feature,
-                properties: { ...feature.properties, provinceCode: code },
-              }));
-            }),
-          },
+          data: createMapCollection(requestedCodes, maps),
         });
       })
       .catch(() => {

@@ -1,5 +1,6 @@
 import { PROVINCES, type Province } from "@/domain/geography/data/provinces";
 import { cityChallengePath } from "@/features/city-challenge/config/city-challenge-routes";
+import AppLink from "@/shared/components/app-link";
 import PageBreadcrumbs from "@/shared/components/page-breadcrumbs";
 import { routePath } from "@/shared/lib/app-path";
 
@@ -43,15 +44,15 @@ export default function ChallengeHeader({
         <div className="header-actions flex flex-wrap items-center justify-end gap-[22px] max-[1050px]:w-full max-[1050px]:gap-2.5 max-[1050px]:border-t max-[1050px]:border-black/[.13] max-[1050px]:pt-3 max-md:grid max-md:grid-cols-2 max-md:gap-1.5">
           {!province ? (
             <>
-              <a className="atlas-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-atlas-500/30 bg-atlas-100 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-atlas-700 no-underline transition hover:-translate-y-px hover:bg-atlas-300 max-md:hidden" href={routePath("/atlas")}>
+              <AppLink className="atlas-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-atlas-500/30 bg-atlas-100 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-atlas-700 no-underline transition hover:-translate-y-px hover:bg-atlas-300 max-md:hidden" href={routePath("/atlas")}>
                 <span className="grid size-5 place-items-center rounded-full bg-atlas-500 font-sans text-[10px] font-bold leading-none tracking-normal text-white" aria-hidden="true">图</span><span className="max-sm:hidden">全国车牌图鉴</span><span className="hidden max-sm:inline">图鉴</span>
-              </a>
-              <a className="knowledge-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-scholar-600/30 bg-scholar-100 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-scholar-600 no-underline transition hover:-translate-y-px hover:bg-scholar-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-meta max-sm:tracking-normal" href={routePath("/knowledge")}>
+              </AppLink>
+              <AppLink className="knowledge-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-scholar-600/30 bg-scholar-100 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-scholar-600 no-underline transition hover:-translate-y-px hover:bg-scholar-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-meta max-sm:tracking-normal" href={routePath("/knowledge")}>
                 <span className="grid size-5 place-items-center rounded-full bg-scholar-500 font-sans text-[10px] font-bold leading-none tracking-normal text-white" aria-hidden="true">知</span><span className="max-sm:hidden">地理知识馆</span><span className="hidden max-sm:inline">知识</span>
-              </a>
-              <a className="gauntlet-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-gold-600/35 bg-gold-200 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-gold-900 no-underline transition hover:-translate-y-px hover:bg-gold-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-meta max-sm:tracking-normal" href={routePath("/gauntlet")}>
+              </AppLink>
+              <AppLink className="gauntlet-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-gold-600/35 bg-gold-200 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-gold-900 no-underline transition hover:-translate-y-px hover:bg-gold-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-meta max-sm:tracking-normal" href={routePath("/gauntlet")}>
                 <span className="grid size-5 place-items-center rounded-full bg-gold-600 font-sans text-[10px] font-bold leading-none tracking-normal text-gold-100" aria-hidden="true">关</span><span className="max-sm:hidden">过关斩将</span><span className="hidden max-sm:inline">闯关</span>
-              </a>
+              </AppLink>
             </>
           ) : null}
           <div

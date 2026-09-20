@@ -14,6 +14,7 @@ import {
   type KnowledgeTone,
 } from "@/features/knowledge/data/knowledge-data";
 import { knowledgeCategoryPath } from "@/features/knowledge/config/knowledge-routes";
+import AppLink from "@/shared/components/app-link";
 
 const KNOWLEDGE_TONE_CLASSES: Record<KnowledgeTone, {
   accent: string;
@@ -92,7 +93,7 @@ export default function KnowledgeCatalog() {
         </div>
         <div className="knowledge-category-grid grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
           {KNOWLEDGE_CATEGORIES.map((category, index) => (
-            <a
+            <AppLink
               className={`knowledge-category-card relative grid min-h-[220px] cursor-pointer grid-cols-[58px_minmax(0,1fr)] content-start gap-5 overflow-hidden rounded-[20px_20px_20px_7px] border p-[22px] text-left text-ink no-underline shadow-[0_15px_35px_rgba(59,48,34,.06)] transition hover:-translate-y-1 max-sm:min-h-0 max-sm:grid-cols-[44px_minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-3 max-sm:rounded-[15px_15px_15px_5px] max-sm:p-3 ${KNOWLEDGE_TONE_CLASSES[category.tone].card}`}
               href={knowledgeCategoryPath(category.id)}
               key={category.id}
@@ -116,7 +117,7 @@ export default function KnowledgeCatalog() {
                 </span>
                 <i className={`text-[19px] not-italic ${KNOWLEDGE_TONE_CLASSES[category.tone].accent}`}>→</i>
               </footer>
-            </a>
+            </AppLink>
           ))}
         </div>
       </section>

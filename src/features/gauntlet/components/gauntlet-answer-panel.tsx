@@ -12,6 +12,7 @@ import { CITY_MAP_RECENT_QUESTION_LIMIT } from "@/domain/game/gauntlet-rules";
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import { routePath } from "@/shared/lib/app-path";
+import AppLink from "@/shared/components/app-link";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 const ANSWER_TITLE_CLASS = "mb-6 mt-0 font-serif text-section font-bold max-sm:text-section-mobile";
@@ -156,12 +157,12 @@ export default function GauntletAnswerPanel({
           <p className={SUMMARY_CLASS}>
             返回选关继续挑战；之后出现的新错题会自动加入本关。
           </p>
-          <a
+          <AppLink
             className={`${PRIMARY_CLASS} flex items-center justify-center no-underline`}
             href={routePath("/gauntlet")}
           >
             返回选关
-          </a>
+          </AppLink>
         </>
       );
     }

@@ -9,6 +9,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 
 test("desktop home map opens a province challenge", async ({ page }) => {
   const pageErrors: string[] = [];
+  const documentRequests: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
   await page.setViewportSize({ width: 1280, height: 720 });
@@ -20,12 +21,64 @@ test("desktop home map opens a province challenge", async ({ page }) => {
   await expect(page.locator('svg path[role="button"]')).toHaveCount(34);
   await expectNoHorizontalOverflow(page);
 
+  await page.evaluate(() => {
+    Object.assign(window, { __clientNavigationMarker: "alive" });
+  });
+  page.on("request", (request) => {
+    if (request.resourceType() === "document") {
+      documentRequests.push(request.url());
+    }
+  });
+
   await page.getByRole("button", { name: "江苏省，未完成" }).click();
   await expect(page).toHaveURL(/\/city-fill\/320000$/);
   await expect(page.getByRole("heading", {
     name: "江苏，你认识多少座城？",
   })).toBeVisible();
+  expect(await page.evaluate(() =>
+    (window as Window & { __clientNavigationMarker?: string })
+      .__clientNavigationMarker
+  )).toBe("alive");
+  expect(documentRequests).toEqual([]);
   expect(pageErrors).toEqual([]);
+});
+
+test("section links navigate without reloading the document", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  await page.goto("/");
+  await expect(page.locator('svg path[role="button"]')).toHaveCount(34);
+
+  await page.evaluate(() => {
+    Object.assign(window, { __clientNavigationMarker: "alive" });
+  });
+  const documentRequests: string[] = [];
+  const repeatedNationalMapRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document") {
+      documentRequests.push(request.url());
+    }
+    if (/\/data\/maps\/100000\.json(?:\?|$)/.test(request.url())) {
+      repeatedNationalMapRequests.push(request.url());
+    }
+  });
+
+  await page.getByRole("link", { name: "全国车牌图鉴" }).click();
+  await expect(page).toHaveURL(/\/atlas$/);
+  await expect(page.getByRole("heading", { name: "全国车牌图鉴" }))
+    .toBeVisible();
+  expect(await page.evaluate(() =>
+    (window as Window & { __clientNavigationMarker?: string })
+      .__clientNavigationMarker
+  )).toBe("alive");
+  expect(documentRequests).toEqual([]);
+  expect(repeatedNationalMapRequests).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+  await expect(page.getByText("正在确认账号与云存档…")).toHaveCount(0);
 });
 
 test("query settings open the joined manual challenge directly", async ({

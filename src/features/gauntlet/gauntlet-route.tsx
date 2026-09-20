@@ -14,6 +14,7 @@ export default function GauntletRoute({
 
   return (
     <GauntletGame
+      key={initialLevel ?? "lobby"}
       nationalMap={nationalMap}
       nationalError={nationalError}
       initialLevel={initialLevel}

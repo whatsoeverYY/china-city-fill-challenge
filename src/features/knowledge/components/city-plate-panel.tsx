@@ -3,6 +3,7 @@ import { MULTI_PLATE_CITY_COUNT } from "@/domain/geography/data/city-plates";
 import KnowledgeSearchEmpty from "@/features/knowledge/components/knowledge-search-empty";
 import type { KnowledgeProvince } from "@/features/knowledge/model/knowledge-types";
 import { plainPlaceName } from "@/features/knowledge/model/knowledge-format";
+import AppLink from "@/shared/components/app-link";
 import { routePath } from "@/shared/lib/app-path";
 
 type CityGroup = { province: KnowledgeProvince; items: CityQuizItem[] };
@@ -31,7 +32,7 @@ export default function CityPlatePanel({
             个多号牌城市或地区；高亮卡片会列出全部前缀和形成原因，关卡中必须全部答出。
           </p>
         </div>
-        <a className="inline-flex min-h-10 items-center rounded-full border border-current bg-white/50 px-[13px] py-2 text-compact font-black text-current no-underline max-md:hidden" href={routePath("/atlas")}>去全国图鉴看地图</a>
+        <AppLink className="inline-flex min-h-10 items-center rounded-full border border-current bg-white/50 px-[13px] py-2 text-compact font-black text-current no-underline max-md:hidden" href={routePath("/atlas")}>去全国图鉴看地图</AppLink>
       </div>
       <div className="knowledge-group-list">
         {groups.map(({ province, items }) => {

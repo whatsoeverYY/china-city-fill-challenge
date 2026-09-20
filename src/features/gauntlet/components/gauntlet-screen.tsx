@@ -17,6 +17,7 @@ import { useGauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-actio
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import { MAP_REQUIRED_LEVELS } from "@/features/gauntlet/config/gauntlet-config";
+import AppLink from "@/shared/components/app-link";
 import PageBreadcrumbs from "@/shared/components/page-breadcrumbs";
 import { routePath } from "@/shared/lib/app-path";
 
@@ -93,7 +94,7 @@ export default function GauntletScreen({
         <section className="mx-auto mt-12 grid min-h-[360px] max-w-[680px] place-content-center justify-items-center gap-4 rounded-[24px_24px_24px_8px] border border-city-500/20 bg-card/90 p-8 text-center max-md:mt-5">
           <h1 className="m-0 font-serif text-section">当前设置无法开始这一关</h1>
           <p className="m-0 text-body text-ink-soft">{d.provinceScopeIssue(initialLevel!) ?? "关卡所需地图暂时无法载入。"}</p>
-          <a className="inline-flex min-h-11 items-center rounded-full bg-city-500 px-5 py-2.5 text-compact font-black text-white no-underline" href={routePath("/gauntlet")}>返回选关</a>
+          <AppLink className="inline-flex min-h-11 items-center rounded-full bg-city-500 px-5 py-2.5 text-compact font-black text-white no-underline" href={routePath("/gauntlet")}>返回选关</AppLink>
         </section>
       ) : !s.level ? (
         <GauntletLobby actions={actions} />

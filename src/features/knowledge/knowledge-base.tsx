@@ -32,6 +32,7 @@ import {
 } from "@/features/knowledge/config/knowledge-tone-style";
 import { useKnowledgeCatalog } from "@/features/knowledge/model/use-knowledge-catalog";
 import PageBreadcrumbs from "@/shared/components/page-breadcrumbs";
+import AppLink from "@/shared/components/app-link";
 import { routePath } from "@/shared/lib/app-path";
 
 
@@ -279,7 +280,7 @@ export default function KnowledgeBase({
           <span className="text-meta font-black tracking-[.14em]">读图五步法</span>
           <h3 className="my-4 font-serif text-section">大范围 → 小范围<br />位置 → 边界 → 路线</h3>
           <p className="m-0 text-compact opacity-85">地图题不是只靠死记轮廓。把观察顺序固定下来，陌生题也能用排除法解决。</p>
-          <a className="mt-6 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[10px] border-0 bg-gold-200 px-3.5 py-2 text-center text-compact font-black text-gold-800 no-underline max-md:hidden" href={routePath("/atlas")}>打开全国车牌图鉴练读图</a>
+          <AppLink className="mt-6 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[10px] border-0 bg-gold-200 px-3.5 py-2 text-center text-compact font-black text-gold-800 no-underline max-md:hidden" href={routePath("/atlas")}>打开全国车牌图鉴练读图</AppLink>
         </section>
         <ol className="knowledge-tip-list m-0 grid list-none gap-3 p-0">
           {MAP_READING_TIPS.map((tip, index) => (
@@ -351,7 +352,7 @@ export default function KnowledgeBase({
           </section>
           <section className="knowledge-detail-content mx-auto min-h-[520px] w-[min(1380px,calc(100%_-_48px))] pb-[52px] pt-[30px] max-sm:w-[calc(100%_-_24px)] max-sm:pb-8 max-sm:pt-5">{renderDetailContent()}</section>
           <footer className="knowledge-page-footer mx-auto flex w-[min(1380px,calc(100%_-_48px))] items-center justify-between gap-5 border-t border-black/[.13] pb-[42px] pt-6 max-sm:w-[calc(100%_-_24px)] max-sm:flex-col">
-            <a className="inline-flex min-h-10 items-center rounded-full border border-scholar-500/25 bg-scholar-100 px-[13px] py-2 text-compact font-black text-scholar-600 no-underline max-md:min-h-11" href={routePath("/knowledge")}>继续浏览其他知识专题</a>
+            <AppLink className="inline-flex min-h-10 items-center rounded-full border border-scholar-500/25 bg-scholar-100 px-[13px] py-2 text-compact font-black text-scholar-600 no-underline max-md:min-h-11" href={routePath("/knowledge")}>继续浏览其他知识专题</AppLink>
             <span className="text-meta text-stone-500">知识来自当前关卡题库及注明的权威公开资料</span>
           </footer>
         </>

@@ -31,6 +31,9 @@ test("exports a GitHub Pages entry document", async () => {
   assert.match(html, /<title>中国城市填充挑战<\/title>/i);
   assert.match(html, /中国城市填充挑战/);
   assert.match(html, /\/china-city-fill-challenge\//);
+  assert.match(html, /href="\/china-city-fill-challenge\/atlas\.html"/);
+  assert.match(html, /href="\/china-city-fill-challenge\/gauntlet\.html"/);
+  assert.match(html, /href="\/china-city-fill-challenge\/knowledge\.html"/);
   assert.doesNotMatch(html, /http:\/\/localhost/);
 });
 

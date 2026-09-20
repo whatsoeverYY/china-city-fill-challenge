@@ -1,4 +1,5 @@
 import { useCallback, useEffect, type MutableRefObject } from "react";
+import { useRouter } from "next/navigation";
 import {
   PROVINCE_BY_CODE,
   type Province,
@@ -43,6 +44,7 @@ export function useCityChallengeNavigation({
   setCompletedRegionIds: (value: Set<string>) => void;
   setMessage: (value: string) => void;
 }) {
+  const router = useRouter();
   const province = initialProvinceCode
     ? PROVINCE_BY_CODE.get(initialProvinceCode) ?? null
     : null;
@@ -62,11 +64,16 @@ export function useCityChallengeNavigation({
   ]);
 
   const enterProvince = useCallback((nextProvince: Province) => {
-    window.location.assign(cityChallengePath(nextProvince.code, {
+    const href = cityChallengePath(nextProvince.code, {
       hardMode,
       neighborMode,
-    }));
-  }, [hardMode, neighborMode]);
+    });
+    if (process.env.NEXT_PUBLIC_BASE_PATH) {
+      window.location.assign(href);
+      return;
+    }
+    router.push(href);
+  }, [hardMode, neighborMode, router]);
 
   return { enterProvince, province };
 }

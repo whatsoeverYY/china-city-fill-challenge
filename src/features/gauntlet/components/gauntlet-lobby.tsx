@@ -18,6 +18,7 @@ import type { GauntletActions } from "@/features/gauntlet/hooks/use-gauntlet-act
 import { useGauntletDerived } from "@/features/gauntlet/model/gauntlet-derived-context";
 import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-context";
 import { gauntletLevelPath } from "@/features/gauntlet/config/gauntlet-routes";
+import AppLink from "@/shared/components/app-link";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -99,7 +100,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
             (!s.nationalMap || s.nationalError);
           const unavailable = mapUnavailable || Boolean(scopeIssue);
           return (
-            <a
+            <AppLink
               key={item.id}
               className={`gauntlet-level-card relative grid min-h-[360px] content-start overflow-hidden rounded-[22px] border border-black/15 bg-[rgba(251,248,240,.94)] [background-image:radial-gradient(circle_at_100%_0%,rgba(213,169,69,.18),transparent_16rem)] p-6 text-left text-ink no-underline shadow-[0_24px_60px_rgba(57,46,31,.08)] transition after:absolute after:-bottom-[50px] after:-right-11 after:size-[180px] after:rounded-full after:border after:border-city-500/10 max-[900px]:grid-cols-[auto_1fr] max-[900px]:gap-x-6 max-[900px]:min-h-0 max-sm:grid-cols-1 max-sm:gap-1.5 max-sm:min-h-48 max-sm:rounded-[16px_16px_16px_5px] max-sm:p-3 ${unavailable ? "cursor-wait opacity-60" : "cursor-pointer hover:-translate-y-[5px] hover:border-city-500/40 hover:shadow-[0_30px_70px_rgba(57,46,31,.13)]"}`}
               href={gauntletLevelPath(item.id)}
@@ -125,7 +126,7 @@ export default function GauntletLobby({ actions }: { actions: GauntletActions })
                       ? "✓ 已过关"
                       : "开始挑战 →"}
               </span>
-            </a>
+            </AppLink>
           );
         })}
       </section>

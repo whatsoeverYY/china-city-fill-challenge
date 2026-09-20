@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { usePlayerData } from "@/features/player/player-data-context";
+import AppLink from "@/shared/components/app-link";
 import { useModalDialog } from "@/shared/hooks/use-modal-dialog";
 import { adminPath } from "@/shared/lib/app-path";
 
@@ -143,9 +144,9 @@ export default function AccountControl() {
                 </div>
                 <div className="account-actions mt-4 grid grid-cols-2 gap-2">
                   {isAdmin ? (
-                    <a href={adminPath()} className="account-primary-link col-span-2 grid min-h-11 place-items-center rounded-xl bg-jade-500 px-4 text-xs font-black text-white no-underline">
+                    <AppLink href={adminPath()} onClick={closeAccount} className="account-primary-link col-span-2 grid min-h-11 place-items-center rounded-xl bg-jade-500 px-4 text-xs font-black text-white no-underline">
                       进入管理员后台
-                    </a>
+                    </AppLink>
                   ) : null}
                   <button
                     type="button"

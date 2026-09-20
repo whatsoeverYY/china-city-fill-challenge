@@ -1,3 +1,5 @@
+import AppLink from "@/shared/components/app-link";
+
 export type PageBreadcrumbItem = {
   label: string;
   mobileLabel?: string;
@@ -41,12 +43,12 @@ export default function PageBreadcrumbs({
                 <span className="text-stone-400" aria-hidden="true">/</span>
               ) : null}
               {item.href && !current ? (
-                <a
+                <AppLink
                   className="rounded-sm text-ink-500 no-underline transition hover:text-city-600 hover:underline"
                   href={item.href}
                 >
                   {label}
-                </a>
+                </AppLink>
               ) : (
                 <span
                   className="min-w-0 truncate text-ink"
