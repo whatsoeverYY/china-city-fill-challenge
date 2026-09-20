@@ -14,6 +14,7 @@ import {
   type MapFeature,
 } from "@/features/map/model/map-data";
 import { usePlayerData } from "@/features/player/player-data-context";
+import { useWorldAccess } from "@/features/player/model/use-world-access";
 import { useCityProgress } from "@/features/city-challenge/model/use-city-progress";
 import { useCityMapView } from "@/features/city-challenge/model/use-city-map-view";
 import { placeNameMatches } from "@/shared/lib/place-name";
@@ -33,6 +34,7 @@ export default function CityGame({
   initialProvinceCode?: string | null;
 }) {
   const { identity, progressStorage, syncStatus } = usePlayerData();
+  const worldAccess = useWorldAccess();
   const [showAllProvinceNames, setShowAllProvinceNames] = useState(false);
   const [showAllCityNames, setShowAllCityNames] = useState(false);
   const [hiddenProvinceCodes, setHiddenProvinceCodes] = useState<Set<string>>(
@@ -298,6 +300,7 @@ export default function CityGame({
         completedProvinceCodes={activeCompletedProvinceCodes}
         challengeProvinces={challengeProvinces}
         answerCount={answers.length}
+        worldUnlocked={worldAccess === "unlocked"}
       />
 
       <ChallengeSettings

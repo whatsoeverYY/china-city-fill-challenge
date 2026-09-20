@@ -18,6 +18,9 @@
 - 支持邮箱密码登录、按账号隔离的离线缓存与 Supabase 云存档
 - 游客可完整试玩但不保存；登录玩家在曾登录设备上可离线继续，联网后自动同步
 - 独立管理员后台：查看玩家信息、活跃时间、地图进度、关卡进度与完整存档
+- 完成中国篇 19 个主线关卡后解锁世界篇；管理员账号不受通关限制；其他未解锁玩家看不到入口，直接访问 `/world` 会显示通关提示
+- 世界篇首批提供 195 国、首都、七大洲知识目录，以及“世界地图填国名”“国家轮廓辨认”两关
+- 世界地图和国家/首都资料均在页面显著标注整理口径日期，当前截至 `2026-09-20`
 
 ## 本地运行
 
@@ -59,6 +62,7 @@ pnpm test:pages
 ```
 
 代码目录、依赖方向、命名和单文件大小约定见 [docs/architecture.md](docs/architecture.md)。
+世界篇的数据来源、2026-09-20 核验记录与更新门禁见 [docs/world-data.md](docs/world-data.md)。
 
 ## GitHub Pages 部署
 
@@ -83,5 +87,5 @@ pnpm test:pages
 - 原生 SVG 地图渲染
 - Cloudflare Workers 兼容构建
 
-地图数据仅用于地理学习与游戏展示。
-边界数据参考 [GeoJSON.CN](https://geojson.cn/data/atlas/china) 与 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。
+地图数据仅用于地理学习与游戏展示，不作为政治立场、主权或边界主张的表达。
+中国地图边界数据参考 [GeoJSON.CN](https://geojson.cn/data/atlas/china) 与 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。世界国家口径参考 [联合国 M49](https://unstats.un.org/unsd/methodology/m49/)，世界地图采用联合国托管的 `UN Compliant Boundaries` 当日快照；首都资料以 [Natural Earth](https://www.naturalearthdata.com/) 点位为底稿，并通过当日 Wikidata 关系与官方变更公告逐国核验。地图数据与国家/首都资料的统计及有效性核验时间均为 `2026-09-20`。

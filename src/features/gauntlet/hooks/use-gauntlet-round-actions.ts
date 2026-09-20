@@ -40,6 +40,7 @@ import {
   parseMistakeProgress,
 } from "@/infrastructure/storage/progress-storage";
 import { randomShuffle } from "@/shared/lib/random";
+import { ensureWorldAccess } from "@/infrastructure/storage/world-access-progress";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -281,6 +282,7 @@ export function useGauntletRoundActions() {
       GAUNTLET_PROGRESS_KEY,
       JSON.stringify(Array.from(nextCompleted)),
     );
+    ensureWorldAccess(s.progressStorage, nextCompleted);
     s.setPassedLevel(finishedLevel);
     s.setFeedbackType("right");
   };

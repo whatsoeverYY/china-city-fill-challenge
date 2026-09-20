@@ -25,6 +25,11 @@ const knowledgeCategoryIds = [
   "rivers", "territory", "confusable", "map-reading",
 ];
 
+const worldLevelIds = [
+  "world-map-country-names",
+  "world-country-shapes",
+];
+
 test("exports a GitHub Pages entry document", async () => {
   const html = await readFile(new URL("index.html", exportRoot), "utf8");
 
@@ -34,6 +39,7 @@ test("exports a GitHub Pages entry document", async () => {
   assert.match(html, /href="\/china-city-fill-challenge\/atlas\.html"/);
   assert.match(html, /href="\/china-city-fill-challenge\/gauntlet\.html"/);
   assert.match(html, /href="\/china-city-fill-challenge\/knowledge\.html"/);
+  assert.doesNotMatch(html, /href="\/china-city-fill-challenge\/world\.html"/);
   assert.doesNotMatch(html, /http:\/\/localhost/);
 });
 
@@ -49,6 +55,9 @@ test("exports every feature as an independently addressable route", async () => 
     ["atlas.html", "全国车牌图鉴"],
     ["gauntlet.html", "过关斩将"],
     ["knowledge.html", "中国地理知识馆"],
+    ["world.html", "世界地理"],
+    ["world/knowledge.html", "世界地理知识"],
+    ["world/gauntlet.html", "世界地图关卡"],
   ];
 
   for (const [file, title] of routes) {
@@ -93,11 +102,30 @@ test("exports every province, gauntlet level, and knowledge topic route", async 
   assert.match(knowledgeHtml, /省份全景名片/);
 });
 
+test("exports the gated world chapter and every world level", async () => {
+  const worldHtml = await readFile(new URL("world.html", exportRoot), "utf8");
+  assert.match(worldHtml, /<title>世界地理｜中国城市填充挑战<\/title>/i);
+  assert.match(worldHtml, /正在核验世界篇资格/);
+
+  const exportedFiles = (await readdir(new URL("world/gauntlet/", exportRoot)))
+    .filter((file) => file.endsWith(".html"))
+    .sort();
+  assert.deepEqual(exportedFiles, worldLevelIds.map((id) => `${id}.html`).sort());
+
+  const levelHtml = await readFile(
+    new URL("world/gauntlet/world-map-country-names.html", exportRoot),
+    "utf8",
+  );
+  assert.match(levelHtml, /<title>世界落名｜世界地图关卡｜中国城市填充挑战<\/title>/i);
+  assert.match(levelHtml, /正在核验世界篇资格/);
+});
+
 test("copies static maps and disables Jekyll processing", async () => {
   await Promise.all([
     access(new URL(".nojekyll", exportRoot)),
     access(new URL("data/maps/100000.json", exportRoot)),
     access(new URL("data/maps/820000.json", exportRoot)),
+    access(new URL("data/maps/world/50m.json", exportRoot)),
     access(new URL("favicon.svg", exportRoot)),
     access(new URL("og.png", exportRoot)),
   ]);

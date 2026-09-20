@@ -36,8 +36,14 @@ src/
 | `/knowledge` | `src/app/knowledge/page.tsx` | `features/knowledge/knowledge-route.tsx` |
 | `/knowledge/[categoryId]` | `src/app/knowledge/[categoryId]/page.tsx` | 单知识专题独立页，使用稳定英文专题 ID |
 | `/admin` | `src/app/admin/page.tsx` | `features/admin/admin-dashboard.tsx` |
+| `/world` | `src/app/world/page.tsx` | 通关中国篇后解锁的世界地理入口；未解锁时由布局统一展示门禁 |
+| `/world/knowledge` | `src/app/world/knowledge/page.tsx` | `features/world-knowledge/world-knowledge.tsx` |
+| `/world/gauntlet` | `src/app/world/gauntlet/page.tsx` | `features/world-gauntlet/world-gauntlet-route.tsx` |
+| `/world/gauntlet/[levelId]` | `src/app/world/gauntlet/[levelId]/page.tsx` | 世界篇单关卡独立页，使用稳定英文关卡 ID |
 
 地理主数据与跨模块使用的城市车牌数据位于 `src/domain/geography/data/`，关卡 ID、关卡目录与错题规则位于 `src/domain/game/`。仅供单个功能使用的题库才放在对应 feature 的 `data/` 目录。
+
+世界篇与中国篇位于同一仓库。世界国家、首都、洲和数据时间口径下沉到 `domain/geography`，世界篇解锁规则和关卡 ID 下沉到 `domain/game`；`world-home`、`world-knowledge`、`world-gauntlet` 彼此不直接依赖，共同复用 `map` 和 `player` 应用级能力。世界篇访问资格是独立持久化成就：完成规则集中的 19 个中国篇主线关卡后永久解锁，错题复仇赛不计入条件，全量清除进度时一并重置。管理员账号始终拥有世界篇访问资格且首页展示入口，不依赖或写入通关成就。
 
 多层页面统一在左上角使用 `shared/components/page-breadcrumbs.tsx`，不在页头右侧重复放置返回按钮。省内填图的挑战范围和作答方式通过查询参数表达，路由生成统一经过各 feature 的 `config/*-routes.ts`，并最终调用 `shared/lib/app-path.ts` 兼容站点根路径与 GitHub Pages base path。
 

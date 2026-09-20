@@ -37,6 +37,13 @@ export const MAP_COLORS = {
   wrongFill: "#e7a09a",
   wrongLabelOutline: "#fff0ed",
   wrongStroke: "#8f302a",
+  worldBackgroundFill: "#ddd6c8",
+  worldBackgroundStroke: "#a59a87",
+  worldBoundary: "#6f796f",
+  worldCompleteFill: "#9bc7b1",
+  worldEmptyFill: "#e6ddc9",
+  worldLabel: "#27362f",
+  worldLabelOutline: "#fffdf7",
 } as const;
 
 export const PROVINCE_FILL_COLORS = [

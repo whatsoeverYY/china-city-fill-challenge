@@ -45,6 +45,9 @@ const businessFeatures = new Set([
   "city-challenge",
   "gauntlet",
   "knowledge",
+  "world-gauntlet",
+  "world-home",
+  "world-knowledge",
 ]);
 const reusableFeatures = new Set(["map", "player"]);
 const nonUiFeatureLayers = new Set([
@@ -115,7 +118,17 @@ if (!existsSync(designSystemPath)) {
   }
 }
 
-for (const route of ["page.tsx", "atlas/page.tsx", "gauntlet/page.tsx", "knowledge/page.tsx", "admin/page.tsx"]) {
+for (const route of [
+  "page.tsx",
+  "atlas/page.tsx",
+  "gauntlet/page.tsx",
+  "knowledge/page.tsx",
+  "admin/page.tsx",
+  "world/page.tsx",
+  "world/knowledge/page.tsx",
+  "world/gauntlet/page.tsx",
+  "world/gauntlet/[levelId]/page.tsx",
+]) {
   if (!existsSync(join(srcRoot, "app", route))) {
     errors.push(`缺少独立路由：src/app/${route}`);
   }

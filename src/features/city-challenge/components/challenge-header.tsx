@@ -11,6 +11,7 @@ export default function ChallengeHeader({
   completedProvinceCodes,
   challengeProvinces,
   answerCount,
+  worldUnlocked,
 }: {
   province: Province | null;
   neighborMode: boolean;
@@ -18,6 +19,7 @@ export default function ChallengeHeader({
   completedProvinceCodes: Set<string>;
   challengeProvinces: Province[];
   answerCount: number;
+  worldUnlocked: boolean;
 }) {
   const homePath = cityChallengePath(null, { hardMode, neighborMode });
 
@@ -53,6 +55,11 @@ export default function ChallengeHeader({
               <AppLink className="gauntlet-mode-button inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-gold-600/35 bg-gold-200 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-gold-900 no-underline transition hover:-translate-y-px hover:bg-gold-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-meta max-sm:tracking-normal" href={routePath("/gauntlet")}>
                 <span className="grid size-5 place-items-center rounded-full bg-gold-600 font-sans text-[10px] font-bold leading-none tracking-normal text-gold-100" aria-hidden="true">关</span><span className="max-sm:hidden">过关斩将</span><span className="hidden max-sm:inline">闯关</span>
               </AppLink>
+              {worldUnlocked ? (
+                <AppLink className="inline-flex min-h-[38px] items-center gap-[7px] rounded-full border border-atlas-600/30 bg-atlas-200 px-3 py-2 text-compact font-extrabold tracking-[0.06em] text-atlas-800 no-underline transition hover:-translate-y-px hover:bg-atlas-300 max-md:min-h-11 max-md:justify-center max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1 max-sm:py-2 max-sm:text-meta max-sm:tracking-normal" href={routePath("/world")}>
+                  <span className="grid size-5 place-items-center rounded-full bg-atlas-700 font-sans text-[10px] font-bold leading-none tracking-normal text-white" aria-hidden="true">世</span><span className="max-sm:hidden">世界地理</span><span className="hidden max-sm:inline">世界</span>
+                </AppLink>
+              ) : null}
             </>
           ) : null}
           <div

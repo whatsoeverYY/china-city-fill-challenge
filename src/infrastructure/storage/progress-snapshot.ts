@@ -1,6 +1,7 @@
 import { isGauntletLevelId } from "../../domain/game/gauntlet-level-ids.ts";
 import { CITY_MAP_RECENT_QUESTION_LIMIT } from "../../domain/game/gauntlet-rules.ts";
 import { normalizeMistakeList } from "../../domain/game/mistakes.ts";
+import { isWorldLevelId } from "../../domain/game/world-level-ids.ts";
 import { CURRENT_PROGRESS_SCHEMA_VERSION } from "./progress-config.ts";
 import {
   emptyProgressMeta,
@@ -23,8 +24,11 @@ import {
   NEIGHBOR_PROGRESS_KEY,
   PROGRESS_STORAGE_KEYS,
   STORAGE_KEY,
+  WORLD_ACCESS_KEY,
+  WORLD_GAUNTLET_PROGRESS_KEY,
   type ProgressStorageKey,
 } from "./progress-keys.ts";
+import { mergeWorldAccessProgress } from "./world-access-progress.ts";
 
 export {
   emptyProgressMeta,
@@ -317,6 +321,24 @@ export function mergeProgressSnapshots(
         ),
       ]),
     ).sort(),
+  );
+
+  values[WORLD_GAUNTLET_PROGRESS_KEY] = JSON.stringify(
+    Array.from(
+      new Set([
+        ...parseStringList(local.values[WORLD_GAUNTLET_PROGRESS_KEY]).filter(
+          isWorldLevelId,
+        ),
+        ...parseStringList(remote.values[WORLD_GAUNTLET_PROGRESS_KEY]).filter(
+          isWorldLevelId,
+        ),
+      ]),
+    ).sort(),
+  );
+
+  values[WORLD_ACCESS_KEY] = mergeWorldAccessProgress(
+    local.values[WORLD_ACCESS_KEY],
+    remote.values[WORLD_ACCESS_KEY],
   );
 
   values[GAUNTLET_MISTAKES_KEY] = mergeMistakeProgress(local, remote, meta);

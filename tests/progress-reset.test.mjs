@@ -7,12 +7,15 @@ import {
   GAUNTLET_PROGRESS_KEY,
   GAUNTLET_REGION_MAP_HISTORY_KEY,
   STORAGE_KEY,
+  WORLD_ACCESS_KEY,
+  WORLD_GAUNTLET_PROGRESS_KEY,
   assertSupportedProgressVersion,
   createResetProgressSnapshot,
   mergeProgressSnapshots,
 } from "../src/infrastructure/storage/progress-storage.ts";
 import { CITY_MAP_RECENT_QUESTION_LIMIT } from "../src/domain/game/gauntlet-rules.ts";
 import { GAUNTLET_LEVEL_ID } from "../src/domain/game/gauntlet-level-ids.ts";
+import { WORLD_LEVEL_ID } from "../src/domain/game/world-level-ids.ts";
 
 const BEFORE_RESET = "2026-08-27T00:00:00.000Z";
 const RESET_AT = "2026-08-27T01:00:00.000Z";
@@ -81,6 +84,22 @@ test("progress created after acknowledging the reset remains available", () => {
   ]);
   assert.deepEqual(JSON.parse(merged.values[STORAGE_KEY] ?? "{}"), {});
   assert.equal(merged.resetAt, RESET_AT);
+});
+
+test("a global reset relocks the world chapter", () => {
+  const unlocked = staleSnapshot();
+  unlocked.values[WORLD_ACCESS_KEY] = JSON.stringify({
+    unlockedAt: BEFORE_RESET,
+    rulesetVersion: 1,
+  });
+  unlocked.meta.keys[WORLD_ACCESS_KEY] = BEFORE_RESET;
+
+  const merged = mergeProgressSnapshots(
+    unlocked,
+    createResetProgressSnapshot(RESET_AT),
+  );
+
+  assert.equal(merged.values[WORLD_ACCESS_KEY], undefined);
 });
 
 test("a province reset beats stale progress from a device with a future clock", () => {
@@ -178,6 +197,41 @@ test("gauntlet progress merges current stable IDs and rejects unknown IDs", () =
     JSON.parse(merged.values[GAUNTLET_PROGRESS_KEY] ?? "[]"),
     [GAUNTLET_LEVEL_ID.CITY_PROVINCE, GAUNTLET_LEVEL_ID.PROVINCE_SHAPE].sort(),
   );
+});
+
+test("world progress merges stable IDs and keeps the earliest unlock record", () => {
+  const local = staleSnapshot(BEFORE_RESET);
+  local.values[WORLD_GAUNTLET_PROGRESS_KEY] = JSON.stringify([
+    WORLD_LEVEL_ID.MAP_COUNTRY_NAMES,
+    "unknown-world-level",
+  ]);
+  local.values[WORLD_ACCESS_KEY] = JSON.stringify({
+    unlockedAt: BEFORE_RESET,
+    rulesetVersion: 1,
+  });
+  local.meta.keys[WORLD_GAUNTLET_PROGRESS_KEY] = BEFORE_RESET;
+  local.meta.keys[WORLD_ACCESS_KEY] = BEFORE_RESET;
+
+  const remote = staleSnapshot(AFTER_RESET);
+  remote.values[WORLD_GAUNTLET_PROGRESS_KEY] = JSON.stringify([
+    WORLD_LEVEL_ID.COUNTRY_SHAPES,
+  ]);
+  remote.values[WORLD_ACCESS_KEY] = JSON.stringify({
+    unlockedAt: RESET_AT,
+    rulesetVersion: 1,
+  });
+  remote.meta.keys[WORLD_GAUNTLET_PROGRESS_KEY] = AFTER_RESET;
+  remote.meta.keys[WORLD_ACCESS_KEY] = AFTER_RESET;
+
+  const merged = mergeProgressSnapshots(local, remote);
+  assert.deepEqual(
+    JSON.parse(merged.values[WORLD_GAUNTLET_PROGRESS_KEY] ?? "[]"),
+    [WORLD_LEVEL_ID.COUNTRY_SHAPES, WORLD_LEVEL_ID.MAP_COUNTRY_NAMES].sort(),
+  );
+  assert.deepEqual(JSON.parse(merged.values[WORLD_ACCESS_KEY]), {
+    unlockedAt: BEFORE_RESET,
+    rulesetVersion: 1,
+  });
 });
 
 test("mistakes from different devices merge by question id", () => {

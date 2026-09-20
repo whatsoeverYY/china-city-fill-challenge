@@ -17,6 +17,7 @@ import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-c
 import { gauntletLevelPath } from "@/features/gauntlet/config/gauntlet-routes";
 import AppLink from "@/shared/components/app-link";
 import { routePath } from "@/shared/lib/app-path";
+import { hasCompletedChinaCampaign } from "@/domain/game/china-campaign";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
 
@@ -77,6 +78,11 @@ export default function GauntletOutcome({ actions }: { actions: GauntletActions 
         ? <BossSkillSummary stats={s.bossStats} />
         : null}
       <div className="flex flex-wrap justify-center gap-2">
+        {hasCompletedChinaCampaign(s.completedLevels) ? (
+          <AppLink className="inline-flex min-h-11 items-center rounded-full border-0 bg-atlas-700 px-5 py-2.5 text-compact font-black text-white no-underline" href={routePath("/world")}>
+            世界篇已解锁
+          </AppLink>
+        ) : null}
         {nextLevel ? (
           <AppLink className="inline-flex min-h-11 items-center rounded-full border-0 bg-city-500 px-5 py-2.5 text-compact font-black text-white no-underline" href={gauntletLevelPath(nextLevel.id)}>
             挑战下一关

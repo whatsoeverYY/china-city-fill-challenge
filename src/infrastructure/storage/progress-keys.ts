@@ -14,6 +14,9 @@ export const GAUNTLET_REGION_MAP_HISTORY_KEY =
   "china-city-fill-region-map-history-v1";
 export const GAUNTLET_PLATE_CITY_MAP_HISTORY_KEY =
   "china-city-fill-plate-city-map-history-v1";
+export const WORLD_ACCESS_KEY = "world-geography-access-v1";
+export const WORLD_GAUNTLET_PROGRESS_KEY =
+  "world-geography-gauntlet-completed-level-ids-v1";
 
 export const PROGRESS_STORAGE_KEYS = [
   STORAGE_KEY,
@@ -25,6 +28,8 @@ export const PROGRESS_STORAGE_KEYS = [
   GAUNTLET_PROVINCE_SCOPE_KEY,
   GAUNTLET_REGION_MAP_HISTORY_KEY,
   GAUNTLET_PLATE_CITY_MAP_HISTORY_KEY,
+  WORLD_ACCESS_KEY,
+  WORLD_GAUNTLET_PROGRESS_KEY,
 ] as const;
 
 export type ProgressStorageKey = (typeof PROGRESS_STORAGE_KEYS)[number];

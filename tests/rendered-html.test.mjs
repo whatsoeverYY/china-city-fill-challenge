@@ -23,6 +23,7 @@ test("server-renders the city challenge shell", async () => {
   assert.match(html, /中国城市填充挑战/);
   assert.match(html, /34 个省级行政区/);
   assert.match(html, /地理知识馆/);
+  assert.doesNotMatch(html, /href="\/world"/);
   assert.doesNotMatch(html, /codex-preview/);
 });
 
@@ -48,5 +49,24 @@ test("server-renders independently addressable nested routes", async () => {
     assert.match(html, title);
     assert.match(html, content);
     assert.match(html, /面包屑导航/);
+  }
+});
+
+test("server-renders the gated world route without exposing world content", async () => {
+  for (const [path, title] of [
+    ["/world", /世界地理｜中国城市填充挑战/],
+    ["/world/knowledge", /世界地理知识｜中国城市填充挑战/],
+    [
+      "/world/gauntlet/world-country-shapes",
+      /国形辨影｜世界地图关卡｜中国城市填充挑战/,
+    ],
+  ]) {
+    const response = await render(path);
+    assert.equal(response.status, 200, `${path} should render successfully`);
+    const html = await response.text();
+    const visibleHtml = html.split("</head>")[1]?.split('<script type="module"')[0] ?? "";
+    assert.match(html, title);
+    assert.match(visibleHtml, /正在核验世界篇资格/);
+    assert.doesNotMatch(visibleHtml, /国家、首都与七大洲/);
   }
 });
