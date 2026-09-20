@@ -81,6 +81,98 @@ test("section links navigate without reloading the document", async ({
   await expect(page.getByText("正在确认账号与云存档…")).toHaveCount(0);
 });
 
+test("signed-in pages do not wait for a slow cloud save", async ({ page }) => {
+  const now = new Date().toISOString();
+  const userId = "00000000-0000-4000-8000-000000000001";
+  await page.addInitScript(
+    ({ authKey, session }) => {
+      localStorage.setItem(authKey, JSON.stringify(session));
+    },
+    {
+      authKey: "sb-moeunhlxurnxvdwpbefl-auth-token",
+      session: {
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expires_at: Math.floor(Date.now() / 1_000) + 3_600,
+        expires_in: 3_600,
+        token_type: "bearer",
+        user: {
+          id: userId,
+          aud: "authenticated",
+          role: "authenticated",
+          email: "loading-test@example.com",
+          app_metadata: { provider: "email", providers: ["email"] },
+          user_metadata: {},
+          created_at: now,
+          updated_at: now,
+        },
+      },
+    },
+  );
+
+  let markCloudRequestStarted: (() => void) | undefined;
+  const cloudRequestStarted = new Promise<void>((resolve) => {
+    markCloudRequestStarted = resolve;
+  });
+  await page.route("https://moeunhlxurnxvdwpbefl.supabase.co/**", async (route) => {
+    markCloudRequestStarted?.();
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await route.abort("failed");
+  });
+
+  await page.goto("/");
+  await cloudRequestStarted;
+  await expect(page.getByRole("button", {
+    name: "账户：loading-test@example.com",
+  })).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page.getByText("正在确认账号与云存档…")).toHaveCount(0);
+  await expect(page.getByRole("heading", {
+    name: "从一省出发，拼出整幅中国城市地图",
+  })).toBeVisible();
+});
+
+test("account initialization overlay appears at most once per tab", async ({
+  page,
+}) => {
+  const now = new Date().toISOString();
+  await page.addInitScript(({ authKey, session }) => {
+    localStorage.setItem(authKey, JSON.stringify(session));
+  }, {
+    authKey: "sb-moeunhlxurnxvdwpbefl-auth-token",
+    session: {
+      access_token: "expiring-test-access-token",
+      refresh_token: "expiring-test-refresh-token",
+      expires_at: Math.floor(Date.now() / 1_000),
+      expires_in: 0,
+      token_type: "bearer",
+      user: {
+        id: "00000000-0000-4000-8000-000000000002",
+        aud: "authenticated",
+        role: "authenticated",
+        email: "slow-auth@example.com",
+        app_metadata: { provider: "email", providers: ["email"] },
+        user_metadata: {},
+        created_at: now,
+        updated_at: now,
+      },
+    },
+  });
+  await page.route("https://moeunhlxurnxvdwpbefl.supabase.co/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await route.abort("failed");
+  });
+
+  const overlay = page.getByText("正在确认账号与云存档…");
+  await page.goto("/");
+  await expect(overlay).toBeVisible({ timeout: 1_000 });
+  await expect(overlay).toHaveCount(0, { timeout: 2_000 });
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(600);
+  await expect(overlay).toHaveCount(0);
+});
+
 test("query settings open the joined manual challenge directly", async ({
   page,
 }) => {

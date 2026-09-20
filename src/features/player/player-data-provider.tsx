@@ -33,10 +33,10 @@ import {
   PROGRESS_STORAGE_EVENT,
 } from "@/infrastructure/storage/progress-storage";
 import { useProgressStorageListener } from "@/features/player/model/use-progress-storage-listener";
+import { usePlayerSessionListener } from "@/features/player/hooks/use-player-session-listener";
 import { operationErrorMessage } from "@/shared/lib/error";
 import { getSupabaseClient, isSupabaseConfigured } from "@/infrastructure/supabase/client";
 
-const AUTH_EVENT_DEFER_MS = 0;
 const SYNC_DELAY_MS = 1_200;
 
 export function PlayerDataProvider({ children }: { children: React.ReactNode }) {
@@ -59,6 +59,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
   const syncTimerRef = useRef<number | null>(null);
   const activeUserRef = useRef<string | null>(null);
   const readyUserRef = useRef<string | null>(null);
+  const initializingUserRef = useRef<string | null>(null);
   const bootSequenceRef = useRef(0);
   const syncingRef = useRef(false);
   const syncWaitersRef = useRef(new Set<() => void>());
@@ -187,14 +188,20 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
 
   useProgressStorageListener(activeUserRef, markProgressDirty);
 
-  const loadProfile = useCallback(async (nextSession: Session) => {
-    setProfile(await loadPlayerProfile(nextSession));
-  }, []);
-
   const activateSession = useCallback(
     async (nextSession: Session | null) => {
+      const nextUserId = nextSession?.user.id ?? null;
+      if (
+        nextUserId &&
+        (readyUserRef.current === nextUserId ||
+          initializingUserRef.current === nextUserId)
+      ) {
+        setInitialized(true);
+        return;
+      }
       const sequence = ++bootSequenceRef.current;
       if (!nextSession) {
+        initializingUserRef.current = null;
         if (!navigator.onLine) {
           const cached = readOfflineAccount();
           if (cached) {
@@ -239,41 +246,33 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
         id: nextSession.user.id,
         email: nextSession.user.email ?? "",
       };
+      const previousUserId = activeUserRef.current;
       activeUserRef.current = nextIdentity.id;
       setIdentity(nextIdentity);
-      if (readyUserRef.current === nextIdentity.id) {
-        setInitialized(true);
-        return;
-      }
-
-      setInitialized(false);
+      if (previousUserId !== nextIdentity.id) setProfile(null);
+      initializingUserRef.current = nextIdentity.id;
       setSyncStatus("loading");
       setSyncMessage("正在载入你的存档…");
-      await Promise.all([loadProfile(nextSession), syncProgress(nextIdentity.id)]);
-      if (sequence !== bootSequenceRef.current) return;
-      readyUserRef.current = nextIdentity.id;
-      setProgressEpoch((value) => value + 1);
+      // 本机存档可在身份确认后立即使用；资料和云存档继续在后台载入。
       setInitialized(true);
+      const [profileResult] = await Promise.allSettled([
+        loadPlayerProfile(nextSession),
+        syncProgress(nextIdentity.id),
+      ]);
+      if (sequence !== bootSequenceRef.current) return;
+      if (profileResult.status === "fulfilled") setProfile(profileResult.value);
+      readyUserRef.current = nextIdentity.id;
+      initializingUserRef.current = null;
+      setProgressEpoch((value) => value + 1);
     },
-    [loadProfile, syncProgress],
+    [syncProgress],
   );
+
+  usePlayerSessionListener(supabaseConfigured, activateSession, setInitialized);
 
   useEffect(() => {
     if (!supabaseConfigured) return;
     const supabase = getSupabaseClient();
-    let disposed = false;
-    void supabase.auth.getSession()
-      .then(({ data }) => {
-        if (!disposed) void activateSession(data.session);
-      })
-      .catch(() => {
-        if (!disposed) void activateSession(null);
-      });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!disposed) {
-        window.setTimeout(() => void activateSession(nextSession), AUTH_EVENT_DEFER_MS);
-      }
-    });
 
     const handleOnline = () => {
       const userId = activeUserRef.current;
@@ -302,8 +301,6 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      disposed = true;
-      listener.subscription.unsubscribe();
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -344,8 +341,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
       scope: navigator.onLine ? "global" : "local",
     });
     if (error) throw new Error(authErrorMessage(error.message));
-    await activateSession(null);
-  }, [activateSession, syncNow]);
+  }, [syncNow]);
 
   const value = useMemo<PlayerDataContextValue>(
     () => ({

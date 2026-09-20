@@ -4,13 +4,19 @@ import { saveOfflineAccount } from "@/features/player/model/player-auth";
 import { getSupabaseClient } from "@/infrastructure/supabase/client";
 
 export async function loadPlayerProfile(session: Session) {
-  const { data, error } = await getSupabaseClient()
-    .from("player_profiles")
-    .select("id,email,role,created_at,last_seen_at,updated_at")
-    .eq("id", session.user.id)
-    .maybeSingle<PlayerProfile>();
+  let data: PlayerProfile | null = null;
+  try {
+    const result = await getSupabaseClient()
+      .from("player_profiles")
+      .select("id,email,role,created_at,last_seen_at,updated_at")
+      .eq("id", session.user.id)
+      .maybeSingle<PlayerProfile>();
+    if (!result.error) data = result.data;
+  } catch {
+    // 账号身份已经确认时，资料接口失败不应阻塞本机存档和页面使用。
+  }
 
-  const profile = error || !data
+  const profile = !data
     ? {
         id: session.user.id,
         email: session.user.email ?? "",

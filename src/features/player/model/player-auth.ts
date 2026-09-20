@@ -6,6 +6,24 @@ import {
 export type OfflineAccount = PlayerIdentity & { role: PlayerRole };
 
 export const OFFLINE_ACCOUNT_KEY = "china-city-fill-offline-account-v1";
+const INITIALIZATION_INDICATOR_SEEN_KEY =
+  "china-city-fill-initialization-indicator-seen-v1";
+
+export function hasSeenInitializationIndicator() {
+  try {
+    return sessionStorage.getItem(INITIALIZATION_INDICATOR_SEEN_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function rememberInitializationIndicator() {
+  try {
+    sessionStorage.setItem(INITIALIZATION_INDICATOR_SEEN_KEY, "true");
+  } catch {
+    // 会话存储不可用时，仅失去跨整页导航的防重复提示能力。
+  }
+}
 
 export function readOfflineAccount() {
   try {
@@ -27,7 +45,11 @@ export function readOfflineAccount() {
 }
 
 export function saveOfflineAccount(account: OfflineAccount) {
-  localStorage.setItem(OFFLINE_ACCOUNT_KEY, JSON.stringify(account));
+  try {
+    localStorage.setItem(OFFLINE_ACCOUNT_KEY, JSON.stringify(account));
+  } catch {
+    // 浏览器禁用或限制本地存储时，仍允许在线账号继续使用当前页面。
+  }
 }
 
 export function authErrorMessage(message: string) {
