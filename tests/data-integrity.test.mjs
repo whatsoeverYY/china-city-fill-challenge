@@ -194,6 +194,14 @@ test("quiz datasets keep their expected coverage and references", () => {
   assert.ok(PLATE_QUIZ_DATA.length >= 340);
   assert.equal(MAP_REGION_QUIZ_DATA.length, 500);
   assert.ok(CITY_QUIZ_DATA.every((item) => provinceNames.has(item.province) && provinceShortNames.has(item.provinceShort)));
+  assert.equal(
+    MAP_REGION_QUIZ_DATA.find((item) => item.city === "新乡市")?.plate,
+    "豫G",
+  );
+  assert.equal(
+    MAP_REGION_QUIZ_DATA.find((item) => item.city === "东城区")?.plate,
+    null,
+  );
   assert.equal(UNIVERSITY_QUIZ_DATA.length, 115);
   assert.equal(UNIVERSITY_QUIZ_DATA.filter((item) => item.tier === "985").length, 39);
   assert.equal(CONFUSABLE_CITY_PAIRS.length, 12);

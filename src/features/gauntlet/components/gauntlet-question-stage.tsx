@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { PROVINCE_BY_CODE } from "@/domain/geography/data/provinces";
 import GauntletDetailMap from "@/features/gauntlet/components/maps/gauntlet-detail-map";
 import GauntletNationalMap from "@/features/gauntlet/components/maps/gauntlet-national-map";
@@ -15,6 +17,36 @@ import { useGauntletSession } from "@/features/gauntlet/model/gauntlet-session-c
 import LoadingMap from "@/features/map/components/loading-map";
 
 const LEVEL = GAUNTLET_LEVEL_ID;
+
+function MapRegionQuestionTitle({
+  city,
+  plate,
+}: {
+  city: string;
+  plate: string | null;
+}) {
+  const [showPlate, setShowPlate] = useState(false);
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <strong className="font-serif text-[23px]" aria-live="polite">
+        {city}
+        {showPlate && plate ? `（${plate}）` : ""}
+      </strong>
+      {plate ? (
+        <button
+          className="min-h-10 cursor-pointer rounded-full border border-atlas-500/30 bg-atlas-100 px-3 py-1 text-meta font-black text-atlas-800 transition hover:bg-atlas-200 max-sm:min-h-11"
+          type="button"
+          aria-expanded={showPlate}
+          aria-label={`${showPlate ? "隐藏" : "查看"}${city}的车牌`}
+          onClick={() => setShowPlate((visible) => !visible)}
+        >
+          {showPlate ? "隐藏车牌" : "查看车牌"}
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 export default function GauntletQuestionStage({
   actions,
@@ -49,7 +81,11 @@ export default function GauntletQuestionStage({
         <div className="gauntlet-map-question relative grid size-full place-items-center">
           <div className="map-question-banner absolute left-4 top-4 z-[2] grid justify-items-center rounded-xl border border-city-500/20 bg-paper-100/95 px-[18px] py-[10px] text-ink shadow-[0_10px_25px_rgba(62,49,33,.12)]">
             <small className="block text-meta font-extrabold tracking-[.12em] text-stone-600">在{d.currentMapRegion.provinceShort}地图上找到</small>
-            <strong className="font-serif text-[23px]">{d.currentMapRegion.city}</strong>
+            <MapRegionQuestionTitle
+              key={`${d.currentMapRegion.id}-${s.questionIndex}-${s.answerReview ? "review" : "question"}`}
+              city={d.currentMapRegion.city}
+              plate={d.currentMapRegion.plate}
+            />
           </div>
           <GauntletDetailMap
             map={d.gauntletDetailMap}

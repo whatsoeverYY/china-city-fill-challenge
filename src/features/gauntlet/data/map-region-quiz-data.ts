@@ -1,5 +1,6 @@
-import { PROVINCE_BY_CODE } from "../../../domain/geography/data/provinces.ts";
+import { PLATE_QUIZ_DATA } from "../../../domain/geography/data/city-plates.ts";
 import { mapRegionCode } from "../../../domain/geography/data/map-region-codes.ts";
+import { PROVINCE_BY_CODE } from "../../../domain/geography/data/provinces.ts";
 
 export type MapRegionQuizItem = {
   id: string;
@@ -7,12 +8,13 @@ export type MapRegionQuizItem = {
   province: string;
   provinceShort: string;
   provinceCode: string;
+  plate: string | null;
 };
 
 /**
  * Generated name index for the currently bundled province maps.
  *
- * Level 13 uses this compact index instead of the vehicle-plate dataset, because
+ * Level 10 uses this compact index instead of only the vehicle-plate dataset, because
  * province maps also contain autonomous prefectures, leagues, regions, directly
  * administered county-level units and municipality districts. The integrity test
  * keeps this index in lockstep with public/data/maps/*.json.
@@ -54,6 +56,12 @@ export const MAP_REGION_NAMES_BY_PROVINCE = {
   "820000": ["花地玛堂区","花王堂区","望德堂区","大堂区","风顺堂区","嘉模堂区","路凼填海区","圣方济各堂区"],
 } satisfies Record<string, readonly string[]>;
 
+const PLATE_BY_MAP_REGION_ID = new Map(
+  PLATE_QUIZ_DATA.flatMap((item) =>
+    item.mapRegion && item.regionCode ? [[item.regionCode, item.plate] as const] : []
+  ),
+);
+
 export const MAP_REGION_QUIZ_DATA: MapRegionQuizItem[] = Object.entries(
   MAP_REGION_NAMES_BY_PROVINCE,
 ).flatMap(([provinceCode, regionNames]) => {
@@ -68,6 +76,7 @@ export const MAP_REGION_QUIZ_DATA: MapRegionQuizItem[] = Object.entries(
       province: province.name,
       provinceShort: province.shortName,
       provinceCode,
+      plate: PLATE_BY_MAP_REGION_ID.get(id) ?? null,
     };
   });
 });
