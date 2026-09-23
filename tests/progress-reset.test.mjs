@@ -8,6 +8,7 @@ import {
   GAUNTLET_REGION_MAP_HISTORY_KEY,
   STORAGE_KEY,
   WORLD_ACCESS_KEY,
+  WORLD_EXPLORED_COUNTRIES_KEY,
   WORLD_GAUNTLET_PROGRESS_KEY,
   assertSupportedProgressVersion,
   createResetProgressSnapshot,
@@ -92,7 +93,11 @@ test("a global reset relocks the world chapter", () => {
     unlockedAt: BEFORE_RESET,
     rulesetVersion: 1,
   });
+  unlocked.values[WORLD_EXPLORED_COUNTRIES_KEY] = JSON.stringify([
+    "country:156",
+  ]);
   unlocked.meta.keys[WORLD_ACCESS_KEY] = BEFORE_RESET;
+  unlocked.meta.keys[WORLD_EXPLORED_COUNTRIES_KEY] = BEFORE_RESET;
 
   const merged = mergeProgressSnapshots(
     unlocked,
@@ -100,6 +105,10 @@ test("a global reset relocks the world chapter", () => {
   );
 
   assert.equal(merged.values[WORLD_ACCESS_KEY], undefined);
+  assert.deepEqual(
+    JSON.parse(merged.values[WORLD_EXPLORED_COUNTRIES_KEY] ?? "[]"),
+    [],
+  );
 });
 
 test("a province reset beats stale progress from a device with a future clock", () => {
@@ -209,8 +218,13 @@ test("world progress merges stable IDs and keeps the earliest unlock record", ()
     unlockedAt: BEFORE_RESET,
     rulesetVersion: 1,
   });
+  local.values[WORLD_EXPLORED_COUNTRIES_KEY] = JSON.stringify([
+    "country:156",
+    "unknown-country",
+  ]);
   local.meta.keys[WORLD_GAUNTLET_PROGRESS_KEY] = BEFORE_RESET;
   local.meta.keys[WORLD_ACCESS_KEY] = BEFORE_RESET;
+  local.meta.keys[WORLD_EXPLORED_COUNTRIES_KEY] = BEFORE_RESET;
 
   const remote = staleSnapshot(AFTER_RESET);
   remote.values[WORLD_GAUNTLET_PROGRESS_KEY] = JSON.stringify([
@@ -220,8 +234,12 @@ test("world progress merges stable IDs and keeps the earliest unlock record", ()
     unlockedAt: RESET_AT,
     rulesetVersion: 1,
   });
+  remote.values[WORLD_EXPLORED_COUNTRIES_KEY] = JSON.stringify([
+    "country:840",
+  ]);
   remote.meta.keys[WORLD_GAUNTLET_PROGRESS_KEY] = AFTER_RESET;
   remote.meta.keys[WORLD_ACCESS_KEY] = AFTER_RESET;
+  remote.meta.keys[WORLD_EXPLORED_COUNTRIES_KEY] = AFTER_RESET;
 
   const merged = mergeProgressSnapshots(local, remote);
   assert.deepEqual(
@@ -232,6 +250,10 @@ test("world progress merges stable IDs and keeps the earliest unlock record", ()
     unlockedAt: BEFORE_RESET,
     rulesetVersion: 1,
   });
+  assert.deepEqual(
+    JSON.parse(merged.values[WORLD_EXPLORED_COUNTRIES_KEY] ?? "[]"),
+    ["country:156", "country:840"],
+  );
 });
 
 test("mistakes from different devices merge by question id", () => {

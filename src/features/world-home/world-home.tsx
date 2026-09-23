@@ -1,54 +1,125 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import {
+  WORLD_COUNTRIES,
+  WORLD_COUNTRY_BY_ID,
+  type WorldCountryId,
+} from "@/domain/geography/data/world-countries";
 import {
   WORLD_COUNTRY_DATA_NOTICE,
   WORLD_BOUNDARY_DISCLAIMER,
   WORLD_MAP_DATA_NOTICE,
 } from "@/domain/geography/data/world-data-policy";
+import {
+  useWorldMapData,
+  type WorldMapFeature,
+} from "@/features/map/model/world-map-data";
 import DataVintageNotice from "@/shared/components/data-vintage-notice";
-import AppLink from "@/shared/components/app-link";
 import PageBreadcrumbs from "@/shared/components/page-breadcrumbs";
 import { routePath } from "@/shared/lib/app-path";
-
-const worldCards = [
-  {
-    title: "世界地理知识",
-    badge: "知",
-    description: "从 195 个国家、首都与七大洲开始，建立世界地理框架。",
-    href: "/world/knowledge",
-    action: "进入知识馆",
-  },
-  {
-    title: "世界地图关卡",
-    badge: "关",
-    description: "在世界地图填写国家名称，再用国界轮廓检验记忆。",
-    href: "/world/gauntlet",
-    action: "选择关卡",
-  },
-] as const;
+import WorldCountryDossier from "./components/world-country-dossier";
+import WorldExplorer from "./components/world-explorer";
+import { useWorldExplorationProgress } from "./model/use-world-exploration-progress";
 
 export default function WorldHome() {
+  const { data: map, error } = useWorldMapData();
+  const { exploredCountryIds, exploreCountry } = useWorldExplorationProgress();
+  const [activeContinentId, setActiveContinentId] = useState<string | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<WorldMapFeature | null>(null);
+  const selectedCountry = selectedFeature
+    ? WORLD_COUNTRY_BY_ID.get(selectedFeature.properties.id) ?? null
+    : null;
+  const exploredContinents = useMemo(() => new Set(
+    WORLD_COUNTRIES
+      .filter((country) => exploredCountryIds.has(country.id))
+      .map((country) => country.continentId),
+  ).size, [exploredCountryIds]);
+  const closeDossier = useCallback(() => setSelectedFeature(null), []);
+
+  const openCountry = (feature: WorldMapFeature) => {
+    const country = WORLD_COUNTRY_BY_ID.get(feature.properties.id);
+    if (!country) return;
+    exploreCountry(country.id);
+    setSelectedFeature(feature);
+  };
+
+  const openCountryById = (countryId: WorldCountryId) => {
+    const feature = map?.features.find(
+      (item) => item.properties.id === countryId,
+    );
+    if (feature) openCountry(feature);
+  };
+
+  const openRandomCountry = () => {
+    if (!map) return;
+    const candidates = WORLD_COUNTRIES.filter((country) =>
+      (!activeContinentId || country.continentId === activeContinentId) &&
+      !exploredCountryIds.has(country.id)
+    );
+    const country = candidates[Math.floor(Math.random() * candidates.length)];
+    if (country) openCountryById(country.id);
+  };
+
   return (
-    <main className="mx-auto min-h-dvh w-[min(1240px,calc(100%_-_48px))] pb-16 pt-8 text-ink max-md:w-[min(680px,calc(100%_-_24px))] max-md:pt-4">
+    <main className="mx-auto min-h-dvh w-[min(1320px,calc(100%_-_48px))] pb-16 pt-8 text-ink max-md:w-[min(760px,calc(100%_-_24px))] max-md:pt-4">
       <PageBreadcrumbs items={[{ label: "中国篇", href: routePath("/") }, { label: "世界篇" }]} />
-      <section className="mt-8 overflow-hidden rounded-[30px_30px_30px_9px] border border-atlas-500/20 bg-card/85 px-8 py-12 shadow-xl max-sm:px-5 max-sm:py-8">
-        <p className="m-0 text-meta font-black uppercase tracking-[0.24em] text-atlas-700">WORLD GEOGRAPHY · 第二期</p>
-        <h1 className="mb-4 mt-3 max-w-[780px] font-serif text-display font-bold max-md:text-display-mobile">越过中国版图，打开世界地理</h1>
-        <p className="m-0 max-w-[780px] text-body text-ink-soft">这里是完成中国篇后的进阶区域。先了解国家、首都与洲，再通过地图与轮廓关卡把知识真正记住。</p>
+
+      <section className="mt-8 grid grid-cols-[minmax(0,1fr)_360px] gap-6 overflow-hidden rounded-[30px_30px_30px_9px] border border-atlas-500/20 bg-card/85 px-8 py-10 shadow-xl max-lg:grid-cols-1 max-sm:px-5 max-sm:py-7">
+        <div>
+          <p className="m-0 text-meta font-black uppercase tracking-[0.24em] text-atlas-700">WORLD EXPEDITION · 环球探索册</p>
+          <h1 className="mb-4 mt-3 max-w-[780px] font-serif text-display font-bold max-md:text-display-mobile">从一张地图出发，亲手点亮世界</h1>
+          <p className="m-0 max-w-[780px] text-body text-ink-soft">选择一个洲，点击国家查看轮廓、首都和资料。每打开一份国家档案，地图就会留下你的探索印记。</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 self-end">
+          {[
+            [String(exploredCountryIds.size), "已探索国家"],
+            [String(exploredContinents), "已踏足洲别"],
+            ["195", "国家目标"],
+          ].map(([value, label]) => (
+            <div className="rounded-[16px_16px_16px_5px] border border-atlas-500/15 bg-atlas-100/65 px-3 py-4 text-center" key={label}>
+              <strong className="block font-numeric text-section text-atlas-800">{value}</strong>
+              <span className="text-meta font-bold text-ink-soft">{label}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <div className="mt-6">
+      <div className="mt-5">
         <DataVintageNotice lines={[WORLD_MAP_DATA_NOTICE, WORLD_COUNTRY_DATA_NOTICE, WORLD_BOUNDARY_DISCLAIMER]} />
       </div>
 
-      <section className="mt-8 grid grid-cols-2 gap-5 max-md:grid-cols-1" aria-label="世界篇功能入口">
-        {worldCards.map((card, index) => (
-          <article key={card.href} className={`rounded-[24px_24px_24px_7px] border p-6 shadow-lg ${index === 0 ? "border-scholar-500/20 bg-scholar-100/70" : "border-gold-600/25 bg-gold-100/75"}`}>
-            <span className={`grid size-14 place-items-center rounded-[17px_17px_17px_5px] font-serif text-2xl font-black text-white ${index === 0 ? "bg-scholar-500" : "bg-gold-700"}`} aria-hidden="true">{card.badge}</span>
-            <h2 className="mb-2 mt-5 font-serif text-section font-bold">{card.title}</h2>
-            <p className="mb-6 mt-0 text-body text-ink-soft">{card.description}</p>
-            <AppLink className={`inline-flex min-h-11 items-center rounded-full px-5 py-2.5 text-compact font-black text-white no-underline ${index === 0 ? "bg-scholar-600" : "bg-gold-800"}`} href={routePath(card.href)}>{card.action}</AppLink>
-          </article>
-        ))}
-      </section>
+      {error ? (
+        <section className="mt-8 rounded-[22px_22px_22px_7px] border border-city-500/20 bg-card p-8 text-center">
+          <h2 className="m-0 font-serif text-section font-bold">世界地图加载失败</h2>
+          <p className="mb-0 mt-2 text-body text-ink-soft">请检查网络或刷新页面后重试。</p>
+        </section>
+      ) : map ? (
+        <WorldExplorer
+          map={map}
+          exploredCountryIds={exploredCountryIds}
+          selectedCountryId={selectedCountry?.id ?? null}
+          activeContinentId={activeContinentId}
+          onCountry={openCountry}
+          onCountryId={openCountryById}
+          onContinent={(continentId) => {
+            setActiveContinentId(continentId);
+            setSelectedFeature(null);
+          }}
+          onRandomCountry={openRandomCountry}
+        />
+      ) : (
+        <section className="mt-8 grid min-h-[420px] place-items-center rounded-[22px_22px_22px_7px] border border-atlas-500/20 bg-card/85 text-center" role="status">
+          <div>
+            <span className="mx-auto mb-4 block size-9 animate-spin rounded-full border-[3px] border-atlas-500/20 border-t-atlas-600" aria-hidden="true" />
+            <p className="m-0 text-body font-bold text-ink-soft">正在展开环球探索地图…</p>
+          </div>
+        </section>
+      )}
+
+      {selectedCountry && selectedFeature ? (
+        <WorldCountryDossier country={selectedCountry} feature={selectedFeature} onClose={closeDossier} />
+      ) : null}
     </main>
   );
 }

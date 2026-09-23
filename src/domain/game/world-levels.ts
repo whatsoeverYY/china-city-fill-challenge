@@ -11,17 +11,17 @@ export type WorldLevelDefinition = {
 export const WORLD_LEVELS: readonly WorldLevelDefinition[] = [
   {
     id: WORLD_LEVEL_ID.MAP_COUNTRY_NAMES,
-    title: "世界落名",
-    badge: "地图",
-    description: "在世界地图上点击国家区块，填写对应的国家名称。",
-    target: "累计正确填写 30 个不同国家",
+    title: "点亮世界",
+    badge: "路线",
+    description: "选择一条地区探索路线，逐国填写名称并点亮地图。",
+    target: "完整点亮任意一条地区路线",
   },
   {
     id: WORLD_LEVEL_ID.COUNTRY_SHAPES,
-    title: "国形辨影",
-    badge: "轮廓",
-    description: "观察单独展示的国界轮廓，填写国家名称。",
-    target: "连续答对 20 题",
+    title: "轮廓侦察",
+    badge: "侦察",
+    description: "选择洲别观察国家轮廓，按需解锁洲别、地区与首都线索。",
+    target: "完成任意一个侦察范围的识别任务",
   },
 ] as const;
 

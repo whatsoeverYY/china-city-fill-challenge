@@ -58,7 +58,7 @@ test("server-renders the gated world route without exposing world content", asyn
     ["/world/knowledge", /世界地理知识｜中国城市填充挑战/],
     [
       "/world/gauntlet/world-country-shapes",
-      /国形辨影｜世界地图关卡｜中国城市填充挑战/,
+      /轮廓侦察｜世界地图关卡｜中国城市填充挑战/,
     ],
   ]) {
     const response = await render(path);

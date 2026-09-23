@@ -22,6 +22,8 @@ export type WorldCountry = {
   shapeEligible: boolean;
 };
 
+export type WorldCountryId = WorldCountry["id"];
+
 export type WorldContinentId =
   | "africa"
   | "asia"

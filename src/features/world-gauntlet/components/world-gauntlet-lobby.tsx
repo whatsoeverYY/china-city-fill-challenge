@@ -25,8 +25,8 @@ export default function WorldGauntletLobby({
       ]} />
       <header className="mt-7 rounded-[28px_28px_28px_8px] border border-gold-600/25 bg-gold-100/70 px-7 py-9 max-sm:px-5">
         <p className="m-0 text-meta font-black uppercase tracking-[0.22em] text-gold-900">WORLD GAUNTLET</p>
-        <h1 className="mb-3 mt-2 font-serif text-display font-black max-sm:text-display-mobile">世界地图，开始落名</h1>
-        <p className="m-0 max-w-[760px] text-body text-ink-soft">第一批开放两关：在完整世界地图上填写国家名称，或只凭国界轮廓辨认国家。后续关卡会继续补充。</p>
+        <h1 className="mb-3 mt-2 font-serif text-display font-black max-sm:text-display-mobile">沿着地区路线，亲手点亮世界</h1>
+        <p className="m-0 max-w-[760px] text-body text-ink-soft">第一批开放两关：按地区路线逐国点亮地图，或在轮廓侦察中按需调用洲别、地区与首都信号。后续关卡会继续补充。</p>
       </header>
       <div className="mt-5">
         <DataVintageNotice lines={[WORLD_MAP_DATA_NOTICE, WORLD_COUNTRY_DATA_NOTICE, WORLD_BOUNDARY_DISCLAIMER]} />

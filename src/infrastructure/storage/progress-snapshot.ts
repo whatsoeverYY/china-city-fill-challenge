@@ -25,10 +25,12 @@ import {
   PROGRESS_STORAGE_KEYS,
   STORAGE_KEY,
   WORLD_ACCESS_KEY,
+  WORLD_EXPLORED_COUNTRIES_KEY,
   WORLD_GAUNTLET_PROGRESS_KEY,
   type ProgressStorageKey,
 } from "./progress-keys.ts";
 import { mergeWorldAccessProgress } from "./world-access-progress.ts";
+import { mergeWorldExplorationProgress } from "./world-exploration-progress.ts";
 
 export {
   emptyProgressMeta,
@@ -334,6 +336,11 @@ export function mergeProgressSnapshots(
         ),
       ]),
     ).sort(),
+  );
+
+  values[WORLD_EXPLORED_COUNTRIES_KEY] = mergeWorldExplorationProgress(
+    local.values[WORLD_EXPLORED_COUNTRIES_KEY],
+    remote.values[WORLD_EXPLORED_COUNTRIES_KEY],
   );
 
   values[WORLD_ACCESS_KEY] = mergeWorldAccessProgress(

@@ -43,7 +43,7 @@ src/
 
 地理主数据与跨模块使用的城市车牌数据位于 `src/domain/geography/data/`，关卡 ID、关卡目录与错题规则位于 `src/domain/game/`。仅供单个功能使用的题库才放在对应 feature 的 `data/` 目录。
 
-世界篇与中国篇位于同一仓库。世界国家、首都、洲和数据时间口径下沉到 `domain/geography`，世界篇解锁规则和关卡 ID 下沉到 `domain/game`；`world-home`、`world-knowledge`、`world-gauntlet` 彼此不直接依赖，共同复用 `map` 和 `player` 应用级能力。世界篇访问资格是独立持久化成就：完成规则集中的 19 个中国篇主线关卡后永久解锁，错题复仇赛不计入条件，全量清除进度时一并重置。管理员账号始终拥有世界篇访问资格且首页展示入口，不依赖或写入通关成就。
+世界篇与中国篇位于同一仓库。世界国家、首都、洲和数据时间口径下沉到 `domain/geography`，世界篇解锁规则和关卡 ID 下沉到 `domain/game`；`world-home`、`world-knowledge`、`world-gauntlet` 彼此不直接依赖，共同复用 `map` 和 `player` 应用级能力。`world-home` 负责地图探索编排和国家档案展示，已探索国家使用稳定 M49 国家 ID 独立持久化，并参与现有云存档合并与全量删档；`world-gauntlet` 的地图关卡使用稳定的地区路线 ID，将联合国 M49 子地区组合为 15 条路线，轮廓关卡则按洲别筛选有效轮廓并提供洲别、地区和首都三层渐进线索，两关答对的国家都会写入同一探索进度。世界篇访问资格是独立持久化成就：完成规则集中的 19 个中国篇主线关卡后永久解锁，错题复仇赛不计入条件，全量清除进度时一并重置。管理员账号始终拥有世界篇访问资格且首页展示入口，不依赖或写入通关成就。
 
 多层页面统一在左上角使用 `shared/components/page-breadcrumbs.tsx`，不在页头右侧重复放置返回按钮。省内填图的挑战范围和作答方式通过查询参数表达，路由生成统一经过各 feature 的 `config/*-routes.ts`，并最终调用 `shared/lib/app-path.ts` 兼容站点根路径与 GitHub Pages base path。
 

@@ -116,8 +116,14 @@ test("exports the gated world chapter and every world level", async () => {
     new URL("world/gauntlet/world-map-country-names.html", exportRoot),
     "utf8",
   );
-  assert.match(levelHtml, /<title>世界落名｜世界地图关卡｜中国城市填充挑战<\/title>/i);
+  assert.match(levelHtml, /<title>点亮世界｜世界地图关卡｜中国城市填充挑战<\/title>/i);
   assert.match(levelHtml, /正在核验世界篇资格/);
+
+  const shapeLevelHtml = await readFile(
+    new URL("world/gauntlet/world-country-shapes.html", exportRoot),
+    "utf8",
+  );
+  assert.match(shapeLevelHtml, /<title>轮廓侦察｜世界地图关卡｜中国城市填充挑战<\/title>/i);
 });
 
 test("copies static maps and disables Jekyll processing", async () => {

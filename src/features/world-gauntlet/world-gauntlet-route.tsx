@@ -33,7 +33,7 @@ export default function WorldGauntletRoute({
       <PageBreadcrumbs items={[
         { label: "世界篇", href: routePath("/world") },
         { label: "世界地图关卡", href: routePath("/world/gauntlet") },
-        { label: initialLevel === WORLD_LEVEL_ID.MAP_COUNTRY_NAMES ? "世界落名" : "国形辨影" },
+        { label: initialLevel === WORLD_LEVEL_ID.MAP_COUNTRY_NAMES ? "点亮世界" : "轮廓侦察" },
       ]} />
       <div className="mb-6 mt-5">
         <DataVintageNotice compact lines={[WORLD_MAP_DATA_NOTICE, WORLD_COUNTRY_DATA_NOTICE, WORLD_BOUNDARY_DISCLAIMER]} />
