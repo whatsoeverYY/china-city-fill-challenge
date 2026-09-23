@@ -5,8 +5,10 @@ import { isGauntletLevelId } from "@/domain/game/gauntlet-level-ids";
 import { usePlayerData } from "@/features/player/player-data-context";
 import { GAUNTLET_PROGRESS_KEY } from "@/infrastructure/storage/progress-storage";
 import { canAccessWorld } from "@/infrastructure/storage/world-access-progress";
-
-export type WorldAccessState = "checking" | "locked" | "unlocked";
+import {
+  isWorldAuthorizationPending,
+  type WorldAccessState,
+} from "./world-access-state";
 
 function readCompletedChinaLevels(raw: string | null) {
   if (!raw) return [];
@@ -19,14 +21,26 @@ function readCompletedChinaLevels(raw: string | null) {
 }
 
 export function useWorldAccess() {
-  const { initialized, isAdmin, progressEpoch, progressStorage } = usePlayerData();
+  const {
+    identity,
+    initialized,
+    isAdmin,
+    profile,
+    progressEpoch,
+    progressStorage,
+  } = usePlayerData();
   const [state, setState] = useState<WorldAccessState>("checking");
+  const authorizationPending = isWorldAuthorizationPending(
+    initialized,
+    identity?.id ?? null,
+    profile?.id ?? null,
+  );
 
   useEffect(() => {
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
-      if (!initialized) {
+      if (authorizationPending) {
         setState("checking");
         return;
       }
@@ -42,7 +56,7 @@ export function useWorldAccess() {
     return () => {
       cancelled = true;
     };
-  }, [initialized, isAdmin, progressEpoch, progressStorage]);
+  }, [authorizationPending, isAdmin, progressEpoch, progressStorage]);
 
-  return state;
+  return authorizationPending ? "checking" : state;
 }

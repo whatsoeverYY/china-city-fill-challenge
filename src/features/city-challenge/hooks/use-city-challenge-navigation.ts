@@ -6,6 +6,7 @@ import {
 } from "@/domain/geography/data/provinces";
 import { cityChallengePath } from "@/features/city-challenge/config/city-challenge-routes";
 import { MAP_COMPLETION_MARKER } from "@/infrastructure/storage/progress-storage";
+import { clientRoutePath } from "@/shared/lib/app-path";
 
 function provinceChallengeMessage(
   province: Province,
@@ -68,11 +69,7 @@ export function useCityChallengeNavigation({
       hardMode,
       neighborMode,
     });
-    if (process.env.NEXT_PUBLIC_BASE_PATH) {
-      window.location.assign(href);
-      return;
-    }
-    router.push(href);
+    router.push(clientRoutePath(href));
   }, [hardMode, neighborMode, router]);
 
   return { enterProvince, province };

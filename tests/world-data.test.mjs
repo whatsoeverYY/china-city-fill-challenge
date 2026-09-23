@@ -21,6 +21,7 @@ import {
 } from "../src/infrastructure/storage/progress-storage.ts";
 import { parseWorldExplorationProgress } from "../src/infrastructure/storage/world-exploration-progress.ts";
 import { WORLD_MAP_ROUTE_SEEDS } from "../src/features/world-gauntlet/config/world-map-route-seeds.ts";
+import { isWorldAuthorizationPending } from "../src/features/player/model/world-access-state.ts";
 
 const catalog = JSON.parse(await readFile(
   new URL("../src/domain/geography/data/world-countries.json", import.meta.url),
@@ -166,6 +167,20 @@ test("administrators can access world pages without completing China", () => {
   assert.equal(canAccessWorld(storage, [], true), true);
   assert.equal(storage.getItem(WORLD_ACCESS_KEY), null);
   assert.equal(canAccessWorld(storage, [], false), false);
+});
+
+test("world access waits for a signed-in player's role before showing the lock page", () => {
+  assert.equal(isWorldAuthorizationPending(false, null, null), true);
+  assert.equal(isWorldAuthorizationPending(true, "admin-id", null), true);
+  assert.equal(
+    isWorldAuthorizationPending(true, "admin-id", "different-user-id"),
+    true,
+  );
+  assert.equal(
+    isWorldAuthorizationPending(true, "admin-id", "admin-id"),
+    false,
+  );
+  assert.equal(isWorldAuthorizationPending(true, null, null), false);
 });
 
 test("world exploration stores only stable country IDs without duplicates", () => {

@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-const exportRoot = new URL("../dist/client/", import.meta.url);
+const exportRoot = new URL(
+  "../dist/client/china-city-fill-challenge/",
+  import.meta.url,
+);
 
 const provinceCodes = [
   "110000", "120000", "130000", "140000", "150000", "210000", "220000",
@@ -36,15 +39,15 @@ test("exports a GitHub Pages entry document", async () => {
   assert.match(html, /<title>中国城市填充挑战<\/title>/i);
   assert.match(html, /中国城市填充挑战/);
   assert.match(html, /\/china-city-fill-challenge\//);
-  assert.match(html, /href="\/china-city-fill-challenge\/atlas\.html"/);
-  assert.match(html, /href="\/china-city-fill-challenge\/gauntlet\.html"/);
-  assert.match(html, /href="\/china-city-fill-challenge\/knowledge\.html"/);
-  assert.doesNotMatch(html, /href="\/china-city-fill-challenge\/world\.html"/);
+  assert.match(html, /href="\/china-city-fill-challenge\/atlas\/"/);
+  assert.match(html, /href="\/china-city-fill-challenge\/gauntlet\/"/);
+  assert.match(html, /href="\/china-city-fill-challenge\/knowledge\/"/);
+  assert.doesNotMatch(html, /href="\/china-city-fill-challenge\/world\/"/);
   assert.doesNotMatch(html, /http:\/\/localhost/);
 });
 
 test("exports the administrator dashboard route", async () => {
-  const html = await readFile(new URL("admin.html", exportRoot), "utf8");
+  const html = await readFile(new URL("admin/index.html", exportRoot), "utf8");
 
   assert.match(html, /<title>管理员后台｜中国城市填充挑战<\/title>/i);
   assert.match(html, /玩家与进度中心|正在确认管理员身份/);
@@ -52,12 +55,12 @@ test("exports the administrator dashboard route", async () => {
 
 test("exports every feature as an independently addressable route", async () => {
   const routes = [
-    ["atlas.html", "全国车牌图鉴"],
-    ["gauntlet.html", "过关斩将"],
-    ["knowledge.html", "中国地理知识馆"],
-    ["world.html", "世界地理"],
-    ["world/knowledge.html", "世界地理知识"],
-    ["world/gauntlet.html", "世界地图关卡"],
+    ["atlas/index.html", "全国车牌图鉴"],
+    ["gauntlet/index.html", "过关斩将"],
+    ["knowledge/index.html", "中国地理知识馆"],
+    ["world/index.html", "世界地理"],
+    ["world/knowledge/index.html", "世界地理知识"],
+    ["world/gauntlet/index.html", "世界地图关卡"],
   ];
 
   for (const [file, title] of routes) {
@@ -74,28 +77,32 @@ test("exports every province, gauntlet level, and knowledge topic route", async 
   ];
 
   for (const [directory, ids] of routeGroups) {
-    const exportedFiles = (await readdir(new URL(`${directory}/`, exportRoot)))
-      .filter((file) => file.endsWith(".html"))
+    const exportedFiles = (await readdir(
+      new URL(`${directory}/`, exportRoot),
+      { withFileTypes: true },
+    ))
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
       .sort();
-    assert.deepEqual(exportedFiles, ids.map((id) => `${id}.html`).sort());
+    assert.deepEqual(exportedFiles, ids.toSorted());
   }
 
   const provinceHtml = await readFile(
-    new URL("city-fill/440000.html", exportRoot),
+    new URL("city-fill/440000/index.html", exportRoot),
     "utf8",
   );
   assert.match(provinceHtml, /<title>广东城市填图｜中国城市填充挑战<\/title>/i);
   assert.match(provinceHtml, /面包屑导航/);
 
   const gauntletHtml = await readFile(
-    new URL("gauntlet/province-shape.html", exportRoot),
+    new URL("gauntlet/province-shape/index.html", exportRoot),
     "utf8",
   );
   assert.match(gauntletHtml, /<title>辨形识省｜过关斩将｜中国城市填充挑战<\/title>/i);
   assert.match(gauntletHtml, /第 1 关/);
 
   const knowledgeHtml = await readFile(
-    new URL("knowledge/province-profile.html", exportRoot),
+    new URL("knowledge/province-profile/index.html", exportRoot),
     "utf8",
   );
   assert.match(knowledgeHtml, /<title>省份全景名片｜地理知识馆｜中国城市填充挑战<\/title>/i);
@@ -103,24 +110,28 @@ test("exports every province, gauntlet level, and knowledge topic route", async 
 });
 
 test("exports the gated world chapter and every world level", async () => {
-  const worldHtml = await readFile(new URL("world.html", exportRoot), "utf8");
+  const worldHtml = await readFile(new URL("world/index.html", exportRoot), "utf8");
   assert.match(worldHtml, /<title>世界地理｜中国城市填充挑战<\/title>/i);
   assert.match(worldHtml, /正在核验世界篇资格/);
 
-  const exportedFiles = (await readdir(new URL("world/gauntlet/", exportRoot)))
-    .filter((file) => file.endsWith(".html"))
+  const exportedFiles = (await readdir(
+    new URL("world/gauntlet/", exportRoot),
+    { withFileTypes: true },
+  ))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
     .sort();
-  assert.deepEqual(exportedFiles, worldLevelIds.map((id) => `${id}.html`).sort());
+  assert.deepEqual(exportedFiles, worldLevelIds.toSorted());
 
   const levelHtml = await readFile(
-    new URL("world/gauntlet/world-map-country-names.html", exportRoot),
+    new URL("world/gauntlet/world-map-country-names/index.html", exportRoot),
     "utf8",
   );
   assert.match(levelHtml, /<title>点亮世界｜世界地图关卡｜中国城市填充挑战<\/title>/i);
   assert.match(levelHtml, /正在核验世界篇资格/);
 
   const shapeLevelHtml = await readFile(
-    new URL("world/gauntlet/world-country-shapes.html", exportRoot),
+    new URL("world/gauntlet/world-country-shapes/index.html", exportRoot),
     "utf8",
   );
   assert.match(shapeLevelHtml, /<title>轮廓侦察｜世界地图关卡｜中国城市填充挑战<\/title>/i);
@@ -133,6 +144,7 @@ test("copies static maps and disables Jekyll processing", async () => {
     access(new URL("data/maps/820000.json", exportRoot)),
     access(new URL("data/maps/world/50m.json", exportRoot)),
     access(new URL("favicon.svg", exportRoot)),
+    access(new URL("knowledge/index.txt", exportRoot)),
     access(new URL("og.png", exportRoot)),
   ]);
 

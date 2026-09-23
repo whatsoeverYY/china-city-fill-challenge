@@ -2,6 +2,7 @@
 
 import type { ComponentPropsWithoutRef } from "react";
 import { useRouter } from "next/navigation";
+import { clientRoutePath } from "@/shared/lib/app-path";
 
 type AppLinkProps = ComponentPropsWithoutRef<"a"> & { href: string };
 
@@ -25,7 +26,6 @@ export default function AppLink({
         onClick?.(event);
         if (
           event.defaultPrevented ||
-          process.env.NEXT_PUBLIC_BASE_PATH ||
           event.button !== 0 ||
           event.metaKey ||
           event.ctrlKey ||
@@ -36,7 +36,7 @@ export default function AppLink({
         ) return;
 
         event.preventDefault();
-        router.push(href);
+        router.push(clientRoutePath(href));
       }}
     >
       {children}
